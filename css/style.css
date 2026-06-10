@@ -27,7 +27,7 @@ input,select{font-family:inherit; font-size:16px}
 .top{position:sticky; top:0; z-index:30; background:rgba(10,11,13,.82); backdrop-filter:blur(12px);
   border-bottom:1px solid var(--line); padding:14px 18px; display:flex; align-items:center; gap:10px}
 .logo{display:flex; align-items:center; gap:9px; font-family:'Archivo'; font-weight:900; font-size:18px; letter-spacing:.02em}
-.logo .dot{width:11px; height:11px; border-radius:50%; background:var(--acc); box-shadow:0 0 12px var(--acc)}
+.logo img{width:28px; height:28px; border-radius:8px; display:block; flex:none}
 .logo b{color:var(--acc)}
 .top .who{margin-left:auto; font-size:12px; color:var(--mut); text-align:right; line-height:1.25}
 .iconbtn{flex:none; width:34px; height:34px; margin-left:10px; border-radius:10px; background:var(--card2);

@@ -26,7 +26,7 @@ function renderNav(){
 
 /* ---------- shared bits ---------- */
 function topBar(){
-  return `<div class="top"><div class="logo"><span class="dot"></span>Mongol<b>Fit</b></div>
+  return `<div class="top"><div class="logo"><img src="icons/logo-mark.svg" alt="MongolFit">Mongol<b>Fit</b></div>
     <div class="who">${esc(S.profile.name)}<br><span style="color:var(--acc)">${goalName(S.profile.goal)}</span></div>
     <button class="iconbtn" id="settingsBtn" aria-label="Тохиргоо">⚙</button></div>`;
 }

@@ -4,7 +4,7 @@ let step = 0;
 function renderOnboard(){
   if(step===0){
     app.innerHTML = `
-    <div class="top"><div class="logo"><span class="dot"></span>Mongol<b>Fit</b></div></div>
+    <div class="top"><div class="logo"><img src="icons/logo-mark.svg" alt="MongolFit">Mongol<b>Fit</b></div></div>
     <div class="view">
       <div class="hero">
         <div class="eyebrow">Гэр &amp; Жийм · Монгол</div>
@@ -31,7 +31,7 @@ function renderOnboard(){
   // multi-step form
   const steps = [renderS1, renderS2, renderS3];
   app.innerHTML = `
-    <div class="top"><div class="logo"><span class="dot"></span>Mongol<b>Fit</b></div>
+    <div class="top"><div class="logo"><img src="icons/logo-mark.svg" alt="MongolFit">Mongol<b>Fit</b></div>
       <button class="chip" id="back" style="margin-left:auto">‹ Буцах</button></div>
     <div class="view">
       <div class="seg" style="margin-bottom:22px">
