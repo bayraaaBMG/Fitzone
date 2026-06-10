@@ -1,15 +1,29 @@
 /* ---------- PLAN ---------- */
+const WD_NAMES=['Дав','Мяг','Лха','Пүр','Баа','Бям','Ням'];
 function renderPlan(){
   const p=S.profile;
+  const sched=weekSchedule(p.days);
+  const todayIdx=(new Date().getDay()+6)%7; // Mon=0
   app.innerHTML = `
     ${topBar()}
     <div class="view">
       <div class="secttl" style="margin-top:4px"><h2>Миний хөтөлбөр</h2><a class="regen">↻ Шинэчлэх</a></div>
-      <p class="mut sm" style="margin:0 0 16px">${goalName(p.goal)} · ${p.level===1?'Анхан':p.level===2?'Дунд':'Ахисан'} · ${p.place==='home'?'Гэр':p.place==='gym'?'Жийм':'Гэр+Жийм'} · долоо хоногт ${p.days} өдөр</p>
+      <p class="mut sm" style="margin:0 0 16px">${goalName(p.goal)} · ${LVL_NAMES[p.level]} · ${p.place==='home'?'Гэр':p.place==='gym'?'Жийм':'Гэр+Жийм'} · долоо хоногт ${p.days} өдөр</p>
+      <p class="xs mut" style="margin:0 0 6px">7 ХОНОГИЙН ХУВААРЬ</p>
+      <div class="weekgrid">
+        ${sched.map((di,wi)=>{
+          if(di===-1) return `<div class="wd rest"><div class="lbl">${WD_NAMES[wi]}</div><div class="ic">😴</div></div>`;
+          const d=S.plan[di];
+          return `<div class="wd ${d.done?'done':''} ${wi===todayIdx?'today':''}" data-i="${di}">
+            <div class="lbl">${WD_NAMES[wi]}</div><div class="ic">${d.done?'✓':'💪'}</div>
+          </div>`;
+        }).join('')}
+      </div>
       <div id="days"></div>
       <div class="note warn" style="margin-top:18px"><div class="lab">⚠ Анхаар</div>Хөтөлбөр эхлэхээс өмнө 5 мин халаалт, дараа нь сунгалт хий. Хурц өвдөлт мэдрэгдвэл зогсоо.</div>
     </div>`;
   topWire();
+  app.querySelectorAll('.weekgrid .wd[data-i]').forEach(w=> w.onclick=()=>openDay(+w.dataset.i));
   const wrap=document.getElementById('days');
   wrap.innerHTML = S.plan.map((d,i)=>`
     <div class="dayhead ${d.done?'done':''}" data-i="${i}" style="cursor:pointer">

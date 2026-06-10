@@ -3,7 +3,18 @@
     "allow": [
       "Skill(run)",
       "Skill(run:*)",
-      "Bash(chromium-cli --session fitzone)"
+      "Bash(chromium-cli --session fitzone)",
+      "Bash(node --check js/views/nutrition.js)",
+      "Bash(ls \"C:\\\\Users\\\\bbayr\\\\AppData\\\\Local\\\\Temp\\\\pwproj\" 2>/dev/null && echo EXISTS || echo MISSING)",
+      "Read(//c/Users/bbayr/AppData/Local/Temp/**)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\bbayr\\\\AppData\\\\Local\\\\Temp\\\\pwproj\")",
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Bash(npx playwright *)",
+      "Read(//tmp/**)",
+      "Bash(node test4.js)",
+      "Bash(node --check js/state.js)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

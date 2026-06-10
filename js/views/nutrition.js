@@ -3,6 +3,9 @@ let actLevel=1.45;
 function renderNutrition(){
   const p=S.profile;
   const n=nutrition(p, actLevel);
+  const b=bmi(p.weight, p.height);
+  const cat=bmiCategory(b);
+  const bpos=Math.min(100,Math.max(0,(b-15)/(40-15)*100));
   const acts=[['Сууринтай',1.3],['Дунд зэрэг',1.45],['Идэвхтэй',1.65],['Маш идэвхтэй',1.8]];
   app.innerHTML = `
     ${topBar()}
@@ -24,6 +27,18 @@ function renderNutrition(){
         <div class="macro"><b style="color:var(--coral)">${n.protein}г</b><div class="bar"><i style="width:${pct(n.protein*4,n.cal)}%;background:var(--coral)"></i></div><span class="sm mut" style="width:64px">Уураг</span></div>
         <div class="macro"><b style="color:var(--acc)">${n.carb}г</b><div class="bar"><i style="width:${pct(n.carb*4,n.cal)}%;background:var(--acc)"></i></div><span class="sm mut" style="width:64px">Нүүрс ус</span></div>
         <div class="macro"><b style="color:var(--warn)">${n.fat}г</b><div class="bar"><i style="width:${pct(n.fat*9,n.cal)}%;background:var(--warn)"></i></div><span class="sm mut" style="width:64px">Өөх тос</span></div>
+      </div>
+
+      <div class="secttl"><h2>Биеийн жин (BMI)</h2></div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <div><span class="xs mut">Таны үзүүлэлт</span>
+            <div style="font-family:Archivo;font-weight:900;font-size:34px;color:${cat.c};line-height:1">${b.toFixed(1)}</div>
+            <span class="xs" style="color:${cat.c};font-weight:700">${cat.n}</span></div>
+          <div class="xs mut" style="text-align:right">${p.height} см<br>${p.weight} кг</div>
+        </div>
+        <div class="bmibar"><div class="marker" style="left:${bpos}%"></div></div>
+        <div class="bmiscale"><span>Дутуу</span><span>Хэвийн</span><span>Илүүдэл</span><span>Таргалалт</span></div>
       </div>
 
       <div class="secttl"><h2>Монгол хоолоо тохируул</h2></div>

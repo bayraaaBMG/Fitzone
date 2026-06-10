@@ -1,10 +1,19 @@
-/* ---------- persistence (window.storage with in-memory fallback) ---------- */
+/* ---------- persistence (window.storage > localStorage > in-memory) ---------- */
 const Store = (() => {
   let mem = {};
   const has = (typeof window !== 'undefined' && window.storage);
+  const ls = (typeof localStorage !== 'undefined') ? localStorage : null;
   return {
-    async get(k){ try{ if(has){ const r = await window.storage.get(k); return r? JSON.parse(r.value): null;} }catch(e){} return mem[k] ?? null; },
-    async set(k,v){ mem[k]=v; try{ if(has) await window.storage.set(k, JSON.stringify(v)); }catch(e){} },
+    async get(k){
+      try{ if(has){ const r = await window.storage.get(k); return r? JSON.parse(r.value): null; } }catch(e){}
+      if(ls){ try{ const v=ls.getItem(k); if(v!=null) return JSON.parse(v); }catch(e){} }
+      return mem[k] ?? null;
+    },
+    async set(k,v){
+      mem[k]=v;
+      try{ if(has) await window.storage.set(k, JSON.stringify(v)); }catch(e){}
+      if(ls){ try{ ls.setItem(k, JSON.stringify(v)); }catch(e){} }
+    },
   };
 })();
 
@@ -14,6 +23,7 @@ let S = {
   plan:null,            // [{title, focus, ex:[{id,sets,reps,rest}], done:bool}]
   weights:[],           // [{d:'YYYY-MM-DD', kg}]
   completed:[],         // ['YYYY-MM-DD']
+  challenge:null,       // {start:'YYYY-MM-DD', done:['YYYY-MM-DD']} | null
   tab:'home',
 };
 
@@ -26,5 +36,5 @@ function toast(msg){
   document.body.appendChild(t); clearTimeout(toastT);
   toastT=setTimeout(()=>t.remove(), 2200);
 }
-async function save(){ await Store.set('mf_state', {profile:S.profile, plan:S.plan, weights:S.weights, completed:S.completed}); }
+async function save(){ await Store.set('mf_state', {profile:S.profile, plan:S.plan, weights:S.weights, completed:S.completed, challenge:S.challenge}); }
 function esc(t){ return (t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }

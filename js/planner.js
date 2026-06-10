@@ -99,3 +99,26 @@ function nutrition(p, activity){
   return {tdee, cal, label, protein, fat, carb:Math.max(carb,0)};
 }
 function pct(part,whole){ return Math.min(100,Math.round(part/whole*100)); }
+
+/* ---------- 7-day week schedule ---------- */
+// spreads `numDays` workout days evenly across a Mon..Sun week.
+// returns array of length 7: index into S.plan, or -1 for a rest day.
+function weekSchedule(numDays){
+  const sched = Array(7).fill(-1);
+  for(let i=0;i<numDays;i++){
+    sched[Math.min(6, Math.round(i*7/numDays))] = i;
+  }
+  return sched;
+}
+
+/* ---------- BMI ---------- */
+function bmi(weight, height){
+  const h = height/100;
+  return weight/(h*h);
+}
+function bmiCategory(b){
+  if(b<18.5) return {n:'Дутуу жинтэй', c:'var(--acc)'};
+  if(b<25)   return {n:'Хэвийн', c:'var(--ok)'};
+  if(b<30)   return {n:'Илүүдэл жинтэй', c:'var(--warn)'};
+  return {n:'Таргалалттай', c:'var(--coral)'};
+}

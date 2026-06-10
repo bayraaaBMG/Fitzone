@@ -34,6 +34,9 @@ function renderProgress(){
 
       <div class="secttl"><h2>Энэ 7 хоног</h2></div>
       ${weekStreak()}
+
+      <div class="secttl"><h2>30 хоногийн эрэлт</h2></div>
+      ${challengeCard()}
     </div>`;
   topWire();
   document.getElementById('w_add').onclick=()=>{
@@ -44,6 +47,52 @@ function renderProgress(){
     if(ix>=0) S.weights[ix].kg=v; else S.weights.push({d:t,kg:v});
     save(); render(); toast('Жин бүртгэгдлээ');
   };
+  const cstart=document.getElementById('chall_start');
+  if(cstart) cstart.onclick=()=>{
+    S.challenge={start:today(), done:[]};
+    save(); render(); toast('Эрэлт эхэллээ! Амжилт хүсье 💪');
+  };
+  const creset=document.getElementById('chall_reset');
+  if(creset) creset.onclick=()=>{
+    S.challenge=null; save(); render();
+  };
+  app.querySelectorAll('.challgrid .cd[data-d]').forEach(c=> c.onclick=()=>{
+    const ds=c.dataset.d;
+    if(ds>today()) return;
+    const ix=S.challenge.done.indexOf(ds);
+    if(ix>=0) S.challenge.done.splice(ix,1); else S.challenge.done.push(ds);
+    save(); render();
+  });
+}
+
+/* ---------- 30-day challenge ---------- */
+function challengeCard(){
+  if(!S.challenge){
+    return `<div class="card">
+      <p class="mut sm" style="margin:0 0 12px">Өдөр бүр дасгал хийгээд тэмдэглэж, 30 хоногийн эрэлтээ давхар бүртгээрэй.</p>
+      <button class="btn p" id="chall_start">30 хоногийн эрэлт эхлүүлэх 🔥</button>
+    </div>`;
+  }
+  const start=new Date(S.challenge.start);
+  const doneSet=new Set(S.challenge.done);
+  const t=today();
+  let cells='';
+  for(let i=0;i<30;i++){
+    const d=new Date(start); d.setDate(start.getDate()+i);
+    const ds=fmt(d);
+    const isDone=doneSet.has(ds);
+    const cls=[isDone?'done':'', ds===t?'today':'', ds>t?'future':''].filter(Boolean).join(' ');
+    cells+=`<div class="cd ${cls}" data-d="${ds}">${isDone?'✓':i+1}</div>`;
+  }
+  const doneCount=S.challenge.done.length;
+  return `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <b class="sm">${doneCount}/30 өдөр дууссан</b>
+      <a class="regen" id="chall_reset">↻ Дахин эхлүүлэх</a>
+    </div>
+    <div class="challgrid">${cells}</div>
+    ${doneCount>=30?`<div class="note ok"><div class="lab">🎉 Баяр хүргэе!</div>30 хоногийн эрэлтийг амжилттай дуусгалаа!</div>`:`<p class="mut xs" style="margin:0">Өнөөдрийн нүдэн дээр дарж тэмдэглээрэй.</p>`}
+  </div>`;
 }
 function calcStreak(){
   if(!S.completed.length) return 0;

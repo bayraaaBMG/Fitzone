@@ -20,6 +20,12 @@ function renderHome(){
         <div class="card"><span class="xs mut">Зорилгын калори</span><div style="font-family:Archivo;font-weight:900;font-size:26px;margin-top:4px;color:var(--acc)">${nut.cal}</div><span class="xs mut">ккал / өдөр</span></div>
       </div>
 
+      <div class="secttl"><h2>Дасгал хийх</h2></div>
+      <div class="grid g2">
+        <button class="tile acc" id="goHomeWO"><div class="ic">🏠</div><h3>Гэрийн дасгал</h3><p>Тоног хэрэгслэлгүй, хаана ч хийнэ</p></button>
+        <button class="tile" id="goGymWO"><div class="ic">🏋️</div><h3>Жийм дасгал</h3><p>Тоног төхөөрөмжтэй, хүчтэй ачаалал</p></button>
+      </div>
+
       <div class="secttl"><h2>Дараагийн дасгал</h2><a data-tab="plan" class="goTab">Бүгд ›</a></div>
       <div class="card">
         <div class="dayhead" style="margin:0 0 12px;background:transparent;border:none;padding:0">
@@ -41,6 +47,8 @@ function renderHome(){
     </div>`;
   topWire();
   document.getElementById('goNext').onclick=()=>openDay(nIdx);
+  document.getElementById('goHomeWO').onclick=()=>{ libF.loc='home'; S.tab='library'; render(); };
+  document.getElementById('goGymWO').onclick=()=>{ libF.loc='gym'; S.tab='library'; render(); };
   app.querySelectorAll('.goTab').forEach(a=>a.onclick=()=>{S.tab=a.dataset.tab;render();});
   app.querySelectorAll('.ai').forEach(b=> b.onclick=()=>aiReply(b.dataset.q));
 }
