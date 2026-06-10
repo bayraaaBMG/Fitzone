@@ -18,14 +18,16 @@ function renderOnboard(){
       </div>
       <div style="margin-top:18px"><button class="btn p" id="start">Эхлэх — 1 минут ⚡</button></div>
       <div class="grid g2" style="margin-top:14px">
-        <div class="tile"><div class="ic">🏠</div><h3>Гэрийн дасгал</h3><p>Тоног төхөөрөмжгүй ч болно</p></div>
-        <div class="tile"><div class="ic">🏋️</div><h3>Жийм хөтөлбөр</h3><p>PPL, Upper/Lower, Full body</p></div>
-        <div class="tile"><div class="ic">📈</div><h3>Ахиц хянах</h3><p>Жин, streak, график</p></div>
-        <div class="tile acc"><div class="ic">🍳</div><h3>Монгол хоол</h3><p>Бууз, цуйван, тарагаа тохируул</p></div>
+        <button class="tile intro"><div class="ic">🏠</div><h3>Гэрийн дасгал</h3><p>Тоног төхөөрөмжгүй ч болно</p></button>
+        <button class="tile intro"><div class="ic">🏋️</div><h3>Жийм хөтөлбөр</h3><p>PPL, Upper/Lower, Full body</p></button>
+        <button class="tile intro"><div class="ic">📈</div><h3>Ахиц хянах</h3><p>Жин, streak, график</p></button>
+        <button class="tile acc intro"><div class="ic">🍳</div><h3>Монгол хоол</h3><p>Бууз, цуйван, тарагаа тохируул</p></button>
       </div>
       <p class="xs mut center" style="margin-top:20px">Эмчилгээний зөвлөгөө биш. Гэмтэл, өвчтэй бол эмчтэйгээ зөвлөл.</p>
     </div>`;
-    document.getElementById('start').onclick=()=>{ step=1; renderOnboard(); };
+    const goStart=()=>{ step=1; renderOnboard(); };
+    document.getElementById('start').onclick=goStart;
+    app.querySelectorAll('.tile.intro').forEach(t=> t.onclick=goStart);
     return;
   }
   // multi-step form

@@ -44,6 +44,7 @@ function renderHome(){
         ${['Өнөөдөр ядарч байна','Гэдэс багасгах','20 минутын дасгал','Нуруу өвдөхгүй'].map(q=>
           `<button class="chip ai" data-q="${esc(q)}">💬 ${q}</button>`).join('')}
       </div>
+      <p class="xs mut center" style="margin-top:20px">Эмчилгээний зөвлөгөө биш. Гэмтэл, өвчтэй бол эмчтэйгээ зөвлөл.</p>
     </div>`;
   topWire();
   document.getElementById('goNext').onclick=()=>openDay(nIdx);
