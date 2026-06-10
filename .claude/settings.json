@@ -14,7 +14,8 @@
       "Read(//tmp/**)",
       "Bash(node test4.js)",
       "Bash(node --check js/state.js)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "WebSearch"
     ]
   }
 }
