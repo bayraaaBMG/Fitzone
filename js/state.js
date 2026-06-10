@@ -24,6 +24,8 @@ let S = {
   weights:[],           // [{d:'YYYY-MM-DD', kg}]
   completed:[],         // ['YYYY-MM-DD']
   challenge:null,       // {start:'YYYY-MM-DD', done:['YYYY-MM-DD']} | null
+  pantry:[],            // ['egg','beef',...] pantry tags the user has at home
+  foodLog:{},           // {'YYYY-MM-DD': {breakfast:[],lunch:[],dinner:[],snack:[]}}
   tab:'home',
 };
 
@@ -36,5 +38,10 @@ function toast(msg){
   document.body.appendChild(t); clearTimeout(toastT);
   toastT=setTimeout(()=>t.remove(), 2200);
 }
-async function save(){ await Store.set('mf_state', {profile:S.profile, plan:S.plan, weights:S.weights, completed:S.completed, challenge:S.challenge}); }
+async function save(){ await Store.set('mf_state', {profile:S.profile, plan:S.plan, weights:S.weights, completed:S.completed, challenge:S.challenge, pantry:S.pantry, foodLog:S.foodLog}); }
 function esc(t){ return (t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function todayLog(){
+  const d=today();
+  if(!S.foodLog[d]) S.foodLog[d]={breakfast:[],lunch:[],dinner:[],snack:[]};
+  return S.foodLog[d];
+}

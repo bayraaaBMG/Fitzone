@@ -1,5 +1,19 @@
 /* ---------- NUTRITION ---------- */
 let actLevel=1.45;
+let planDays=7;
+let recipeF='all';
+
+function consumedToday(){
+  const log=todayLog();
+  const t={kcal:0,protein:0,carb:0,fat:0};
+  ['breakfast','lunch','dinner','snack'].forEach(slot=>{
+    (log[slot]||[]).forEach(it=>{
+      t.kcal+=it.kcal||0; t.protein+=it.protein||0; t.carb+=it.carb||0; t.fat+=it.fat||0;
+    });
+  });
+  return t;
+}
+
 function renderNutrition(){
   const p=S.profile;
   const n=nutrition(p, actLevel);
@@ -7,6 +21,7 @@ function renderNutrition(){
   const cat=bmiCategory(b);
   const bpos=Math.min(100,Math.max(0,(b-15)/(40-15)*100));
   const acts=[['Сууринтай',1.3],['Дунд зэрэг',1.45],['Идэвхтэй',1.65],['Маш идэвхтэй',1.8]];
+  const c=consumedToday();
   app.innerHTML = `
     ${topBar()}
     <div class="view">
@@ -19,15 +34,18 @@ function renderNutrition(){
 
       <div class="card" style="margin-top:16px">
         <div style="display:flex;justify-content:space-between;align-items:baseline">
-          <div><span class="xs mut">${n.label} калори</span>
-            <div style="font-family:Archivo;font-weight:900;font-size:34px;color:var(--acc);line-height:1">${n.cal}</div>
-            <span class="xs mut">ккал / өдөр · хадгалах ${n.tdee}</span></div>
+          <div><span class="xs mut">Өнөөдөр идсэн</span>
+            <div style="font-family:Archivo;font-weight:900;font-size:34px;color:var(--acc);line-height:1">${c.kcal}</div>
+            <span class="xs mut">/ ${n.cal} ккал зорилго (${n.label})</span></div>
         </div>
         <hr class="sep">
-        <div class="macro"><b style="color:var(--coral)">${n.protein}г</b><div class="bar"><i style="width:${pct(n.protein*4,n.cal)}%;background:var(--coral)"></i></div><span class="sm mut" style="width:64px">Уураг</span></div>
-        <div class="macro"><b style="color:var(--acc)">${n.carb}г</b><div class="bar"><i style="width:${pct(n.carb*4,n.cal)}%;background:var(--acc)"></i></div><span class="sm mut" style="width:64px">Нүүрс ус</span></div>
-        <div class="macro"><b style="color:var(--warn)">${n.fat}г</b><div class="bar"><i style="width:${pct(n.fat*9,n.cal)}%;background:var(--warn)"></i></div><span class="sm mut" style="width:64px">Өөх тос</span></div>
+        <div class="macro"><b style="color:var(--coral)">${c.protein}г / ${n.protein}г</b><div class="bar"><i style="width:${pct(c.protein,n.protein)}%;background:var(--coral)"></i></div><span class="sm mut" style="width:64px">Уураг</span></div>
+        <div class="macro"><b style="color:var(--acc)">${c.carb}г / ${n.carb}г</b><div class="bar"><i style="width:${pct(c.carb,n.carb)}%;background:var(--acc)"></i></div><span class="sm mut" style="width:64px">Нүүрс ус</span></div>
+        <div class="macro"><b style="color:var(--warn)">${c.fat}г / ${n.fat}г</b><div class="bar"><i style="width:${pct(c.fat,n.fat)}%;background:var(--warn)"></i></div><span class="sm mut" style="width:64px">Өөх тос</span></div>
       </div>
+
+      <div class="secttl"><h2>Өнөөдрийн тэмдэглэл</h2></div>
+      <div id="diary"></div>
 
       <div class="secttl"><h2>Биеийн жин (BMI)</h2></div>
       <div class="card">
@@ -41,19 +59,200 @@ function renderNutrition(){
         <div class="bmiscale"><span>Дутуу</span><span>Хэвийн</span><span>Илүүдэл</span><span>Таргалалт</span></div>
       </div>
 
-      <div class="secttl"><h2>Монгол хоолоо тохируул</h2></div>
-      <div class="card">
-        ${[
-          ['🥟','Бууз','3–4 ширхэг + ногооны салат. Махан чанартай уураг сайн, гэхдээ гурил, тос ихтэй тул тоогоо барь.'],
-          ['🍜','Цуйван','Хагас порц + илүү мах, ногоо нэмж гурилаа багасга. Уургаа өсгөнө.'],
-          ['🥩','Шарсан мах','Уургийн гол эх үүсвэр. Тосыг нь халбагадаж, шарсан/чанасныг сонго.'],
-          ['🥛','Тараг, аарц','Уураг, кальци өндөр. Чихэргүй цагаан тараг хамгийн зөв.'],
-          ['🥚','Өндөг','Хямд, чанартай уураг. Өглөө 2–3 өндөг гайхалтай эхлэл.'],
-          ['🌾','Овъёос','Удаан шингэдэг нүүрс ус. Өглөөний эрчим, удаан цатгана.'],
-        ].map(([e,t,d])=>`<div class="foodrow"><div class="e">${e}</div><div><b>${t}</b><div class="xs mut" style="margin-top:2px">${d}</div></div></div>`).join('')}
+      <div class="secttl"><h2>Гэрийн нөөц</h2></div>
+      <p class="mut sm" style="margin:0 0 12px">Гэртээ байгаа бүтээгдэхүүнээ тэмдэглээрэй — тэдгээрт тулгуурлан хоолны санаа гаргана.</p>
+      <div id="pantry"></div>
+
+      <div class="secttl"><h2>Хоолны санаа</h2></div>
+      <div class="scrollrow" id="recipeF"></div>
+      <div id="recipelist" style="margin-top:12px"></div>
+
+      <div class="secttl"><h2>Хоолны төлөвлөгөө</h2></div>
+      <div class="chiprow" id="planDaysSel">
+        <button class="chip ${planDays===7?'on':''}" data-d="7">7 хоног</button>
+        <button class="chip ${planDays===30?'on':''}" data-d="30">30 хоног</button>
       </div>
+      <div id="mealplan" style="margin-top:12px"></div>
+
       <p class="xs mut center" style="margin-top:16px">Тооцоо нь ойролцоо. Эрүүл мэндийн онцгой нөхцөлд мэргэжлийн хүнтэй зөвлөл.</p>
     </div>`;
   topWire();
   app.querySelectorAll('#acts .chip').forEach(c=>c.onclick=()=>{actLevel=+c.dataset.v; renderNutrition();});
+  app.querySelectorAll('#planDaysSel .chip').forEach(c=>c.onclick=()=>{
+    planDays=+c.dataset.d;
+    app.querySelectorAll('#planDaysSel .chip').forEach(x=>x.classList.toggle('on',x===c));
+    drawMealPlan();
+  });
+  drawDiary();
+  drawPantry();
+  drawRecipeFilter();
+  drawRecipeList();
+  drawMealPlan();
+}
+
+/* ---------- food diary ---------- */
+function drawDiary(){
+  const log=todayLog();
+  const slots=['breakfast','lunch','dinner','snack'];
+  document.getElementById('diary').innerHTML = slots.map(slot=>{
+    const items=log[slot]||[];
+    return `<div class="card" style="margin-top:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <b>${MEAL_NAMES[slot]}</b>
+        <button class="chip" data-slot="${slot}" data-add="1">+ Нэмэх</button>
+      </div>
+      ${items.length? items.map((it,i)=>`<div class="foodrow"><div class="e">🍽</div><div style="flex:1"><b>${esc(it.n)}</b><div class="xs mut">${it.kcal} ккал · Б${it.protein||0} Н${it.carb||0} Ө${it.fat||0}</div></div><button class="x" data-slot="${slot}" data-i="${i}">✕</button></div>`).join('')
+       : `<p class="xs mut" style="margin:10px 0 0">Бүртгэл алга</p>`}
+    </div>`;
+  }).join('');
+  document.querySelectorAll('#diary [data-add]').forEach(b=>b.onclick=()=>openAddFood(b.dataset.slot));
+  document.querySelectorAll('#diary .x').forEach(b=>b.onclick=()=>removeLogItem(b.dataset.slot, +b.dataset.i));
+}
+function addLogItem(slot, item){
+  todayLog()[slot].push(item);
+  save();
+  renderNutrition();
+}
+function removeLogItem(slot, idx){
+  todayLog()[slot].splice(idx,1);
+  save();
+  renderNutrition();
+}
+function openAddFood(slot){
+  const sheet=mkSheet();
+  sheet.querySelector('.inner').innerHTML = `
+    <div class="grab"></div>
+    <h2 class="disp" style="font-size:20px">${MEAL_NAMES[slot]} — хоол нэмэх</h2>
+    <input class="txin" id="foodSearch" placeholder="Жорын нэрээр хайх..." style="margin-top:12px">
+    <div id="foodResults" style="margin-top:6px"></div>
+    <hr class="sep">
+    <div class="block">
+      <div class="lab">Гараар оруулах</div>
+      <input class="txin" id="mfName" placeholder="Хоолны нэр" style="margin-bottom:8px">
+      <div class="grid g2">
+        <input class="txin" id="mfKcal" type="number" placeholder="Ккал">
+        <input class="txin" id="mfProtein" type="number" placeholder="Уураг (г)">
+        <input class="txin" id="mfCarb" type="number" placeholder="Нүүрс ус (г)">
+        <input class="txin" id="mfFat" type="number" placeholder="Өөх тос (г)">
+      </div>
+      <button class="btn p" id="mfAdd" style="margin-top:10px;width:100%">Нэмэх</button>
+    </div>`;
+  const results=sheet.querySelector('#foodResults');
+  const search=sheet.querySelector('#foodSearch');
+  function drawResults(){
+    const q=search.value.trim().toLowerCase();
+    const list = q ? RECIPES.filter(r=>r.n.toLowerCase().includes(q)) : RECIPES.filter(r=>r.meal.includes(slot));
+    results.innerHTML = list.slice(0,8).map(r=>`<div class="foodrow" data-id="${r.id}" style="cursor:pointer"><div class="e">${r.e}</div><div style="flex:1"><b>${r.n}</b><div class="xs mut">${r.kcal} ккал · Уураг ${r.protein}г</div></div></div>`).join('') || `<p class="xs mut">Илэрц алга</p>`;
+    results.querySelectorAll('.foodrow').forEach(row=>row.onclick=()=>{
+      const r=RECIPES.find(x=>x.id===row.dataset.id);
+      addLogItem(slot, {n:r.n, kcal:r.kcal, protein:r.protein, carb:r.carb, fat:r.fat, recipeId:r.id});
+      closeSheet();
+    });
+  }
+  drawResults();
+  search.oninput=drawResults;
+  sheet.querySelector('#mfAdd').onclick=()=>{
+    const nm=sheet.querySelector('#mfName').value.trim();
+    if(!nm){ toast('Хоолны нэрээ оруулна уу'); return; }
+    addLogItem(slot, {
+      n:nm,
+      kcal:+sheet.querySelector('#mfKcal').value||0,
+      protein:+sheet.querySelector('#mfProtein').value||0,
+      carb:+sheet.querySelector('#mfCarb').value||0,
+      fat:+sheet.querySelector('#mfFat').value||0,
+    });
+    closeSheet();
+  };
+}
+
+/* ---------- pantry ---------- */
+function drawPantry(){
+  document.getElementById('pantry').innerHTML = PANTRY_GROUPS.map(g=>`
+    <p class="xs mut" style="margin:10px 0 6px">${g.cat.toUpperCase()}</p>
+    <div class="scrollrow">
+      ${g.items.map(it=>`<button class="chip ${S.pantry.includes(it.tag)?'on':''}" data-tag="${it.tag}">${it.e} ${it.n}</button>`).join('')}
+    </div>`).join('');
+  document.querySelectorAll('#pantry .chip').forEach(c=>c.onclick=()=>{
+    const tag=c.dataset.tag;
+    if(S.pantry.includes(tag)) S.pantry=S.pantry.filter(t=>t!==tag);
+    else S.pantry=[...S.pantry, tag];
+    save();
+    c.classList.toggle('on');
+    drawMealPlan();
+  });
+}
+
+/* ---------- recipe browser ---------- */
+function drawRecipeFilter(){
+  const opts=[['all','Бүгд'],['breakfast','Өглөө'],['lunch','Өдөр'],['dinner','Орой'],['snack','Зууш']];
+  document.getElementById('recipeF').innerHTML = opts.map(([v,nm])=>`<button class="chip ${recipeF===v?'on':''}" data-v="${v}">${nm}</button>`).join('');
+  document.querySelectorAll('#recipeF .chip').forEach(c=>c.onclick=()=>{
+    recipeF=c.dataset.v;
+    document.querySelectorAll('#recipeF .chip').forEach(x=>x.classList.toggle('on',x===c));
+    drawRecipeList();
+  });
+}
+function drawRecipeList(){
+  const list = recipeF==='all' ? RECIPES : RECIPES.filter(r=>r.meal.includes(recipeF));
+  document.getElementById('recipelist').innerHTML = list.map(r=>`
+    <button class="excard" data-id="${r.id}">
+      <div class="thumb">${r.e}</div>
+      <div class="info">
+        <b>${r.n}</b>
+        <div class="tags">
+          <span class="vtag">⏱ ${r.time} мин</span>
+          <span class="vtag">${LVL_NAMES[r.lvl]}</span>
+        </div>
+        <span class="sr2">${r.kcal} ккал</span>
+      </div>
+      <div class="chev">›</div>
+    </button>`).join('');
+  document.querySelectorAll('#recipelist .excard').forEach(b=>b.onclick=()=>openRecipe(b.dataset.id));
+}
+
+/* ---------- meal plan ---------- */
+function drawMealPlan(){
+  const plan=generateMealPlan(S.pantry, planDays);
+  const slots=['breakfast','lunch','dinner','snack'];
+  document.getElementById('mealplan').innerHTML = plan.map((day,i)=>`
+    <div class="card daycard" style="margin-top:10px">
+      <b>${i+1}-р өдөр</b>
+      <div class="daymeals">
+        ${slots.map(slot=>{const r=day[slot]; return `<button class="dmeal" data-id="${r.id}"><span class="e">${r.e}</span><span class="n">${MEAL_NAMES[slot]}: ${r.n}</span><span class="k">${r.kcal} ккал</span></button>`;}).join('')}
+      </div>
+    </div>`).join('');
+  document.querySelectorAll('#mealplan .dmeal').forEach(b=>b.onclick=()=>openRecipe(b.dataset.id));
+}
+
+/* ---------- recipe detail ---------- */
+function openRecipe(id){
+  const r=RECIPES.find(x=>x.id===id);
+  const sheet=mkSheet();
+  sheet.querySelector('.inner').innerHTML = `
+    <div class="grab"></div>
+    <div class="bigthumb" style="display:grid;place-items:center;font-size:64px">${r.e}</div>
+    <h2 class="disp" style="font-size:23px">${r.n}</h2>
+    <div style="margin-top:8px">
+      <span class="vtag">⏱ ${r.time} мин</span><span class="vtag">${LVL_NAMES[r.lvl]}</span>
+      ${r.meal.map(m=>`<span class="vtag">${MEAL_NAMES[m]}</span>`).join('')}
+    </div>
+    <div class="kv">
+      <div class="k"><b>${r.kcal}</b><span>Ккал</span></div>
+      <div class="k"><b>${r.protein}г</b><span>Уураг</span></div>
+      <div class="k"><b>${r.carb}г</b><span>Нүүрс ус</span></div>
+      <div class="k"><b>${r.fat}г</b><span>Өөх тос</span></div>
+    </div>
+    <div class="block"><div class="lab">🛒 Орц</div><div class="note">${r.ingredients.map(esc).join('<br>')}</div></div>
+    <div class="block"><div class="lab">📋 Хийх заавар</div><div class="note">${esc(r.steps)}</div></div>
+    <a class="btn g" style="margin-top:14px;width:100%" href="${youtubeSearchUrl(r.n)}" target="_blank" rel="noopener">▶ YouTube-с заавар хайх</a>
+    <div class="block"><div class="lab">➕ Тэмдэглэлд нэмэх</div>
+      <div class="chiprow">
+        ${r.meal.map(m=>`<button class="chip" data-slot="${m}">${MEAL_NAMES[m]}</button>`).join('')}
+      </div>
+    </div>`;
+  sheet.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>{
+    addLogItem(b.dataset.slot, {n:r.n, kcal:r.kcal, protein:r.protein, carb:r.carb, fat:r.fat, recipeId:r.id});
+    closeSheet();
+    toast('Тэмдэглэлд нэмлээ ✅');
+  });
 }

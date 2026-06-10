@@ -100,6 +100,27 @@ function nutrition(p, activity){
 }
 function pct(part,whole){ return Math.min(100,Math.round(part/whole*100)); }
 
+/* ---------- meal planner (pantry-aware) ---------- */
+function recipeScore(r, pantry){
+  if(!r.needs.length) return 1;
+  return r.needs.filter(t=>pantry.includes(t)).length / r.needs.length;
+}
+function generateMealPlan(pantry, days){
+  const slots=['breakfast','lunch','dinner','snack'];
+  const plan=[];
+  for(let d=0; d<days; d++){
+    const day={};
+    slots.forEach(slot=>{
+      const cands = RECIPES.filter(r=>r.meal.includes(slot));
+      cands.sort((a,b)=> recipeScore(b,pantry) - recipeScore(a,pantry));
+      const top = cands.filter(r=> recipeScore(r,pantry) === recipeScore(cands[0],pantry));
+      day[slot] = top[d % top.length];
+    });
+    plan.push(day);
+  }
+  return plan;
+}
+
 /* ---------- 7-day week schedule ---------- */
 // spreads `numDays` workout days evenly across a Mon..Sun week.
 // returns array of length 7: index into S.plan, or -1 for a rest day.

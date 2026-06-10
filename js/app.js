@@ -6,6 +6,7 @@
       S.profile=saved.profile; S.plan=saved.plan||generatePlan(saved.profile);
       S.weights=saved.weights||[]; S.completed=saved.completed||[];
       S.challenge=saved.challenge||null;
+      S.pantry=saved.pantry||[]; S.foodLog=saved.foodLog||{};
       S.tab='home';
     }
   }catch(e){}
