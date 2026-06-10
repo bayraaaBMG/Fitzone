@@ -1,5 +1,6 @@
 /* ---------- boot ---------- */
 (async function init(){
+  initFirebase();
   try{
     const saved = await Store.get('mf_state');
     if(saved && saved.profile){

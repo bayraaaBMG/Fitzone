@@ -2,6 +2,7 @@
 let actLevel=1.45;
 let planDays=7;
 let recipeF='all';
+let recipeCat='all';
 
 function consumedToday(){
   const log=todayLog();
@@ -65,6 +66,7 @@ function renderNutrition(){
 
       <div class="secttl"><h2>Хоолны санаа</h2></div>
       <div class="scrollrow" id="recipeF"></div>
+      <div class="scrollrow" id="recipeCat" style="margin-top:6px"></div>
       <div id="recipelist" style="margin-top:12px"></div>
 
       <div class="secttl"><h2>Хоолны төлөвлөгөө</h2></div>
@@ -86,6 +88,7 @@ function renderNutrition(){
   drawDiary();
   drawPantry();
   drawRecipeFilter();
+  drawRecipeCatFilter();
   drawRecipeList();
   drawMealPlan();
 }
@@ -101,12 +104,19 @@ function drawDiary(){
         <b>${MEAL_NAMES[slot]}</b>
         <button class="chip" data-slot="${slot}" data-add="1">+ Нэмэх</button>
       </div>
-      ${items.length? items.map((it,i)=>`<div class="foodrow"><div class="e">🍽</div><div style="flex:1"><b>${esc(it.n)}</b><div class="xs mut">${it.kcal} ккал · Б${it.protein||0} Н${it.carb||0} Ө${it.fat||0}</div></div><button class="x" data-slot="${slot}" data-i="${i}">✕</button></div>`).join('')
+      ${items.length? items.map((it,i)=>{
+        const thumb = it.photo ? `<img class="foodthumb" data-photo="${esc(it.photo)}" src="${esc(it.photo)}" alt="">` : `<div class="e">🍽</div>`;
+        return `<div class="foodrow">${thumb}<div style="flex:1"><b>${esc(it.n)}</b><div class="xs mut">${it.kcal} ккал · Б${it.protein||0} Н${it.carb||0} Ө${it.fat||0}</div></div><button class="x" data-slot="${slot}" data-i="${i}">✕</button></div>`;
+      }).join('')
        : `<p class="xs mut" style="margin:10px 0 0">Бүртгэл алга</p>`}
     </div>`;
   }).join('');
   document.querySelectorAll('#diary [data-add]').forEach(b=>b.onclick=()=>openAddFood(b.dataset.slot));
   document.querySelectorAll('#diary .x').forEach(b=>b.onclick=()=>removeLogItem(b.dataset.slot, +b.dataset.i));
+  document.querySelectorAll('#diary .foodthumb').forEach(img=>img.onclick=()=>{
+    const sheet=mkSheet();
+    sheet.querySelector('.inner').innerHTML = `<div class="grab"></div><img src="${img.dataset.photo}" style="width:100%;border-radius:12px;margin-top:8px" alt="">`;
+  });
 }
 function addLogItem(slot, item){
   todayLog()[slot].push(item);
@@ -123,6 +133,12 @@ function openAddFood(slot){
   sheet.querySelector('.inner').innerHTML = `
     <div class="grab"></div>
     <h2 class="disp" style="font-size:20px">${MEAL_NAMES[slot]} — хоол нэмэх</h2>
+    <div class="askrow" style="margin-top:12px">
+      <span class="sm mut" style="flex:1">📷 Хийсэн хоолныхоо зургийг хавсаргах (заавал биш)</span>
+      <label class="iconbtn" for="diaryImg">📷</label>
+      <input type="file" id="diaryImg" accept="image/*" hidden>
+    </div>
+    <div id="diaryImgPreview"></div>
     <input class="txin" id="foodSearch" placeholder="Жорын нэрээр хайх..." style="margin-top:12px">
     <div id="foodResults" style="margin-top:6px"></div>
     <hr class="sep">
@@ -139,14 +155,33 @@ function openAddFood(slot){
     </div>`;
   const results=sheet.querySelector('#foodResults');
   const search=sheet.querySelector('#foodSearch');
+
+  let attachedFile=null;
+  sheet.querySelector('#diaryImg').onchange=e=>{
+    const f=e.target.files[0];
+    const prev=sheet.querySelector('#diaryImgPreview');
+    attachedFile=f||null;
+    if(!f){ prev.innerHTML=''; return; }
+    prev.innerHTML=`<div class="askpreview"><img src="${URL.createObjectURL(f)}" alt=""><span class="xs">Зураг хавсаргасан</span><button id="diaryImgX">✕</button></div>`;
+    sheet.querySelector('#diaryImgX').onclick=()=>{ e.target.value=''; attachedFile=null; prev.innerHTML=''; };
+  };
+
+  function finishAdd(item, btn){
+    if(!attachedFile){ addLogItem(slot, item); closeSheet(); return; }
+    if(btn){ btn.textContent='Хуулж байна…'; btn.disabled=true; }
+    uploadMealPhoto(attachedFile)
+      .then(url=>{ item.photo=url; })
+      .catch(()=>{ toast('Зураг хадгалах боломжгүй байна, хоол хэвээр нэмэгдлээ'); })
+      .then(()=>{ addLogItem(slot, item); closeSheet(); });
+  }
+
   function drawResults(){
     const q=search.value.trim().toLowerCase();
     const list = q ? RECIPES.filter(r=>r.n.toLowerCase().includes(q)) : RECIPES.filter(r=>r.meal.includes(slot));
     results.innerHTML = list.slice(0,8).map(r=>`<div class="foodrow" data-id="${r.id}" style="cursor:pointer"><div class="e">${r.e}</div><div style="flex:1"><b>${r.n}</b><div class="xs mut">${r.kcal} ккал · Уураг ${r.protein}г</div></div></div>`).join('') || `<p class="xs mut">Илэрц алга</p>`;
     results.querySelectorAll('.foodrow').forEach(row=>row.onclick=()=>{
       const r=RECIPES.find(x=>x.id===row.dataset.id);
-      addLogItem(slot, {n:r.n, kcal:r.kcal, protein:r.protein, carb:r.carb, fat:r.fat, recipeId:r.id});
-      closeSheet();
+      finishAdd({n:r.n, kcal:r.kcal, protein:r.protein, carb:r.carb, fat:r.fat, recipeId:r.id});
     });
   }
   drawResults();
@@ -154,14 +189,13 @@ function openAddFood(slot){
   sheet.querySelector('#mfAdd').onclick=()=>{
     const nm=sheet.querySelector('#mfName').value.trim();
     if(!nm){ toast('Хоолны нэрээ оруулна уу'); return; }
-    addLogItem(slot, {
+    finishAdd({
       n:nm,
       kcal:+sheet.querySelector('#mfKcal').value||0,
       protein:+sheet.querySelector('#mfProtein').value||0,
       carb:+sheet.querySelector('#mfCarb').value||0,
       fat:+sheet.querySelector('#mfFat').value||0,
-    });
-    closeSheet();
+    }, sheet.querySelector('#mfAdd'));
   };
 }
 
@@ -192,8 +226,17 @@ function drawRecipeFilter(){
     drawRecipeList();
   });
 }
+function drawRecipeCatFilter(){
+  const opts=[['all','Бүгд'], ...Object.entries(RECIPE_CATS)];
+  document.getElementById('recipeCat').innerHTML = opts.map(([v,nm])=>`<button class="chip ${recipeCat===v?'on':''}" data-v="${v}">${nm}</button>`).join('');
+  document.querySelectorAll('#recipeCat .chip').forEach(c=>c.onclick=()=>{
+    recipeCat=c.dataset.v;
+    document.querySelectorAll('#recipeCat .chip').forEach(x=>x.classList.toggle('on',x===c));
+    drawRecipeList();
+  });
+}
 function drawRecipeList(){
-  const list = recipeF==='all' ? RECIPES : RECIPES.filter(r=>r.meal.includes(recipeF));
+  const list = RECIPES.filter(r=>(recipeF==='all' || r.meal.includes(recipeF)) && (recipeCat==='all' || r.tags.includes(recipeCat)));
   document.getElementById('recipelist').innerHTML = list.map(r=>`
     <button class="excard" data-id="${r.id}">
       <div class="thumb">${r.e}</div>
@@ -235,6 +278,7 @@ function openRecipe(id){
     <div style="margin-top:8px">
       <span class="vtag">⏱ ${r.time} мин</span><span class="vtag">${LVL_NAMES[r.lvl]}</span>
       ${r.meal.map(m=>`<span class="vtag">${MEAL_NAMES[m]}</span>`).join('')}
+      ${(r.tags||[]).map(t=>`<span class="vtag">${RECIPE_CATS[t]}</span>`).join('')}
     </div>
     <div class="kv">
       <div class="k"><b>${r.kcal}</b><span>Ккал</span></div>
