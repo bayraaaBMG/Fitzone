@@ -91,6 +91,18 @@ input,select{font-family:inherit; font-size:16px}
 .txin{width:100%; background:var(--card); border:1px solid var(--line2); color:var(--txt);
   border-radius:11px; padding:14px 14px; outline:none; transition:.15s}
 .txin:focus{border-color:var(--acc)}
+
+/* ---------- ask-the-doctor ---------- */
+.askrow{display:flex; align-items:center}
+.askrow .txin{flex:1; width:auto}
+label.iconbtn{cursor:pointer}
+.iconbtn.acc{background:var(--acc); color:#0b0d08; border-color:var(--acc)}
+.askpreview{display:flex; align-items:center; gap:8px; margin-top:10px; padding:8px 10px;
+  background:var(--card2); border:1px solid var(--line2); border-radius:11px}
+.askpreview img{width:36px; height:36px; object-fit:cover; border-radius:8px; flex:none}
+.askpreview button{margin-left:auto; color:var(--mut); font-size:16px}
+.askresp{margin-top:16px; padding-top:16px; border-top:1px solid var(--line); font-size:14px; line-height:1.55}
+.askresp img{width:100%; max-height:180px; object-fit:cover; border-radius:12px; margin-bottom:12px; border:1px solid var(--line)}
 .seg{display:flex; gap:7px; flex-wrap:wrap}
 .step{height:4px; background:var(--line); border-radius:4px; flex:1}
 .step.on{background:var(--acc)}

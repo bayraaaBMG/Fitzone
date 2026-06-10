@@ -39,10 +39,21 @@ function renderHome(){
         ${next.ex.length>3?`<p class="xs mut center" style="margin:10px 0 0">+${next.ex.length-3} дасгал</p>`:''}
       </div>
 
-      <div class="secttl"><h2>Хурдан туслах</h2></div>
-      <div class="scrollrow">
-        ${['Өнөөдөр ядарч байна','Гэдэс багасгах','20 минутын дасгал','Нуруу өвдөхгүй'].map(q=>
-          `<button class="chip ai" data-q="${esc(q)}">💬 ${q}</button>`).join('')}
+      <div class="secttl"><h2>Эмчийн зөвлөгөө 🩺</h2></div>
+      <div class="card">
+        <p class="sm mut" style="margin:0 0 12px">Юу өвдөж, эвгүй байгаагаа бичээрэй — тохирсон зөвлөмж өгье. Хүсвэл зураг хавсаргаж болно.</p>
+        <div class="scrollrow" style="margin:0 0 12px; padding-bottom:0">
+          ${['Өнөөдөр ядарч байна','Гэдэс багасгах','20 минутын дасгал','Өвдөг өвдөж байна','Нуруу өвдөж байна','Мөр өвдөж байна'].map(q=>
+            `<button class="chip ai" data-q="${esc(q)}">💬 ${q}</button>`).join('')}
+        </div>
+        <div class="askrow">
+          <input class="txin" id="askInput" placeholder="Жишээ: Өвдөг өвдөж байна, squat хийж болох уу?">
+          <label class="iconbtn" for="askImg" title="Зураг хавсаргах">📷</label>
+          <input type="file" id="askImg" accept="image/*" hidden>
+          <button class="iconbtn acc" id="askBtn" aria-label="Илгээх">→</button>
+        </div>
+        <div id="askPreview"></div>
+        <div id="askResult"></div>
       </div>
       <p class="xs mut center" style="margin-top:20px">Эмчилгээний зөвлөгөө биш. Гэмтэл, өвчтэй бол эмчтэйгээ зөвлөл.</p>
     </div>`;
@@ -51,15 +62,45 @@ function renderHome(){
   document.getElementById('goHomeWO').onclick=()=>{ libF.loc='home'; S.tab='library'; render(); };
   document.getElementById('goGymWO').onclick=()=>{ libF.loc='gym'; S.tab='library'; render(); };
   app.querySelectorAll('.goTab').forEach(a=>a.onclick=()=>{S.tab=a.dataset.tab;render();});
-  app.querySelectorAll('.ai').forEach(b=> b.onclick=()=>aiReply(b.dataset.q));
+  app.querySelectorAll('.ai').forEach(b=> b.onclick=()=>{ document.getElementById('askInput').value=b.dataset.q; askDoctor(); });
+  document.getElementById('askBtn').onclick=askDoctor;
+  document.getElementById('askInput').onkeydown=e=>{ if(e.key==='Enter') askDoctor(); };
+  document.getElementById('askImg').onchange=e=>{
+    const f=e.target.files[0];
+    const prev=document.getElementById('askPreview');
+    if(!f){ prev.innerHTML=''; return; }
+    prev.innerHTML=`<div class="askpreview"><img src="${URL.createObjectURL(f)}" alt=""><span class="xs">Зураг хавсаргасан</span><button id="askImgX">✕</button></div>`;
+    document.getElementById('askImgX').onclick=()=>{ e.target.value=''; prev.innerHTML=''; };
+  };
 }
 
-/* tiny rule-based "AI coach" responses */
-function aiReply(q){
-  let msg='';
-  if(q.includes('ядар')) msg='Зүгээр. Өнөөдөр хөнгөн өдөр болгоё: 15–20 мин сунгалт + хөнгөн алхалт. Маргааш эрчтэй эргэж ороорой.';
-  else if(q.includes('Гэдэс')) msg='Гэдсийг "цэгцэлж" хасах боломжгүй — нийт өөх багасна. Калорийн дутагдал + Plank, Bicycle crunch, Mountain climber тогтмол хий.';
-  else if(q.includes('20')) msg='20 минутын full-body: Squat, Push up, Glute bridge, Plank — тус бүр 3 set, амралт богино. Дасгалын сангаас сонгоорой.';
-  else msg='Нуруунд ээлтэй: Glute bridge, Bird dog, Plank, Wall sit. Deadlift зэрэг ачаалал ихтэйг түр алгасаарай. Хурц өвдвөл эмчтэй уулз.';
-  toast(msg);
+/* rule-based "doctor" advice — keyword matching, no real diagnosis */
+function askDoctor(){
+  const q=(document.getElementById('askInput').value||'').trim();
+  const file=document.getElementById('askImg').files[0];
+  let msg=healthAdvice(q);
+  let imgHtml='';
+  if(file){
+    imgHtml=`<img src="${URL.createObjectURL(file)}" alt="">`;
+    msg += ' Хавсаргасан зургийг автоматаар шинжлэх боломжгүй ч энэ нь эмчид үзүүлэхэд тань хэрэг болно.';
+  }
+  document.getElementById('askResult').innerHTML = `<div class="askresp">${imgHtml}<p>${esc(msg)}</p>
+    <p class="xs mut" style="margin-top:10px">⚠️ Энэ бол ерөнхий зөвлөмж — оношлогоо биш. Шинж тэмдэг үргэлжилбэл/хүндэрвэл эмчид заавал үзүүлээрэй.</p></div>`;
+}
+
+function healthAdvice(q){
+  const t=(q||'').toLowerCase();
+  const has=(...ws)=>ws.some(w=>t.includes(w));
+  if(!t) return 'Юу өвдөж байгаа эсвэл ямар асуулт байгаагаа дээрх талбарт бичнэ үү.';
+  if(has('ядар')) return 'Зүгээр. Өнөөдөр хөнгөн өдөр болгоё: 15–20 мин сунгалт + хөнгөн алхалт. Маргааш эрчтэй эргэж ороорой.';
+  if(has('гэдэс')) return 'Гэдсийг "цэгцэлж" хасах боломжгүй — нийт өөх багасна. Калорийн дутагдал + Plank, Bicycle crunch, Mountain climber тогтмол хий.';
+  if(has('20')) return '20 минутын full-body: Squat, Push up, Glute bridge, Plank — тус бүр 3 set, амралт богино. Дасгалын сангаас сонгоорой.';
+  if(has('цээж','амьсгаад','зүрх')) return '⚠️ Дасгал хийж байхдаа цээжээр огцом өвдөх, амьсгаадах мэдрэмж гарвал шууд зогсоож амраарай — энэ нь зүрхтэй холбоотой байж болзошгүй тул яаралтай эмчид хандаарай.';
+  if(has('өвдөг','овдог')) return 'Өвдөгний эвгүйцэлтэй үед Squat, Lunge, үсрэлттэй дасгалуудыг түр алгасаарай. Glute bridge, хөнгөн Wall sit, сунгалт хий. Хөл шулуун дээр өвдвөл ачаалал/гүнзгийрэлтийг бууруул.';
+  if(has('нуруу','бэлхүүс','бэлхуус')) return 'Нурууны эвгүйцэлтэй үед Deadlift, жинтэй Squat, Sit up зэргийг алгасаж Glute bridge, Bird dog, Plank, зөөлөн сунгалт хий. Нуруугаа дугуйлахгүй, тэгш байлгаарай.';
+  if(has('мөр','мөрөн')) return 'Мөрний эвгүйцэлтэй үед Overhead press, Push up, Pike push up зэргийг түр алгасаж, өвдөлгүй хүрээнд хөнгөн сунгалт, Band дасгал хий.';
+  if(has('гартаа','гарын','бугуй','тохой','мутар')) return 'Гар/бугуй/тохойн эвгүйцэлтэй үед Push up, Curl, Pushdown зэргийг алгасаж доод биеийн дасгал (Squat, Lunge, Glute bridge, Plank-аа fist дээр) руу шилжээрэй.';
+  if(has('хөл','шилбэ','өсгий','осгий','шагай')) return 'Хөл/шагайн эвгүйцэлтэй үед Lunge, Jump, Calf raise, Burpee зэргийг алгасаж сууж/хэвтэж хийдэг дасгал (Glute bridge, Plank, Bird dog, дээд биеийн дасгал) руу шилжээрэй.';
+  if(has('хүзүү','хузуу')) return 'Хүзүүний эвгүйцэлтэй үед Crunch, хүнд Overhead дасгал хийхдээ хүзүүгээ чангалахгүй, толгойгоо төв байрлалд барь. Эвгүйцэл тогтмол үргэлжилбэл эмчид үзүүлээрэй.';
+  return 'Зорилго, дасгал эсвэл өвдөж буй хэсгээ дэлгэрэнгүй бичвэл тохирсон зөвлөмж өгье. Жишээ нь: "Өвдөг өвдөж байна, squat хийж болох уу?"';
 }
