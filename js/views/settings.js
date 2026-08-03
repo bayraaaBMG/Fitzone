@@ -26,8 +26,10 @@ function paintSettings(sheet, sdraft){
       {v:'dumbbell',n:'Гантель'},{v:'barbell',n:'Barbell'},{v:'machine',n:'Machine'},{v:'cable',n:'Cable'}
     ],true)}</div>`:''}
     <button class="btn p" id="st_save" style="margin-top:6px">Хадгалаад хөтөлбөр шинэчлэх</button>
+    <div class="field" style="margin-top:16px"><label>Утас/компьютер дээр суулгах</label>${installBoxHTML()}</div>
     <button class="btn g" id="st_reset" style="margin-top:10px">Бүх өгөгдлийг арилгаж дахин эхлэх</button>
   `;
+  wireInstallBox(sheet);
 
   const syncInputs=()=>{
     sdraft.name=(sheet.querySelector('#st_name').value||'').trim()||sdraft.name;

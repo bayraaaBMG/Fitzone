@@ -91,3 +91,30 @@ function stopRestTimer(){
   if(restTimer){ clearInterval(restTimer); restTimer=null; }
   const bar=document.getElementById('restTimer'); if(bar) bar.remove();
 }
+
+/* ---------- PWA install ---------- */
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+});
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function isIOS(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+function installBoxHTML(){
+  if(isStandalone()) return `<p class="xs mut">✓ Апп болгож суулгасан байна.</p>`;
+  if(deferredInstallPrompt) return `<button class="btn g" id="installBtn">📲 Апп болгож суулгах</button>`;
+  if(isIOS()) return `<p class="xs mut">Safari дээрх "Хуваалцах" 📤 товч дараад "Add to Home Screen" сонговол апп болгож суулгана.</p>`;
+  return `<p class="xs mut">Энэ browser дээр browser-ийн цэснээс "Install app" / "Add to Home Screen" сонголтыг ашиглаж суулгаж болно.</p>`;
+}
+function wireInstallBox(root){
+  const b=root.querySelector('#installBtn');
+  if(!b) return;
+  b.onclick=()=>{
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.finally(()=>{ deferredInstallPrompt=null; });
+  };
+}
