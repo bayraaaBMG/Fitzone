@@ -231,3 +231,17 @@ const RECIPES = [
 const RECIPE_CATS = {mongol:'🇲🇳 Монгол хоол', fatloss:'🔥 Жин хасах', muscle:'💪 Булчин нэмэх'};
 const MEAL_NAMES = {breakfast:'Өглөө', lunch:'Өдөр', dinner:'Орой', snack:'Зууш'};
 function youtubeSearchUrl(name){ return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(name + ' хийх заавар'); }
+
+/* ---------- free-text pantry matching ---------- */
+function allPantryItems(){ return PANTRY_GROUPS.flatMap(g=>g.items); }
+function matchPantryText(text){
+  const items = allPantryItems();
+  const tokens = text.split(/[,\n]+/).map(t=>t.trim().toLowerCase()).filter(Boolean);
+  const matchedTags = new Set(), matchedNames = [], unmatched = [];
+  tokens.forEach(tok=>{
+    const hit = items.find(it=> it.n.toLowerCase()===tok || it.n.toLowerCase().includes(tok) || tok.includes(it.n.toLowerCase()) || it.tag===tok);
+    if(hit){ matchedTags.add(hit.tag); matchedNames.push(hit.n); }
+    else unmatched.push(tok);
+  });
+  return {matchedTags:[...matchedTags], matchedNames, unmatched};
+}

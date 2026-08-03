@@ -65,6 +65,7 @@ function renderNutrition(){
       <div id="pantry"></div>
 
       <div class="secttl"><h2>Хоолны санаа</h2></div>
+      <p class="mut sm" style="margin:0 0 10px">Гэрийн нөөцөндөө тэмдэглэсэн зүйлээрээ шууд хийж болох хоол эхэнд ✓ тэмдэгтэй жагсаана.</p>
       <div class="scrollrow" id="recipeF"></div>
       <div class="scrollrow" id="recipeCat" style="margin-top:6px"></div>
       <div id="recipelist" style="margin-top:12px"></div>
@@ -205,7 +206,12 @@ function drawPantry(){
     <p class="xs mut" style="margin:10px 0 6px">${g.cat.toUpperCase()}</p>
     <div class="scrollrow">
       ${g.items.map(it=>`<button class="chip ${S.pantry.includes(it.tag)?'on':''}" data-tag="${it.tag}">${it.e} ${it.n}</button>`).join('')}
-    </div>`).join('');
+    </div>`).join('') + `
+    <p class="xs mut" style="margin:12px 0 6px">ЭСВЭЛ БИЧЭЭРЭЙ</p>
+    <div class="askrow">
+      <input class="txin" id="pantryText" placeholder="Жишээ: үхрийн мах, өндөг, төмс">
+      <button class="iconbtn acc" id="pantryTextAdd" aria-label="Нэмэх">→</button>
+    </div>`;
   document.querySelectorAll('#pantry .chip').forEach(c=>c.onclick=()=>{
     const tag=c.dataset.tag;
     if(S.pantry.includes(tag)) S.pantry=S.pantry.filter(t=>t!==tag);
@@ -213,7 +219,24 @@ function drawPantry(){
     save();
     c.classList.toggle('on');
     drawMealPlan();
+    drawRecipeList();
   });
+  const addFromText=()=>{
+    const inp=document.getElementById('pantryText');
+    const val=(inp.value||'').trim();
+    if(!val) return;
+    const {matchedTags, matchedNames, unmatched} = matchPantryText(val);
+    matchedTags.forEach(t=>{ if(!S.pantry.includes(t)) S.pantry.push(t); });
+    if(matchedTags.length) save();
+    let msg='';
+    if(matchedNames.length) msg += `Нэмэгдлээ: ${matchedNames.join(', ')} ✓`;
+    if(unmatched.length) msg += (msg?' | ':'') + `Танигдсангүй: ${unmatched.join(', ')}`;
+    toast(msg || 'Юу ч танигдсангүй');
+    inp.value='';
+    drawPantry(); drawMealPlan(); drawRecipeList();
+  };
+  document.getElementById('pantryTextAdd').onclick=addFromText;
+  document.getElementById('pantryText').onkeydown=e=>{ if(e.key==='Enter') addFromText(); };
 }
 
 /* ---------- recipe browser ---------- */
@@ -237,19 +260,23 @@ function drawRecipeCatFilter(){
 }
 function drawRecipeList(){
   const list = RECIPES.filter(r=>(recipeF==='all' || r.meal.includes(recipeF)) && (recipeCat==='all' || r.tags.includes(recipeCat)));
-  document.getElementById('recipelist').innerHTML = list.map(r=>`
+  list.sort((a,b)=> recipeScore(b,S.pantry) - recipeScore(a,S.pantry));
+  document.getElementById('recipelist').innerHTML = list.map(r=>{
+    const canMake = S.pantry.length && r.needs.length && recipeScore(r,S.pantry)===1;
+    return `
     <button class="excard" data-id="${r.id}">
       <div class="thumb">${r.e}</div>
       <div class="info">
         <b>${r.n}</b>
         <div class="tags">
+          ${canMake?`<span class="vtag" style="color:var(--ok);border-color:var(--ok)">✓ Байгаа зүйлээрээ хийнэ</span>`:''}
           <span class="vtag">⏱ ${r.time} мин</span>
           <span class="vtag">${LVL_NAMES[r.lvl]}</span>
         </div>
         <span class="sr2">${r.kcal} ккал</span>
       </div>
       <div class="chev">›</div>
-    </button>`).join('');
+    </button>`;}).join('');
   document.querySelectorAll('#recipelist .excard').forEach(b=>b.onclick=()=>openRecipe(b.dataset.id));
 }
 
