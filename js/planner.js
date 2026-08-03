@@ -45,7 +45,7 @@ function pickEx(muscle, p, used){
     if(x.loc==='home' && p.place==='gym') return false; // pure gym → gym moves
     if(x.lvl > p.level && x.lvl===3) return false; // skip advanced moves unless user is advanced
     // gym moves: skip if user lacks the required equipment
-    if(x.loc==='gym' && x.eq!=='none' && equip.length && !equip.includes(x.eq) && !equip.includes('machine')) return false;
+    if(x.loc==='gym' && x.eq!=='none' && equip.length && !equip.includes(x.eq)) return false;
     return true;
   });
   // prefer not-yet-used, level <= user level

@@ -1,4 +1,4 @@
-const CACHE = 'mongolfit-v2';
+const CACHE = 'mongolfit-v3';
 const ASSETS = [
   './', './Fitzone.html', './css/style.css',
   './js/firebase-config.js','./js/upload.js',
@@ -19,5 +19,12 @@ self.addEventListener('activate', e=>{
 });
 
 self.addEventListener('fetch', e=>{
-  e.respondWith(caches.match(e.request).then(r=> r || fetch(e.request)));
+  if(e.request.method !== 'GET') return;
+  e.respondWith(
+    fetch(e.request).then(res=>{
+      const copy = res.clone();
+      caches.open(CACHE).then(c=>c.put(e.request, copy));
+      return res;
+    }).catch(()=> caches.match(e.request))
+  );
 });
