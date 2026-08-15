@@ -13,6 +13,7 @@
   }
   firebase.auth().onAuthStateChanged(async user=>{
     authUser = user; authReady = true; authBusy = false; authErr = '';
+    authDraft = {email:'', pass:'', pass2:''};
     if(user) await loadCloudState(user.uid);
     else resetLocalState();
     render();

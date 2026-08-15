@@ -2,6 +2,7 @@
 let authMode='login'; // 'login' | 'signup'
 let authBusy=false;
 let authErr='';
+let authDraft={email:'', pass:'', pass2:''};
 
 function renderAuthLoading(){
   app.innerHTML = `<div class="view center" style="padding-top:120px">
@@ -27,9 +28,9 @@ function renderAuthGate(){
         <h1>${authMode==='login' ? 'Нэвтэрч <span class="y">үргэлжлүүл</span>' : 'Бүртгэл <span class="y">үүсгэ</span>'}</h1>
         <p>Дансаараа бүх төхөөрөмж дээрээ хөтөлбөр, ахиц, хоолны тэмдэглэлээ хадгалж, хаанаас ч үргэлжлүүл.</p>
       </div>
-      <div class="field" style="margin-top:18px"><label>Имэйл</label><input class="txin" id="au_email" type="email" placeholder="tanii@mail.com" autocomplete="email"></div>
-      <div class="field"><label>Нууц үг</label><input class="txin" id="au_pass" type="password" placeholder="Хамгийн багадаа 6 тэмдэгт" autocomplete="${authMode==='login'?'current-password':'new-password'}"></div>
-      ${authMode==='signup' ? `<div class="field"><label>Нууц үг давтах</label><input class="txin" id="au_pass2" type="password" placeholder="Дахин оруулна уу"></div>` : ''}
+      <div class="field" style="margin-top:18px"><label>Имэйл</label><input class="txin" id="au_email" type="email" placeholder="tanii@mail.com" autocomplete="email" value="${esc(authDraft.email)}"></div>
+      <div class="field"><label>Нууц үг</label><input class="txin" id="au_pass" type="password" placeholder="Хамгийн багадаа 6 тэмдэгт" autocomplete="${authMode==='login'?'current-password':'new-password'}" value="${esc(authDraft.pass)}"></div>
+      ${authMode==='signup' ? `<div class="field"><label>Нууц үг давтах</label><input class="txin" id="au_pass2" type="password" placeholder="Дахин оруулна уу" value="${esc(authDraft.pass2)}"></div>` : ''}
       ${authErr ? `<p class="sm" style="color:var(--coral);margin:0 0 14px">${esc(authErr)}</p>` : ''}
       <button class="btn p" id="au_submit" ${authBusy?'disabled':''}>${authBusy ? 'Түр хүлээнэ үү…' : (authMode==='login' ? 'Нэвтрэх' : 'Бүртгүүлэх')}</button>
       <button class="btn g" id="au_switch" style="margin-top:10px">${authMode==='login' ? 'Шинэ хэрэглэгч үү? Бүртгүүлэх' : 'Бүртгэлтэй юу? Нэвтрэх'}</button>
@@ -37,24 +38,34 @@ function renderAuthGate(){
       <p class="xs mut center" style="margin-top:20px">Таны мэдээлэл зөвхөн танд харагдана.</p>
     </div>`;
 
-  document.getElementById('au_switch').onclick=()=>{ authMode = authMode==='login' ? 'signup' : 'login'; authErr=''; renderAuthGate(); };
+  const captureDraft=()=>{
+    authDraft = {
+      email: document.getElementById('au_email').value||'',
+      pass: document.getElementById('au_pass').value||'',
+      pass2: (document.getElementById('au_pass2')||{}).value||'',
+    };
+  };
+
+  document.getElementById('au_switch').onclick=()=>{
+    captureDraft(); authDraft.pass=''; authDraft.pass2='';
+    authMode = authMode==='login' ? 'signup' : 'login'; authErr=''; renderAuthGate();
+  };
 
   const forgot=document.getElementById('au_forgot');
   if(forgot) forgot.onclick=async()=>{
-    const email=(document.getElementById('au_email').value||'').trim();
+    captureDraft();
+    const email=authDraft.email.trim();
     if(!email){ authErr='Имэйлээ эхлээд бичнэ үү.'; renderAuthGate(); return; }
     try{ await resetPassword(email); toast('Нууц үг сэргээх холбоос имэйл рүү илгээгдлээ 📩'); }
     catch(e){ authErr=authErrMsg(e.code); renderAuthGate(); }
   };
 
   const submit=async()=>{
-    const email=(document.getElementById('au_email').value||'').trim();
-    const pass=document.getElementById('au_pass').value||'';
+    captureDraft();
+    const email=authDraft.email.trim();
+    const pass=authDraft.pass;
     if(!email || !pass){ authErr='Имэйл, нууц үгээ бөглөнө үү.'; renderAuthGate(); return; }
-    if(authMode==='signup'){
-      const pass2=document.getElementById('au_pass2').value||'';
-      if(pass!==pass2){ authErr='Нууц үг таарахгүй байна.'; renderAuthGate(); return; }
-    }
+    if(authMode==='signup' && pass!==authDraft.pass2){ authErr='Нууц үг таарахгүй байна.'; renderAuthGate(); return; }
     authBusy=true; authErr=''; renderAuthGate();
     try{
       if(authMode==='login') await logIn(email, pass);

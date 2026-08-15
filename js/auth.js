@@ -65,6 +65,7 @@ function authErrMsg(code){
     'auth/weak-password': 'Нууц үг хамгийн багадаа 6 тэмдэгт байх ёстой.',
     'auth/user-not-found': 'Ийм имэйлтэй хэрэглэгч олдсонгүй.',
     'auth/wrong-password': 'Нууц үг буруу байна.',
+    'auth/operation-not-allowed': 'Имэйл/нууц үгээр нэвтрэх түр хаалттай байна. Түр хүлээгээд дахин оролдоно уу.',
     'auth/invalid-credential': 'Имэйл эсвэл нууц үг буруу байна.',
     'auth/too-many-requests': 'Хэт олон оролдлого хийлээ. Түр хүлээгээд дахин оролдоно уу.',
     'auth/network-request-failed': 'Сүлжээний алдаа. Холболтоо шалгаад дахин оролдоно уу.',
