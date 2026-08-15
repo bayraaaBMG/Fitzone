@@ -17,10 +17,10 @@
         }
    Энэ файлыг бөглөтлөө хоолны зураг upload хийх боломжтой болно. */
 const FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyDUIPurUMVMGwsPhB3O7SDh4RtC8xVxlIs",
+  authDomain: "fitzone-7f325.firebaseapp.com",
+  projectId: "fitzone-7f325",
+  storageBucket: "fitzone-7f325.firebasestorage.app",
+  messagingSenderId: "912121543971",
+  appId: "1:912121543971:web:5fd2dcd7b5dfcf09f9a096",
 };
