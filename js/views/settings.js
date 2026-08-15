@@ -9,7 +9,8 @@ function paintSettings(sheet, sdraft){
   const showEquip = sdraft.place!=='home';
   sheet.querySelector('.inner').innerHTML = `
     <div class="grab"></div>
-    <h2 class="disp" style="font-size:22px; margin-bottom:14px">Тохиргоо</h2>
+    <h2 class="disp" style="font-size:22px; margin-bottom:2px">Тохиргоо</h2>
+    <p class="xs mut" style="margin:0 0 14px">${esc(authUser?authUser.email:'')}</p>
     <div class="field"><label>Нэр</label><input class="txin" id="st_name" value="${esc(sdraft.name||'')}"></div>
     <div class="field"><label>Хүйс</label>${chips(sdraft,'sex',[{v:'m',n:'Эрэгтэй',e:'♂'},{v:'f',n:'Эмэгтэй',e:'♀'}])}</div>
     <div class="inrow">
@@ -27,9 +28,14 @@ function paintSettings(sheet, sdraft){
     ],true)}</div>`:''}
     <button class="btn p" id="st_save" style="margin-top:6px">Хадгалаад хөтөлбөр шинэчлэх</button>
     <div class="field" style="margin-top:16px"><label>Утас/компьютер дээр суулгах</label>${installBoxHTML()}</div>
+    <button class="btn g" id="st_logout" style="margin-top:10px">🚪 Гарах</button>
     <button class="btn g" id="st_reset" style="margin-top:10px">Бүх өгөгдлийг арилгаж дахин эхлэх</button>
   `;
   wireInstallBox(sheet);
+  sheet.querySelector('#st_logout').onclick=async()=>{
+    closeSheet();
+    await logOut();
+  };
 
   const syncInputs=()=>{
     sdraft.name=(sheet.querySelector('#st_name').value||'').trim()||sdraft.name;
@@ -53,7 +59,7 @@ function paintSettings(sheet, sdraft){
 
   sheet.querySelector('#st_reset').onclick=()=>{
     if(!confirm('Бүх өгөгдлийг устгаад эхнээс эхлэх үү?')) return;
-    S.profile=null; S.plan=null; S.weights=[]; S.completed=[]; S.tab='home';
+    resetLocalState();
     save();
     closeSheet();
     render();

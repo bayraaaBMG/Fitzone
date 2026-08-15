@@ -1,18 +1,20 @@
 /* ---------- boot ---------- */
-(async function init(){
+(function init(){
   initFirebase();
-  try{
-    const saved = await Store.get('mf_state');
-    if(saved && saved.profile){
-      S.profile=saved.profile; S.plan=saved.plan||generatePlan(saved.profile);
-      S.weights=saved.weights||[]; S.completed=saved.completed||[];
-      S.challenge=saved.challenge||null;
-      S.pantry=saved.pantry||[]; S.foodLog=saved.foodLog||{};
-      S.tab='home';
-    }
-  }catch(e){}
-  render();
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   }
+  render(); // auth-loading splash until the session check below resolves
+
+  if(typeof firebase==='undefined' || !firebase.apps.length){
+    authInitError = true; authReady = true;
+    render();
+    return;
+  }
+  firebase.auth().onAuthStateChanged(async user=>{
+    authUser = user; authReady = true; authBusy = false; authErr = '';
+    if(user) await loadCloudState(user.uid);
+    else resetLocalState();
+    render();
+  });
 })();

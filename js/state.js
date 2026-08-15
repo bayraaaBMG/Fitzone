@@ -38,7 +38,14 @@ function toast(msg){
   document.body.appendChild(t); clearTimeout(toastT);
   toastT=setTimeout(()=>t.remove(), 2200);
 }
-async function save(){ await Store.set('mf_state', {profile:S.profile, plan:S.plan, weights:S.weights, completed:S.completed, challenge:S.challenge, pantry:S.pantry, foodLog:S.foodLog}); }
+async function save(){
+  const data = {profile:S.profile, plan:S.plan, weights:S.weights, completed:S.completed, challenge:S.challenge, pantry:S.pantry, foodLog:S.foodLog};
+  const key = authUser ? 'mf_state_'+authUser.uid : 'mf_state';
+  await Store.set(key, data);
+  if(authUser){
+    try{ await usersDoc(authUser.uid).set({...data, updatedAt: Date.now()}, {merge:true}); }catch(e){}
+  }
+}
 function esc(t){ return (t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function todayLog(){
   const d=today();

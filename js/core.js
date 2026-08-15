@@ -5,6 +5,8 @@ const app = document.getElementById('app');
 const navEl = document.getElementById('nav');
 
 function render(){
+  if(!authReady){ renderAuthLoading(); navEl.classList.add('hidden'); return; }
+  if(!authUser){ renderAuthGate(); navEl.classList.add('hidden'); return; }
   if(!S.profile){ renderOnboard(); navEl.classList.add('hidden'); return; }
   navEl.classList.remove('hidden');
   renderNav();
