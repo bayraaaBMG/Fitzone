@@ -1,7 +1,7 @@
-const CACHE = 'mongolfit-v4';
+const CACHE = 'mongolfit-v5';
 const ASSETS = [
   './', './Fitzone.html', './css/style.css',
-  './js/firebase-config.js','./js/upload.js',
+  './js/firebase-config.js',
   './js/data.js','./js/foods.js','./js/state.js','./js/planner.js','./js/auth.js','./js/core.js',
   './js/views/authgate.js','./js/views/onboard.js','./js/views/home.js','./js/views/exercise.js',
   './js/views/plan.js','./js/views/library.js','./js/views/progress.js','./js/views/nutrition.js',

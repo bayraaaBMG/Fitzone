@@ -1,7 +1,13 @@
-/* ---------- Firebase Auth + Firestore cloud sync ---------- */
+/* ---------- Firebase init + Auth + Firestore cloud sync ---------- */
 let authUser = null;        // firebase.User | null
 let authReady = false;      // true once the initial auth check resolves
 let authInitError = false;  // true if Firebase itself failed to load (offline/blocked)
+
+function initFirebase(){
+  if(typeof firebase==='undefined') return;
+  if(!FIREBASE_CONFIG || !FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.startsWith('YOUR_')) return;
+  try{ firebase.initializeApp(FIREBASE_CONFIG); }catch(e){}
+}
 
 function usersDoc(uid){ return firebase.firestore().collection('users').doc(uid); }
 

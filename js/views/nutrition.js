@@ -157,23 +157,19 @@ function openAddFood(slot){
   const results=sheet.querySelector('#foodResults');
   const search=sheet.querySelector('#foodSearch');
 
-  let attachedFile=null;
   sheet.querySelector('#diaryImg').onchange=e=>{
     const f=e.target.files[0];
     const prev=sheet.querySelector('#diaryImgPreview');
-    attachedFile=f||null;
     if(!f){ prev.innerHTML=''; return; }
     prev.innerHTML=`<div class="askpreview"><img src="${URL.createObjectURL(f)}" alt=""><span class="xs">Зураг хавсаргасан</span><button id="diaryImgX">✕</button></div>`;
-    sheet.querySelector('#diaryImgX').onclick=()=>{ e.target.value=''; attachedFile=null; prev.innerHTML=''; };
+    sheet.querySelector('#diaryImgX').onclick=()=>{ e.target.value=''; prev.innerHTML=''; };
   };
 
-  function finishAdd(item, btn){
-    if(!attachedFile){ addLogItem(slot, item); closeSheet(); return; }
-    if(btn){ btn.textContent='Хуулж байна…'; btn.disabled=true; }
-    uploadMealPhoto(attachedFile)
-      .then(url=>{ item.photo=url; })
-      .catch(()=>{ toast('Зураг хадгалах боломжгүй байна, хоол хэвээр нэмэгдлээ'); })
-      .then(()=>{ addLogItem(slot, item); closeSheet(); });
+  // хавсаргасан зураг зөвхөн энэ дэлгэц дээрх preview-д зориулагдсан —
+  // хаана ч хадгалагдахгvй, зөвхөн нэр/ккал/уураг зэрэг мэдээлэл л хадгалагдана
+  function finishAdd(item){
+    addLogItem(slot, item);
+    closeSheet();
   }
 
   function drawResults(){
@@ -196,7 +192,7 @@ function openAddFood(slot){
       protein:+sheet.querySelector('#mfProtein').value||0,
       carb:+sheet.querySelector('#mfCarb').value||0,
       fat:+sheet.querySelector('#mfFat').value||0,
-    }, sheet.querySelector('#mfAdd'));
+    });
   };
 }
 
