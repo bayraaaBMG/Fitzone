@@ -51,6 +51,20 @@ async function loadCloudState(uid){
 
 function signUp(email, pass){ return firebase.auth().createUserWithEmailAndPassword(email, pass); }
 function logIn(email, pass){ return firebase.auth().signInWithEmailAndPassword(email, pass); }
+
+/* popup on desktop; redirect on standalone-PWA/iOS or if the popup gets blocked —
+   those environments routinely block/mishandle window.open-based OAuth popups */
+function googleSignIn(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  if(isStandalone() || isIOS()) return firebase.auth().signInWithRedirect(provider);
+  return firebase.auth().signInWithPopup(provider).catch(e=>{
+    if(e.code==='auth/popup-blocked' || e.code==='auth/operation-not-supported-in-this-environment'){
+      return firebase.auth().signInWithRedirect(provider);
+    }
+    throw e;
+  });
+}
+
 async function logOut(){
   const uid = authUser && authUser.uid;
   await firebase.auth().signOut();
@@ -69,6 +83,10 @@ function authErrMsg(code){
     'auth/invalid-credential': 'Имэйл эсвэл нууц үг буруу байна.',
     'auth/too-many-requests': 'Хэт олон оролдлого хийлээ. Түр хүлээгээд дахин оролдоно уу.',
     'auth/network-request-failed': 'Сүлжээний алдаа. Холболтоо шалгаад дахин оролдоно уу.',
+    'auth/popup-closed-by-user': 'Google цонх хаагдлаа. Дахин оролдоно уу.',
+    'auth/cancelled-popup-request': 'Дахин оролдоно уу.',
+    'auth/account-exists-with-different-credential': 'Энэ имэйл өөр аргаар (нууц үгээр) бүртгэлтэй байна. Имэйл/нууц үгээрээ нэвтэрнэ үү.',
+    'auth/unauthorized-domain': 'Энэ сайтаас Google-ээр нэвтрэх зөвшөөрөгдөөгүй байна.',
   };
   return map[code] || 'Алдаа гарлаа. Дахин оролдоно уу.';
 }
