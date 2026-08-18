@@ -55,9 +55,9 @@ async function loadCloudState(uid){
     const cached = await Store.get(localKey);
     if(cached && cached.profile){
       applyStateData(cached);
-      toast('Офлайн горим — сүүлд хадгалсан өгөгдөл харагдаж байна');
+      toast(t('toast_offline_mode'));
     } else {
-      toast('Дата ачаалахад алдаа гарлаа. Холболтоо шалгаарай.');
+      toast(t('toast_load_error'));
     }
   }
 }
@@ -99,19 +99,19 @@ function resetPassword(email){ return firebase.auth().sendPasswordResetEmail(ema
 
 function authErrMsg(code){
   const map = {
-    'auth/email-already-in-use': 'Энэ имэйл хаяг бүртгэлтэй байна. Нэвтэрч үзнэ үү.',
-    'auth/invalid-email': 'Имэйл хаяг буруу байна.',
-    'auth/weak-password': 'Нууц үг хамгийн багадаа 6 тэмдэгт байх ёстой.',
-    'auth/user-not-found': 'Ийм имэйлтэй хэрэглэгч олдсонгүй.',
-    'auth/wrong-password': 'Нууц үг буруу байна.',
-    'auth/operation-not-allowed': 'Имэйл/нууц үгээр нэвтрэх түр хаалттай байна. Түр хүлээгээд дахин оролдоно уу.',
-    'auth/invalid-credential': 'Имэйл эсвэл нууц үг буруу байна.',
-    'auth/too-many-requests': 'Хэт олон оролдлого хийлээ. Түр хүлээгээд дахин оролдоно уу.',
-    'auth/network-request-failed': 'Сүлжээний алдаа. Холболтоо шалгаад дахин оролдоно уу.',
-    'auth/popup-closed-by-user': 'Google цонх хаагдлаа. Дахин оролдоно уу.',
-    'auth/cancelled-popup-request': 'Дахин оролдоно уу.',
-    'auth/account-exists-with-different-credential': 'Энэ имэйл өөр аргаар (нууц үгээр) бүртгэлтэй байна. Имэйл/нууц үгээрээ нэвтэрнэ үү.',
-    'auth/unauthorized-domain': 'Энэ сайтаас Google-ээр нэвтрэх зөвшөөрөгдөөгүй байна.',
+    'auth/email-already-in-use': t('autherr_email_in_use'),
+    'auth/invalid-email': t('autherr_invalid_email'),
+    'auth/weak-password': t('autherr_weak_password'),
+    'auth/user-not-found': t('autherr_user_not_found'),
+    'auth/wrong-password': t('autherr_wrong_password'),
+    'auth/operation-not-allowed': t('autherr_operation_not_allowed'),
+    'auth/invalid-credential': t('autherr_invalid_credential'),
+    'auth/too-many-requests': t('autherr_too_many_requests'),
+    'auth/network-request-failed': t('autherr_network'),
+    'auth/popup-closed-by-user': t('autherr_popup_closed'),
+    'auth/cancelled-popup-request': t('autherr_cancelled'),
+    'auth/account-exists-with-different-credential': t('autherr_account_exists'),
+    'auth/unauthorized-domain': t('autherr_unauthorized_domain'),
   };
-  return map[code] || 'Алдаа гарлаа. Дахин оролдоно уу.';
+  return map[code] || t('autherr_generic');
 }

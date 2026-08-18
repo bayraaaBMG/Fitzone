@@ -30,8 +30,8 @@ function renderProfile(){
       </div>
 
       <div class="statbig" style="margin-top:16px">
-        <div class="s"><b>${startWeight}<span style="font-size:13px"> кг</span></b><span>${t('profile_start_weight')}</span></div>
-        <div class="s acc"><b>${curWeight}<span style="font-size:13px"> кг</span></b><span>${t('profile_cur_weight')}</span></div>
+        <div class="s"><b>${startWeight}<span style="font-size:13px"> ${t('unit_kg')}</span></b><span>${t('profile_start_weight')}</span></div>
+        <div class="s acc"><b>${curWeight}<span style="font-size:13px"> ${t('unit_kg')}</span></b><span>${t('profile_cur_weight')}</span></div>
         <div class="s"><b style="color:${delta<0?'var(--ok)':delta>0?'var(--coral)':'var(--txt)'}">${delta>0?'+':''}${delta.toFixed(1)}</b><span>${t('profile_total_change')}</span></div>
         <div class="s"><b>${streak}🔥</b><span>${t('profile_streak')}</span></div>
         <div class="s"><b>${S.completed.length}</b><span>${t('profile_total_workouts')}</span></div>
@@ -44,7 +44,7 @@ function renderProfile(){
 
       <div class="secttl"><h2>${t('profile_weight_history')}</h2></div>
       <div class="chartwrap">${weightChart(ws, p.weight)}</div>
-      ${historyList(ws.slice().reverse().map(w=>({d:w.d, label:`${w.kg} кг`})), '⚖')}
+      ${historyList(ws.slice().reverse().map(w=>({d:w.d, label:`${w.kg} ${t('unit_kg')}`})), '⚖')}
 
       <div class="secttl"><h2>${t('profile_workout_history')}</h2></div>
       ${historyList(workoutHistoryRows(), '💪')}
@@ -72,7 +72,7 @@ function historyList(rows, icon){
 function workoutHistoryRows(){
   return S.completed.slice().sort((a,b)=>b<a?-1:1).map(d=>{
     const entry = S.completedLog[d];
-    return {d, label: entry ? entry.title : 'Дасгал хийсэн'};
+    return {d, label: entry ? (entry.titleKey ? t('plantitle_'+entry.titleKey) : entry.title) : t('workout_done_generic')};
   });
 }
 function foodHistoryRows(){
@@ -82,7 +82,7 @@ function foodHistoryRows(){
     const log=S.foodLog[d];
     let kcal=0, items=0;
     ['breakfast','lunch','dinner','snack'].forEach(slot=>(log[slot]||[]).forEach(it=>{ kcal+=it.kcal||0; items++; }));
-    return {d, items, label:`${items} хоол · ${kcal} ккал`};
+    return {d, items, label:`${items} ${t('unit_meals')} · ${kcal} ${t('unit_kcal')}`};
   }).filter(r=>r.items>0);
 }
 
@@ -95,21 +95,21 @@ function profileSummaryCard(startWeight, curWeight, joined){
       <div class="grid g2">
         <div>
           <span class="xs mut">${t('profile_summary_from')}${joined?` (${joined})`:''}</span>
-          <div style="font-weight:700;margin-top:4px">${startWeight} кг</div>
+          <div style="font-weight:700;margin-top:4px">${startWeight} ${t('unit_kg')}</div>
         </div>
         <div>
           <span class="xs mut">${t('profile_summary_to')}</span>
-          <div style="font-weight:700;margin-top:4px">${curWeight} кг</div>
+          <div style="font-weight:700;margin-top:4px">${curWeight} ${t('unit_kg')}</div>
         </div>
       </div>
       <hr class="sep">
       <p class="sm" style="margin:0">
-        ${delta<0?`↓ ${Math.abs(delta).toFixed(1)} кг хасагдсан`:delta>0?`↑ ${delta.toFixed(1)} кг нэмэгдсэн`:'Жин өөрчлөгдөөгүй'}
-        ${days!=null?` · ${days} өдрийн дотор`:''} · ${S.completed.length} дасгал хийсэн · ${streakLabel()}
+        ${delta<0?`↓ ${t('summary_lost',Math.abs(delta).toFixed(1))}`:delta>0?`↑ ${t('summary_gained',delta.toFixed(1))}`:t('summary_unchanged')}
+        ${days!=null?` · ${t('summary_within_days',days)}`:''} · ${t('summary_workouts_done',S.completed.length)} · ${streakLabel()}
       </p>
     </div>`;
 }
-function streakLabel(){ const s=calcStreak(); return s>0?`${s} өдөр дараалан идэвхтэй`:'одоогоор streak алга'; }
+function streakLabel(){ const s=calcStreak(); return s>0?t('summary_streak_active',s):t('summary_streak_none'); }
 
 function timelineRows(ws){
   const days = {};

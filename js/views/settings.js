@@ -22,10 +22,10 @@ function paintSettings(sheet, sdraft){
     <div class="field"><label>${t('onb_goal')}</label>${chips(sdraft,'goal',GOALS.map(g=>({v:g.id,n:g.n,e:g.e})))}</div>
     <div class="field"><label>${t('onb_level')}</label>${chips(sdraft,'level',[{v:1,n:t('onb_lvl1')},{v:2,n:t('onb_lvl2')},{v:3,n:t('onb_lvl3')}])}</div>
     <div class="field"><label>${t('onb_place')}</label>${chips(sdraft,'place',[{v:'home',n:t('onb_home'),e:'🏠'},{v:'gym',n:t('onb_gym'),e:'🏋️'},{v:'both',n:t('onb_both'),e:'🔁'}])}</div>
-    <div class="field"><label>${t('onb_days')}</label>${chips(sdraft,'days',[2,3,4,5,6].map(d=>({v:d,n:d+' өдөр'})))}</div>
-    <div class="field"><label>${t('onb_minutes')}</label>${chips(sdraft,'minutes',[10,20,30,45,60].map(m=>({v:m,n:m+' мин'})))}</div>
+    <div class="field"><label>${t('onb_days')}</label>${chips(sdraft,'days',[2,3,4,5,6].map(d=>({v:d,n:d+' '+t('unit_days')})))}</div>
+    <div class="field"><label>${t('onb_minutes')}</label>${chips(sdraft,'minutes',[10,20,30,45,60].map(m=>({v:m,n:m+' '+t('unit_min')})))}</div>
     ${showEquip?`<div class="field"><label>${t('onb_equip')}</label>${chips(sdraft,'equip',[
-      {v:'dumbbell',n:'Гантель'},{v:'barbell',n:'Barbell'},{v:'machine',n:'Machine'},{v:'cable',n:'Cable'}
+      {v:'dumbbell',n:t('equip_dumbbell')},{v:'barbell',n:'Barbell'},{v:'machine',n:'Machine'},{v:'cable',n:'Cable'}
     ],true)}</div>`:''}
     <button class="btn p" id="st_save" style="margin-top:6px">${t('st_program_save')}</button>
 
@@ -95,11 +95,11 @@ function paintSettings(sheet, sdraft){
     save();
     closeSheet();
     render();
-    toast('Тохиргоо хадгалагдлаа ✓');
+    toast(t('toast_settings_saved'));
   };
 
   sheet.querySelector('#st_reset').onclick=()=>{
-    if(!confirm('Бүх өгөгдлийг устгаад эхнээс эхлэх үү?')) return;
+    if(!confirm(t('confirm_reset_all'))) return;
     resetLocalState();
     save();
     closeSheet();

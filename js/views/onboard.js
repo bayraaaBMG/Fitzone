@@ -11,19 +11,19 @@ function renderOnboard(){
         <h1>${t('onb_intro_h1')}</h1>
         <p>${t('onb_intro_p')}</p>
         <div class="stats">
-          <div><b>${EX.length}+</b><span>Дасгал</span></div>
-          <div><b>2–6</b><span>Өдөр/долоо хоног</span></div>
-          <div><b>10–60</b><span>Минут</span></div>
+          <div><b>${EX.length}+</b><span>${t('onb_stat_exercises')}</span></div>
+          <div><b>2–6</b><span>${t('onb_stat_days')}</span></div>
+          <div><b>10–60</b><span>${t('onb_stat_minutes')}</span></div>
         </div>
       </div>
       <div style="margin-top:18px"><button class="btn p" id="start">${t('onb_start')}</button></div>
       <div class="grid g2" style="margin-top:14px">
-        <button class="tile intro"><div class="ic">🏠</div><h3>Гэрийн дасгал</h3><p>Тоног төхөөрөмжгүй ч болно</p></button>
-        <button class="tile intro"><div class="ic">🏋️</div><h3>Жийм хөтөлбөр</h3><p>PPL, Upper/Lower, Full body</p></button>
-        <button class="tile intro"><div class="ic">📈</div><h3>Ахиц хянах</h3><p>Жин, streak, график</p></button>
-        <button class="tile acc intro"><div class="ic">🍳</div><h3>Монгол хоол</h3><p>Бууз, цуйван, тарагаа тохируул</p></button>
+        <button class="tile intro"><div class="ic">🏠</div><h3>${t('onb_tile1_h')}</h3><p>${t('onb_tile1_p')}</p></button>
+        <button class="tile intro"><div class="ic">🏋️</div><h3>${t('onb_tile2_h')}</h3><p>PPL, Upper/Lower, Full body</p></button>
+        <button class="tile intro"><div class="ic">📈</div><h3>${t('onb_tile3_h')}</h3><p>${t('onb_tile3_p')}</p></button>
+        <button class="tile acc intro"><div class="ic">🍳</div><h3>${t('onb_tile4_h')}</h3><p>${t('onb_tile4_p')}</p></button>
       </div>
-      <p class="xs mut center" style="margin-top:20px">Эмчилгээний зөвлөгөө биш. Гэмтэл, өвчтэй бол эмчтэйгээ зөвлөл.</p>
+      <p class="xs mut center" style="margin-top:20px">${t('disclaimer')}</p>
     </div>`;
     const goStart=()=>{ step=1; renderOnboard(); };
     document.getElementById('start').onclick=goStart;
@@ -34,7 +34,7 @@ function renderOnboard(){
   const steps = [renderS1, renderS2, renderS3];
   app.innerHTML = `
     <div class="top"><div class="logo"><img src="icons/logo-mark.svg" alt="MongolFit">Mongol<b>Fit</b></div>
-      <button class="chip" id="back" style="margin-left:auto">‹ Буцах</button></div>
+      <button class="chip" id="back" style="margin-left:auto">‹ ${t('back')}</button></div>
     <div class="view">
       <div class="seg" style="margin-bottom:22px">
         ${[1,2,3].map(i=>`<div class="step ${i<=step?'on':''}"></div>`).join('')}
@@ -58,7 +58,7 @@ function renderS1(){
   document.getElementById('formbody').innerHTML = `
     <h2 class="disp" style="font-size:24px; margin-bottom:6px">${t('onb_s1_h')}</h2>
     <p class="mut sm" style="margin:0 0 22px">${t('onb_s1_p')}</p>
-    <div class="field"><label>${t('onb_name')}</label><input class="txin" id="f_name" placeholder="Жишээ: Бат" value="${draft.name||''}"></div>
+    <div class="field"><label>${t('onb_name')}</label><input class="txin" id="f_name" placeholder="${t('onb_name_placeholder')}" value="${draft.name||''}"></div>
     <div class="field"><label>${t('onb_sex')}</label>${chips(draft,'sex',[{v:'m',n:t('onb_male'),e:'♂'},{v:'f',n:t('onb_female'),e:'♀'}])}</div>
     <div class="inrow">
       <div class="field" style="flex:1"><label>${t('onb_age')}</label><input class="txin" id="f_age" type="number" inputmode="numeric" placeholder="22" value="${draft.age||''}"></div>
@@ -68,7 +68,7 @@ function renderS1(){
     <button class="btn p" id="next1">${t('continue')}</button>`;
   wireChips(app, draft, onboardChipChange);
   document.getElementById('next1').onclick=()=>{
-    draft.name=(document.getElementById('f_name').value||'').trim()||'Хэрэглэгч';
+    draft.name=(document.getElementById('f_name').value||'').trim()||t('default_user_name');
     draft.age=+document.getElementById('f_age').value||25;
     draft.height=+document.getElementById('f_h').value||172;
     draft.weight=+document.getElementById('f_w').value||75;
@@ -91,11 +91,11 @@ function renderS3(){
   document.getElementById('formbody').innerHTML = `
     <h2 class="disp" style="font-size:24px; margin-bottom:6px">${t('onb_s3_h')}</h2>
     <p class="mut sm" style="margin:0 0 22px">${t('onb_s3_p')}</p>
-    <div class="field"><label>${t('onb_days')}</label>${chips(draft,'days',[2,3,4,5,6].map(d=>({v:d,n:d+' өдөр'})))}</div>
-    <div class="field"><label>${t('onb_minutes')}</label>${chips(draft,'minutes',[10,20,30,45,60].map(m=>({v:m,n:m+' мин'})))}</div>
+    <div class="field"><label>${t('onb_days')}</label>${chips(draft,'days',[2,3,4,5,6].map(d=>({v:d,n:d+' '+t('unit_days')})))}</div>
+    <div class="field"><label>${t('onb_minutes')}</label>${chips(draft,'minutes',[10,20,30,45,60].map(m=>({v:m,n:m+' '+t('unit_min')})))}</div>
     ${showEquip?`<div class="field"><label>${t('onb_equip')}</label>${chips(draft,'equip',[
-      {v:'dumbbell',n:'Гантель'},{v:'barbell',n:'Barbell'},{v:'machine',n:'Machine'},{v:'cable',n:'Cable'}
-    ],true)}<p class="xs mut" style="margin-top:8px">Юу ч сонгохгүй бол суурь хувилбараар төлөвлөнө.</p></div>`:''}
+      {v:'dumbbell',n:t('equip_dumbbell')},{v:'barbell',n:'Barbell'},{v:'machine',n:'Machine'},{v:'cable',n:'Cable'}
+    ],true)}<p class="xs mut" style="margin-top:8px">${t('onb_equip_hint')}</p></div>`:''}
     <button class="btn p" id="finish">${t('onb_finish')}</button>`;
   wireChips(app, draft, onboardChipChange);
   document.getElementById('finish').onclick=()=>{
@@ -103,6 +103,6 @@ function renderS3(){
     S.plan = generatePlan(S.profile);
     S.tab='plan';
     save(); render();
-    toast('Хувийн хөтөлбөр бэлэн боллоо 🎉');
+    toast(t('toast_program_ready'));
   };
 }

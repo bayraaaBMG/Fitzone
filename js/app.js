@@ -69,9 +69,7 @@
         render();
         return;
       }
-      authErr = (isStandalone() && isIOS())
-        ? 'Суулгасан апп дээр Google-ээр нэвтрэх зарим үед бүтэлгүйтдэг (iOS-ийн хязгаарлалт). Safari дээрээ шууд нээгээд эсвэл имэйлээр нэвтэрнэ үү.'
-        : 'Google-ээр нэвтрэх дуусаагүй байна — дахин оролдоно уу, эсвэл имэйлээр нэвтэрнэ үү.';
+      authErr = (isStandalone() && isIOS()) ? t('err_ios_standalone_google') : t('err_redirect_incomplete');
     }
     authUser = null; authReady = true;
     resetLocalState();

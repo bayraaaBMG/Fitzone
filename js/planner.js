@@ -6,36 +6,41 @@ function repScheme(goal, lvl){
   if(goal==='fatloss')  return {reps:'12–15', rest:40, sets:3};
   return {reps:'10–15', rest:50, sets:3}; // tone / health
 }
+// titleKey is the language-independent source of truth (looked up via
+// t('plantitle_'+key) at render time through planDayTitle()) — a plain
+// generated `title` string would otherwise get baked into S.plan forever
+// and never re-translate after a language switch
 function splitFor(days, lvl){
   if(days<=2) return [['legs','chest','back','abs'], ['legs','shoulders','back','abs']]
-                .map((f,i)=>({title:'Бүх бие '+(i?'B':'A'), focus:f}));
+                .map((f,i)=>({titleKey:i?'full_b':'full_a', focus:f}));
   if(days===3){
     if(lvl>=2) return [
-      {title:'Push (Түлэх)', focus:['chest','shoulders','arms']},
-      {title:'Pull (Татах)', focus:['back','back','arms']},
-      {title:'Legs (Хөл)', focus:['legs','glutes','abs']}];
+      {titleKey:'push', focus:['chest','shoulders','arms']},
+      {titleKey:'pull', focus:['back','back','arms']},
+      {titleKey:'legs', focus:['legs','glutes','abs']}];
     return [['legs','chest','back','abs'],['legs','shoulders','back','abs'],['legs','chest','glutes','abs']]
-      .map((f,i)=>({title:'Бүх бие '+['A','B','C'][i], focus:f}));
+      .map((f,i)=>({titleKey:['full_a','full_b','full_c'][i], focus:f}));
   }
   if(days===4) return [
-    {title:'Upper (Дээд)', focus:['chest','back','shoulders','arms']},
-    {title:'Lower (Доод)', focus:['legs','glutes','abs']},
-    {title:'Upper (Дээд)', focus:['back','chest','shoulders','arms']},
-    {title:'Lower (Доод)', focus:['legs','glutes','abs']}];
+    {titleKey:'upper', focus:['chest','back','shoulders','arms']},
+    {titleKey:'lower', focus:['legs','glutes','abs']},
+    {titleKey:'upper', focus:['back','chest','shoulders','arms']},
+    {titleKey:'lower', focus:['legs','glutes','abs']}];
   if(days===5) return [
-    {title:'Push (Түлэх)', focus:['chest','shoulders','arms']},
-    {title:'Pull (Татах)', focus:['back','back','arms']},
-    {title:'Legs (Хөл)', focus:['legs','glutes','abs']},
-    {title:'Upper (Дээд)', focus:['chest','back','shoulders']},
-    {title:'Lower (Доод)', focus:['legs','glutes','abs']}];
+    {titleKey:'push', focus:['chest','shoulders','arms']},
+    {titleKey:'pull', focus:['back','back','arms']},
+    {titleKey:'legs', focus:['legs','glutes','abs']},
+    {titleKey:'upper', focus:['chest','back','shoulders']},
+    {titleKey:'lower', focus:['legs','glutes','abs']}];
   return [ // 6
-    {title:'Push (Түлэх)', focus:['chest','shoulders','arms']},
-    {title:'Pull (Татах)', focus:['back','back','arms']},
-    {title:'Legs (Хөл)', focus:['legs','glutes','abs']},
-    {title:'Push (Түлэх)', focus:['chest','shoulders','arms']},
-    {title:'Pull (Татах)', focus:['back','back','arms']},
-    {title:'Legs (Хөл)', focus:['legs','glutes','abs']}];
+    {titleKey:'push', focus:['chest','shoulders','arms']},
+    {titleKey:'pull', focus:['back','back','arms']},
+    {titleKey:'legs', focus:['legs','glutes','abs']},
+    {titleKey:'push', focus:['chest','shoulders','arms']},
+    {titleKey:'pull', focus:['back','back','arms']},
+    {titleKey:'legs', focus:['legs','glutes','abs']}];
 }
+function planDayTitle(d){ return d.titleKey ? t('plantitle_'+d.titleKey) : (d.title||''); }
 function pickEx(muscle, p, used){
   const gymOK = p.place==='gym' || p.place==='both';
   const equip = p.equip||[];
@@ -72,9 +77,9 @@ function generatePlan(p){
     // fat loss finisher
     if(p.goal==='fatloss'){
       const fin = EX.find(x=>x.m==='cardio' && (p.place!=='gym'));
-      if(fin && !exs.find(e=>e.id===fin.id)) exs.push({id:fin.id, sets:3, reps:'30–40 сек', rest:30, doneSets:Array(3).fill(false)});
+      if(fin && !exs.find(e=>e.id===fin.id)) exs.push({id:fin.id, sets:3, reps:'30–40', rest:30, doneSets:Array(3).fill(false)});
     }
-    return {title:d.title, focus:d.focus, ex:exs, done:false};
+    return {titleKey:d.titleKey, focus:d.focus, ex:exs, done:false};
   });
   return plan;
 }
@@ -90,9 +95,9 @@ function nutrition(p, activity){
   const s = p.sex==='m'?5:-161;
   const bmr = 10*p.weight + 6.25*p.height - 5*p.age + s;
   const tdee = Math.round(bmr*activity);
-  let cal = tdee, label='Хадгалах';
-  if(p.goal==='fatloss'){ cal = Math.round(tdee*0.8); label='Жин хасах'; }
-  else if(p.goal==='muscle'||p.goal==='strength'){ cal = Math.round(tdee*1.1); label='Булчин нэмэх'; }
+  let cal = tdee, label=t('nut_label_maintain');
+  if(p.goal==='fatloss'){ cal = Math.round(tdee*0.8); label=t('nut_label_lose'); }
+  else if(p.goal==='muscle'||p.goal==='strength'){ cal = Math.round(tdee*1.1); label=t('nut_label_gain'); }
   const protein = Math.round(p.weight*2);            // g
   const fat = Math.round(cal*0.25/9);                // g
   const carb = Math.round((cal - protein*4 - fat*9)/4);
@@ -138,8 +143,8 @@ function bmi(weight, height){
   return weight/(h*h);
 }
 function bmiCategory(b){
-  if(b<18.5) return {n:'Дутуу жинтэй', c:'var(--acc-ink)'};
-  if(b<25)   return {n:'Хэвийн', c:'var(--ok)'};
-  if(b<30)   return {n:'Илүүдэл жинтэй', c:'var(--warn)'};
-  return {n:'Таргалалттай', c:'var(--coral)'};
+  if(b<18.5) return {n:t('bmi_underweight'), c:'var(--acc-ink)'};
+  if(b<25)   return {n:t('bmi_normal'), c:'var(--ok)'};
+  if(b<30)   return {n:t('bmi_overweight'), c:'var(--warn)'};
+  return {n:t('bmi_obese'), c:'var(--coral)'};
 }

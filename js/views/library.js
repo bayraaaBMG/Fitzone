@@ -5,7 +5,7 @@ function renderLibrary(){
     ${topBar()}
     <div class="view">
       <div class="secttl" style="margin-top:4px"><h2>${t('lib_title')}</h2></div>
-      <p class="mut sm" style="margin:0 0 14px">${EX.length} дасгал. Шүүж сонгоод дэлгэрэнгүйг нь үз.</p>
+      <p class="mut sm" style="margin:0 0 14px">${t('lib_intro', EX.length)}</p>
       <p class="xs mut" style="margin:0 0 6px">${t('lib_loc')}</p>
       <div class="scrollrow" id="fLoc"></div>
       <p class="xs mut" style="margin:10px 0 6px">${t('lib_lvl')}</p>
@@ -17,7 +17,7 @@ function renderLibrary(){
       <div id="exlist" style="margin-top:16px"></div>
     </div>`;
   topWire();
-  const locs=[['all',t('all')],['home','🏠 Гэр'],['gym','🏋️ Жийм']];
+  const locs=[['all',t('all')],['home','🏠 '+t('onb_home')],['gym','🏋️ '+t('onb_gym')]];
   const lvls=[['all',t('all')],[1,LVL_NAMES[1]],[2,LVL_NAMES[2]],[3,LVL_NAMES[3]]];
   const goals=[['all',t('all')],['fatloss','🔥 '+goalName('fatloss')],['muscle','💪 '+goalName('muscle')],['tone','✨ '+goalName('tone')]];
   const ms=[['all',t('all')],...Object.keys(M_NAMES).map(k=>[k,M_NAMES[k]])];
@@ -46,7 +46,7 @@ function drawLib(){
     (libF.goal==='all'||x.goals.includes(libF.goal))
   );
   const el=document.getElementById('exlist');
-  if(!list.length){ el.innerHTML=`<div class="empty"><div class="e">🔍</div>Энэ шүүлтэд тохирох дасгал алга. Өөр сонголт хийгээрэй.</div>`; return; }
+  if(!list.length){ el.innerHTML=`<div class="empty"><div class="e">🔍</div>${t('no_exercises_match')}</div>`; return; }
   // suggested set/reps/rest based on chosen goal (or профайл) + level
   const goal = libF.goal==='all' ? (S.profile?S.profile.goal:'tone') : libF.goal;
   const lvl = libF.lvl==='all' ? (S.profile?S.profile.level:2) : libF.lvl;
@@ -57,11 +57,11 @@ function drawLib(){
       <div class="info">
         <b>${x.n}</b>
         <div class="tags">
-          <span class="vtag">${x.loc==='home'?'🏠 Гэр':'🏋️ Жийм'}</span>
+          <span class="vtag">${x.loc==='home'?'🏠 '+t('onb_home'):'🏋️ '+t('onb_gym')}</span>
           <span class="vtag">${M_NAMES[x.m]}</span>
           <span class="vtag">${LVL_NAMES[x.lvl]}</span>
         </div>
-        <span class="sr2">${sch.sets}×${sch.reps} · амралт ${sch.rest}с</span>
+        <span class="sr2">${sch.sets}×${sch.reps} · ${t('rest')} ${sch.rest}${t('unit_sec')}</span>
       </div>
       <div class="chev">›</div>
     </button>`).join('');

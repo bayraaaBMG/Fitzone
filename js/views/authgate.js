@@ -14,8 +14,8 @@ function renderAuthGate(){
   if(authInitError){
     app.innerHTML = `<div class="view center" style="padding-top:100px">
       <div class="logo" style="justify-content:center;margin-bottom:16px"><img src="icons/logo-mark.svg" alt="MongolFit" style="height:32px"></div>
-      <p class="mut sm">Холболтын алдаа гарлаа. Интернэтээ шалгаад хуудсаа дахин ачаалаарай.</p>
-      <button class="btn p" id="au_retry" style="margin-top:16px">Дахин ачаалах</button>
+      <p class="mut sm">${t('conn_error')}</p>
+      <button class="btn p" id="au_retry" style="margin-top:16px">${t('reload')}</button>
     </div>`;
     document.getElementById('au_retry').onclick=()=>location.reload();
     return;
@@ -34,8 +34,8 @@ function renderAuthGate(){
       </button>
       <p class="xs mut center" style="margin:14px 0">${t('auth_or_email')}</p>
       <div class="field"><label>${t('auth_email')}</label><input class="txin" id="au_email" type="email" placeholder="tanii@mail.com" autocomplete="email" value="${esc(authDraft.email)}"></div>
-      <div class="field"><label>${t('auth_pass')}</label><input class="txin" id="au_pass" type="password" placeholder="Хамгийн багадаа 6 тэмдэгт" autocomplete="${authMode==='login'?'current-password':'new-password'}" value="${esc(authDraft.pass)}"></div>
-      ${authMode==='signup' ? `<div class="field"><label>${t('auth_pass2')}</label><input class="txin" id="au_pass2" type="password" placeholder="Дахин оруулна уу" value="${esc(authDraft.pass2)}"></div>` : ''}
+      <div class="field"><label>${t('auth_pass')}</label><input class="txin" id="au_pass" type="password" placeholder="${t('auth_pass_placeholder')}" autocomplete="${authMode==='login'?'current-password':'new-password'}" value="${esc(authDraft.pass)}"></div>
+      ${authMode==='signup' ? `<div class="field"><label>${t('auth_pass2')}</label><input class="txin" id="au_pass2" type="password" placeholder="${t('auth_pass2_placeholder')}" value="${esc(authDraft.pass2)}"></div>` : ''}
       ${authErr ? `<p class="sm" style="color:var(--coral);margin:0 0 14px">${esc(authErr)}</p>` : ''}
       <button class="btn p" id="au_submit" ${authBusy?'disabled':''}>${authBusy ? t('auth_wait') : (authMode==='login' ? t('auth_login_btn') : t('auth_signup_btn'))}</button>
       <button class="btn g" id="au_switch" style="margin-top:10px">${authMode==='login' ? t('auth_switch_to_signup') : t('auth_switch_to_login')}</button>
@@ -60,8 +60,8 @@ function renderAuthGate(){
   if(forgot) forgot.onclick=async()=>{
     captureDraft();
     const email=authDraft.email.trim();
-    if(!email){ authErr='Имэйлээ эхлээд бичнэ үү.'; renderAuthGate(); return; }
-    try{ await resetPassword(email); toast('Нууц үг сэргээх холбоос имэйл рүү илгээгдлээ 📩'); }
+    if(!email){ authErr=t('err_email_first'); renderAuthGate(); return; }
+    try{ await resetPassword(email); toast(t('toast_reset_sent')); }
     catch(e){ authErr=authErrMsg(e.code); renderAuthGate(); }
   };
 
@@ -69,8 +69,8 @@ function renderAuthGate(){
     captureDraft();
     const email=authDraft.email.trim();
     const pass=authDraft.pass;
-    if(!email || !pass){ authErr='Имэйл, нууц үгээ бөглөнө үү.'; renderAuthGate(); return; }
-    if(authMode==='signup' && pass!==authDraft.pass2){ authErr='Нууц үг таарахгүй байна.'; renderAuthGate(); return; }
+    if(!email || !pass){ authErr=t('err_fill_email_pass'); renderAuthGate(); return; }
+    if(authMode==='signup' && pass!==authDraft.pass2){ authErr=t('err_pass_mismatch'); renderAuthGate(); return; }
     authBusy=true; authErr=''; renderAuthGate();
     try{
       if(authMode==='login') await logIn(email, pass);

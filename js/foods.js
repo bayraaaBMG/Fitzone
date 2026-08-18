@@ -230,7 +230,7 @@ const RECIPES = [
 
 const RECIPE_CATS = {mongol:'🇲🇳 Монгол хоол', fatloss:'🔥 Жин хасах', muscle:'💪 Булчин нэмэх'};
 const MEAL_NAMES = {breakfast:'Өглөө', lunch:'Өдөр', dinner:'Орой', snack:'Зууш'};
-function youtubeSearchUrl(name){ return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(name + ' хийх заавар'); }
+function youtubeSearchUrl(name){ return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(name + ' ' + t('recipe_tutorial')); }
 
 /* ---------- free-text pantry matching ---------- */
 function allPantryItems(){ return PANTRY_GROUPS.flatMap(g=>g.items); }

@@ -3,11 +3,11 @@ function waterGoalMl(p){ return Math.round(p.weight*35/50)*50; } // ~35ml/kg, ro
 function todayWaterMl(){ return S.waterLog[today()] || 0; }
 
 function nextActionFor(todayDay, consumed, nutGoal, waterMl, waterGoal){
-  if(todayDay && !todayDay.done) return {label:'▶ '+todayDay.title+' эхлүүлэх', action:'workout'};
-  if(consumed.kcal < nutGoal.cal*0.4) return {label:'🍽 Хоолоо тэмдэглэх', action:'nutrition'};
-  if(waterMl < waterGoal*0.5) return {label:'💧 Ус уух', action:'water'};
-  if(!S.weights.some(w=>w.d===today())) return {label:'⚖ Жингээ бүртгэх', action:'progress'};
-  return {label:'Маш сайн байна өнөөдөр! 🎉', action:null};
+  if(todayDay && !todayDay.done) return {label:t('na_start_workout', planDayTitle(todayDay)), action:'workout'};
+  if(consumed.kcal < nutGoal.cal*0.4) return {label:'🍽 '+t('na_log_food'), action:'nutrition'};
+  if(waterMl < waterGoal*0.5) return {label:'💧 '+t('na_drink_water'), action:'water'};
+  if(!S.weights.some(w=>w.d===today())) return {label:'⚖ '+t('na_log_weight'), action:'progress'};
+  return {label:t('na_all_done'), action:null};
 }
 
 function renderHome(){
@@ -33,28 +33,28 @@ function renderHome(){
     <div class="view">
       <div class="hero" style="padding:24px 20px">
         <div class="eyebrow">${t('home_today')}</div>
-        <h1 style="font-size:28px">Тавтай морил,<br><span class="y">${esc(p.name)}</span></h1>
-        <p>${goalName(p.goal)} · ${p.place==='home'?'Гэртээ':p.place==='gym'?'Жиймд':'Гэр + жийм'} · 7 хоногт ${p.days} өдөр</p>
+        <h1 style="font-size:28px">${t('home_welcome')},<br><span class="y">${esc(p.name)}</span></h1>
+        <p>${goalName(p.goal)} · ${p.place==='home'?t('onb_home'):p.place==='gym'?t('onb_gym'):t('home_both_places')} · ${t('home_days_per_week', p.days)}</p>
       </div>
 
       <div class="card" style="margin-top:14px">
         <div class="grid g2">
           <div>
             <span class="xs mut">${t('home_today_workout')}</span>
-            <div style="font-weight:700;font-size:15px;margin-top:4px">${todayDay ? todayDay.title : t('home_rest_day')}</div>
-            ${todayDay?`<span class="xs mut">${t('home_today_duration')}: ~${planEstMin(todayDay)} мин ${todayDay.done?'· ✓':''}</span>`:''}
+            <div style="font-weight:700;font-size:15px;margin-top:4px">${todayDay ? planDayTitle(todayDay) : t('home_rest_day')}</div>
+            ${todayDay?`<span class="xs mut">${t('home_today_duration')}: ~${planEstMin(todayDay)} ${t('unit_min')} ${todayDay.done?'· ✓':''}</span>`:''}
           </div>
           <div>
             <span class="xs mut">${t('home_today_food')}</span>
-            <div style="font-weight:700;font-size:15px;margin-top:4px">${consumed.kcal} / ${nut.cal} ккал</div>
+            <div style="font-weight:700;font-size:15px;margin-top:4px">${consumed.kcal} / ${nut.cal} ${t('unit_kcal')}</div>
             <span class="xs mut">${t('home_today_calorie_goal')}</span>
           </div>
         </div>
         <hr class="sep" style="margin:14px 0">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div><span class="xs mut">${t('home_today_water_goal')}</span>
-            <div style="font-weight:700;font-size:15px;margin-top:4px">${(waterMl/1000).toFixed(2)} / ${(waterGoal/1000).toFixed(1)} л</div></div>
-          <button class="btn g sm" id="addWater">+250мл</button>
+            <div style="font-weight:700;font-size:15px;margin-top:4px">${(waterMl/1000).toFixed(2)} / ${(waterGoal/1000).toFixed(1)} ${t('unit_liter')}</div></div>
+          <button class="btn g sm" id="addWater">+250${t('unit_ml')}</button>
         </div>
         <hr class="sep" style="margin:14px 0">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -75,32 +75,32 @@ function renderHome(){
       <div class="card">
         <div class="dayhead" style="margin:0 0 12px;background:transparent;border:none;padding:0">
           <div class="n">${nIdx+1}</div>
-          <div class="meta"><b>${next.title}</b><span>${next.ex.length} дасгал · ~${planEstMin(next)} мин</span></div>
+          <div class="meta"><b>${planDayTitle(next)}</b><span>${next.ex.length} ${t('unit_exercises')} · ~${planEstMin(next)} ${t('unit_min')}</span></div>
         </div>
         ${next.ex.slice(0,3).map(e=>{const x=ex(e.id);return `
           <div class="exrow"><div class="thumb">${x.e}</div>
             <div class="info"><b>${x.n}</b><span>${M_NAMES[x.m]||''}</span></div>
             <div class="sr">${e.sets}×${e.reps}<small>set · reps</small></div></div>`;}).join('')}
-        ${next.ex.length>3?`<p class="xs mut center" style="margin:10px 0 0">+${next.ex.length-3} дасгал</p>`:''}
+        ${next.ex.length>3?`<p class="xs mut center" style="margin:10px 0 0">+${next.ex.length-3} ${t('unit_exercises')}</p>`:''}
       </div>
 
       <div class="secttl"><h2>${t('home_doctor')}</h2></div>
       <div class="card">
-        <p class="sm mut" style="margin:0 0 12px">Юу өвдөж, эвгүй байгаагаа бичээрэй — тохирсон зөвлөмж өгье. Хүсвэл зураг хавсаргаж болно.</p>
+        <p class="sm mut" style="margin:0 0 12px">${t('doctor_intro')}</p>
         <div class="scrollrow" style="margin:0 0 12px; padding-bottom:0">
-          ${['Өнөөдөр ядарч байна','Гэдэс багасгах','20 минутын дасгал','Өвдөг өвдөж байна','Нуруу өвдөж байна','Мөр өвдөж байна'].map(q=>
-            `<button class="chip ai" data-q="${esc(q)}">💬 ${q}</button>`).join('')}
+          ${['q_tired','q_shrink_belly','q_20min','q_knee','q_back','q_shoulder'].map(k=>
+            `<button class="chip ai" data-q="${esc(t(k))}">💬 ${t(k)}</button>`).join('')}
         </div>
         <div class="askrow">
-          <input class="txin" id="askInput" placeholder="Жишээ: Өвдөг өвдөж байна, squat хийж болох уу?">
-          <label class="iconbtn" for="askImg" title="Зураг хавсаргах">📷</label>
+          <input class="txin" id="askInput" placeholder="${t('doctor_placeholder')}">
+          <label class="iconbtn" for="askImg" title="${t('attach_photo')}">📷</label>
           <input type="file" id="askImg" accept="image/*" hidden>
-          <button class="iconbtn acc" id="askBtn" aria-label="Илгээх">→</button>
+          <button class="iconbtn acc" id="askBtn" aria-label="${t('send')}">→</button>
         </div>
         <div id="askPreview"></div>
         <div id="askResult"></div>
       </div>
-      <p class="xs mut center" style="margin-top:20px">Эмчилгээний зөвлөгөө биш. Гэмтэл, өвчтэй бол эмчтэйгээ зөвлөл.</p>
+      <p class="xs mut center" style="margin-top:20px">${t('disclaimer')}</p>
     </div>`;
   topWire();
   wireInstallCard(app);
@@ -128,7 +128,7 @@ function renderHome(){
     const f=e.target.files[0];
     const prev=document.getElementById('askPreview');
     if(!f){ prev.innerHTML=''; return; }
-    prev.innerHTML=`<div class="askpreview"><img src="${URL.createObjectURL(f)}" alt=""><span class="xs">Зураг хавсаргасан</span><button id="askImgX">✕</button></div>`;
+    prev.innerHTML=`<div class="askpreview"><img src="${URL.createObjectURL(f)}" alt=""><span class="xs">${t('photo_attached')}</span><button id="askImgX">✕</button></div>`;
     document.getElementById('askImgX').onclick=()=>{ e.target.value=''; prev.innerHTML=''; };
   };
 }
@@ -137,20 +137,20 @@ function renderHome(){
 function askDoctor(){
   const q=(document.getElementById('askInput').value||'').trim();
   const file=document.getElementById('askImg').files[0];
-  let msg=healthAdvice(q);
+  let msg = S.lang==='en' ? healthAdviceEN(q) : healthAdviceMN(q);
   let imgHtml='';
   if(file){
     imgHtml=`<img src="${URL.createObjectURL(file)}" alt="">`;
-    msg += ' Хавсаргасан зургийг автоматаар шинжлэх боломжгүй ч энэ нь эмчид үзүүлэхэд тань хэрэг болно.';
+    msg += ' ' + t('doctor_photo_note');
   }
   document.getElementById('askResult').innerHTML = `<div class="askresp">${imgHtml}<p>${esc(msg)}</p>
-    <p class="xs mut" style="margin-top:10px">⚠️ Энэ бол ерөнхий зөвлөмж — оношлогоо биш. Шинж тэмдэг үргэлжилбэл/хүндэрвэл эмчид заавал үзүүлээрэй.</p></div>`;
+    <p class="xs mut" style="margin-top:10px">${t('doctor_disclaimer')}</p></div>`;
 }
 
-function healthAdvice(q){
-  const t=(q||'').toLowerCase();
-  const has=(...ws)=>ws.some(w=>t.includes(w));
-  if(!t) return 'Юу өвдөж байгаа эсвэл ямар асуулт байгаагаа дээрх талбарт бичнэ үү.';
+function healthAdviceMN(q){
+  const s=(q||'').toLowerCase();
+  const has=(...ws)=>ws.some(w=>s.includes(w));
+  if(!s) return 'Юу өвдөж байгаа эсвэл ямар асуулт байгаагаа дээрх талбарт бичнэ үү.';
   if(has('ядар')) return 'Зүгээр. Өнөөдөр хөнгөн өдөр болгоё: 15–20 мин сунгалт + хөнгөн алхалт. Маргааш эрчтэй эргэж ороорой.';
   if(has('гэдэс')) return 'Гэдсийг "цэгцэлж" хасах боломжгүй — нийт өөх багасна. Калорийн дутагдал + Plank, Bicycle crunch, Mountain climber тогтмол хий.';
   if(has('20')) return '20 минутын full-body: Squat, Push up, Glute bridge, Plank — тус бүр 3 set, амралт богино. Дасгалын сангаас сонгоорой.';
@@ -162,4 +162,21 @@ function healthAdvice(q){
   if(has('хөл','шилбэ','өсгий','осгий','шагай')) return 'Хөл/шагайн эвгүйцэлтэй үед Lunge, Jump, Calf raise, Burpee зэргийг алгасаж сууж/хэвтэж хийдэг дасгал (Glute bridge, Plank, Bird dog, дээд биеийн дасгал) руу шилжээрэй.';
   if(has('хүзүү','хузуу')) return 'Хүзүүний эвгүйцэлтэй үед Crunch, хүнд Overhead дасгал хийхдээ хүзүүгээ чангалахгүй, толгойгоо төв байрлалд барь. Эвгүйцэл тогтмол үргэлжилбэл эмчид үзүүлээрэй.';
   return 'Зорилго, дасгал эсвэл өвдөж буй хэсгээ дэлгэрэнгүй бичвэл тохирсон зөвлөмж өгье. Жишээ нь: "Өвдөг өвдөж байна, squat хийж болох уу?"';
+}
+
+function healthAdviceEN(q){
+  const s=(q||'').toLowerCase();
+  const has=(...ws)=>ws.some(w=>s.includes(w));
+  if(!s) return 'Tell me what hurts, or what your question is, in the field above.';
+  if(has('tired','exhaust','fatigue')) return "That's fine. Let's make today light: 15–20 min of stretching + a light walk. Come back strong tomorrow.";
+  if(has('belly','stomach','fat loss','gut')) return 'You can\'t "spot reduce" belly fat — overall body fat drops instead. Combine a calorie deficit with consistent Plank, Bicycle crunch, and Mountain climber.';
+  if(has('20 min','20min','quick workout')) return '20-minute full-body: Squat, Push up, Glute bridge, Plank — 3 sets each, short rests. Pick more from the exercise library.';
+  if(has('chest pain',"can't breathe",'heart','breathless')) return "⚠️ If you feel sudden chest pain or breathlessness while training, stop and rest immediately — this could be heart-related, so seek urgent medical care.";
+  if(has('knee')) return 'With knee discomfort, skip Squat, Lunge, and jumping moves for now. Do Glute bridge, a light Wall sit, and stretching. Reduce load/depth if it hurts on a straight leg.';
+  if(has('back','lower back','spine')) return 'With back discomfort, skip Deadlift, loaded Squat, and Sit ups — do Glute bridge, Bird dog, Plank, and gentle stretching instead. Keep your back neutral, never rounded.';
+  if(has('shoulder')) return 'With shoulder discomfort, skip Overhead press, Push up, and Pike push up for now — stick to pain-free light stretching and band work.';
+  if(has('wrist','elbow','arm','hand')) return 'With wrist/elbow/arm discomfort, skip Push up, Curl, and Pushdown — switch to lower-body work (Squat, Lunge, Glute bridge, Plank on fists).';
+  if(has('ankle','calf','foot','shin')) return 'With ankle/foot discomfort, skip Lunge, jumps, Calf raise, and Burpee — switch to seated/lying moves (Glute bridge, Plank, Bird dog, upper-body work).';
+  if(has('neck')) return "With neck discomfort, don't strain your neck during Crunches or heavy Overhead moves — keep your head neutral. See a doctor if it persists.";
+  return 'Describe your goal, exercise, or what hurts in more detail and I\'ll suggest something. Example: "My knee hurts, can I still squat?"';
 }

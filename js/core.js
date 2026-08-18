@@ -82,13 +82,13 @@ function startRestTimer(seconds){
   const bar=document.createElement('div'); bar.className='timerbar'; bar.id='restTimer';
   document.body.appendChild(bar);
   const paint=()=>{
-    bar.innerHTML=`<span>⏱ Амралт <b>${remain}</b>с</span><button id="restStop">Алгасах</button>`;
+    bar.innerHTML=`<span>⏱ ${t('rest')} <b>${remain}</b>${t('unit_sec')}</span><button id="restStop">${t('skip')}</button>`;
     bar.querySelector('#restStop').onclick=stopRestTimer;
   };
   paint();
   restTimer=setInterval(()=>{
     remain--;
-    if(remain<=0){ stopRestTimer(); toast('Амралт дууслаа 💪'); if(navigator.vibrate) navigator.vibrate(200); return; }
+    if(remain<=0){ stopRestTimer(); toast(t('toast_rest_done')); if(navigator.vibrate) navigator.vibrate(200); return; }
     paint();
   },1000);
 }
@@ -120,11 +120,11 @@ function applyTheme(theme){
   try{ localStorage.setItem('mf_theme', theme); }catch(e){}
 }
 function installBoxHTML(){
-  if(isStandalone()) return `<p class="xs mut">✓ Апп болгож суулгасан байна.</p>`;
+  if(isStandalone()) return `<p class="xs mut">✓ ${t('already_installed')}</p>`;
   const hint = deferredInstallPrompt ? '' : isIOS()
-    ? `<p class="xs mut" style="margin-top:8px">Safari дээрх "Хуваалцах" 📤 товч дараад "Add to Home Screen" сонговол апп болгож суулгана.</p>`
-    : `<p class="xs mut" style="margin-top:8px">Энэ browser дээр browser-ийн цэснээс "Install app" / "Add to Home Screen" сонголтыг ашиглаж суулгаж болно.</p>`;
-  return `<button class="btn p" id="installBtn">📲 Апп суулгах</button>${hint}`;
+    ? `<p class="xs mut" style="margin-top:8px">${t('ios_install_hint')}</p>`
+    : `<p class="xs mut" style="margin-top:8px">${t('other_browser_install_hint')}</p>`;
+  return `<button class="btn p" id="installBtn">📲 ${t('install_app')}</button>${hint}`;
 }
 function wireInstallBox(root){
   const b=root.querySelector('#installBtn');
@@ -137,9 +137,9 @@ function wireInstallBox(root){
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.finally(()=>{ deferredInstallPrompt=null; });
     } else if(isIOS()){
-      toast('Safari-гийн "Хуваалцах" 📤 → "Add to Home Screen" сонгоорой');
+      toast(t('toast_ios_install_hint'));
     } else {
-      toast('Browser-ийн цэснээс "Install app" сонголтыг ашиглаарай');
+      toast(t('toast_other_install_hint'));
     }
   };
 }
@@ -152,7 +152,7 @@ function installCardHTML(){
     return `<div class="card" style="margin-top:14px">
       <div style="display:flex;align-items:center;gap:12px">
         <div style="font-size:26px">✅</div>
-        <div><b>${t('home_installed')}</b><div class="xs mut" style="margin-top:2px">FitZone таны төхөөрөмж дээр апп болгож суулгасан байна.</div></div>
+        <div><b>${t('home_installed')}</b><div class="xs mut" style="margin-top:2px">${t('already_installed_long')}</div></div>
       </div>
     </div>`;
   }
@@ -160,7 +160,7 @@ function installCardHTML(){
     return `<div class="card" style="margin-top:14px">
       <div style="display:flex;align-items:center;gap:12px">
         <div style="font-size:26px">📲</div>
-        <div style="flex:1"><b>${title}</b><div class="xs mut" style="margin-top:2px">Апп мэт хурдан нээгдэж, offline ч ажиллана.</div></div>
+        <div style="flex:1"><b>${title}</b><div class="xs mut" style="margin-top:2px">${t('install_card_desc')}</div></div>
       </div>
       <button class="btn p" id="installCardBtn" style="margin-top:12px">📲 ${t('home_install_btn')}</button>
     </div>`;
@@ -172,16 +172,16 @@ function installCardHTML(){
         <div><b>${title}</b></div>
       </div>
       <ol class="xs mut" style="margin:10px 0 0;padding-left:18px;line-height:1.7">
-        <li>Доорх Safari цэснээс "Хуваалцах" 📤 дар</li>
-        <li>Жагсаалтаас "Add to Home Screen" сонго</li>
-        <li>Баруун дээд буланд "Нэмэх" дар — болоо</li>
+        <li>${t('ios_step1')}</li>
+        <li>${t('ios_step2')}</li>
+        <li>${t('ios_step3')}</li>
       </ol>
     </div>`;
   }
   return `<div class="card" style="margin-top:14px">
     <div style="display:flex;align-items:center;gap:12px">
       <div style="font-size:26px">📲</div>
-      <div><b>${title}</b><div class="xs mut" style="margin-top:2px">Browser-ийн цэснээс "Install app" / "Add to Home Screen" сонголтыг хайж ашиглаарай.</div></div>
+      <div><b>${title}</b><div class="xs mut" style="margin-top:2px">${t('other_browser_install_hint')}</div></div>
     </div>
   </div>`;
 }
