@@ -121,16 +121,26 @@ function applyTheme(theme){
 }
 function installBoxHTML(){
   if(isStandalone()) return `<p class="xs mut">✓ Апп болгож суулгасан байна.</p>`;
-  if(deferredInstallPrompt) return `<button class="btn g" id="installBtn">📲 Апп болгож суулгах</button>`;
-  if(isIOS()) return `<p class="xs mut">Safari дээрх "Хуваалцах" 📤 товч дараад "Add to Home Screen" сонговол апп болгож суулгана.</p>`;
-  return `<p class="xs mut">Энэ browser дээр browser-ийн цэснээс "Install app" / "Add to Home Screen" сонголтыг ашиглаж суулгаж болно.</p>`;
+  const hint = deferredInstallPrompt ? '' : isIOS()
+    ? `<p class="xs mut" style="margin-top:8px">Safari дээрх "Хуваалцах" 📤 товч дараад "Add to Home Screen" сонговол апп болгож суулгана.</p>`
+    : `<p class="xs mut" style="margin-top:8px">Энэ browser дээр browser-ийн цэснээс "Install app" / "Add to Home Screen" сонголтыг ашиглаж суулгаж болно.</p>`;
+  return `<button class="btn p" id="installBtn">📲 Апп суулгах</button>${hint}`;
 }
 function wireInstallBox(root){
   const b=root.querySelector('#installBtn');
   if(!b) return;
+  // clicking is the only thing that ever starts the install flow — no
+  // automatic prompt is shown (beforeinstallprompt is already
+  // preventDefault()-ed above, so the browser never auto-pops it either)
   b.onclick=()=>{
-    deferredInstallPrompt.prompt();
-    deferredInstallPrompt.userChoice.finally(()=>{ deferredInstallPrompt=null; });
+    if(deferredInstallPrompt){
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.finally(()=>{ deferredInstallPrompt=null; });
+    } else if(isIOS()){
+      toast('Safari-гийн "Хуваалцах" 📤 → "Add to Home Screen" сонгоорой');
+    } else {
+      toast('Browser-ийн цэснээс "Install app" сонголтыг ашиглаарай');
+    }
   };
 }
 
