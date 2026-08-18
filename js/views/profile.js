@@ -73,12 +73,14 @@ function workoutHistoryRows(){
   });
 }
 function foodHistoryRows(){
+  // todayLog() lazily creates an empty {breakfast:[],...} entry as a side
+  // effect of viewing Home/Nutrition — skip days with nothing actually logged
   return Object.keys(S.foodLog).sort((a,b)=>b<a?-1:1).map(d=>{
     const log=S.foodLog[d];
     let kcal=0, items=0;
     ['breakfast','lunch','dinner','snack'].forEach(slot=>(log[slot]||[]).forEach(it=>{ kcal+=it.kcal||0; items++; }));
-    return {d, label:`${items} хоол · ${kcal} ккал`};
-  });
+    return {d, items, label:`${items} хоол · ${kcal} ккал`};
+  }).filter(r=>r.items>0);
 }
 
 function profileSummaryCard(startWeight, curWeight, joined){
