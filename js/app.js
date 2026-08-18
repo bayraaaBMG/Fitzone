@@ -1,6 +1,18 @@
 /* ---------- boot ---------- */
 (async function init(){
   initFirebase();
+  // applyStateData() (which normally sets the theme) only runs once a
+  // Firestore doc is actually loaded — a brand-new session (auth gate,
+  // onboarding, right up to the first save()) would otherwise never get an
+  // explicit data-theme attribute and silently fall back to the browser's
+  // prefers-color-scheme instead of the intended dark default. The inline
+  // <head> script already applies any locally-cached choice pre-paint;
+  // mirror that same cached value into S.theme here (falling back to the
+  // hardcoded 'dark' default only if this device has never cached one) so
+  // this call can't override what was already painted and cause a flash.
+  try{ const cached = localStorage.getItem('mf_theme'); if(cached) S.theme = cached; }catch(e){}
+  applyTheme(S.theme);
+  applyLangLabels();
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   }
