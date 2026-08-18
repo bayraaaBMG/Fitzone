@@ -575,6 +575,7 @@ let _mnSnapshot = null; // captured once, on first applyLangLabels() call, befor
 function applyLangLabels(){
   const lang = (typeof S!=='undefined' && S.lang) || 'mn';
   const en = lang==='en';
+  if(typeof document!=='undefined') document.title = en ? 'MongolFit — Home & Gym Workout Platform' : 'MongolFit — Гэр & Жийм дасгалын платформ';
   if(typeof M_NAMES!=='undefined') Object.assign(M_NAMES, en?M_NAMES_EN:M_NAMES_MN);
   if(typeof LVL_NAMES!=='undefined') Object.assign(LVL_NAMES, en?LVL_NAMES_EN:LVL_NAMES_MN);
   if(typeof MEAL_NAMES!=='undefined') Object.assign(MEAL_NAMES, en?MEAL_NAMES_EN:MEAL_NAMES_MN);
