@@ -19,7 +19,7 @@ const Store = (() => {
 
 /* ---------- app state ---------- */
 let S = {
-  profile:null,         // {name,age,sex,height,weight,goal,level,place,days,minutes,equip:[],joinedAt}
+  profile:null,         // {name,age,sex,height,weight,goal,level,place,days,minutes,equip:[],joinedAt,photo}
   plan:null,            // [{title, focus, ex:[{id,sets,reps,rest}], done:bool}]
   weights:[],           // [{d:'YYYY-MM-DD', kg}]
   completed:[],         // ['YYYY-MM-DD']

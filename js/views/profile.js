@@ -15,7 +15,15 @@ function renderProfile(){
       <div class="secttl" style="margin-top:4px"><h2>${t('profile_title')}</h2></div>
       <div class="card">
         <div style="display:flex;align-items:center;gap:14px">
-          <div style="width:52px;height:52px;border-radius:50%;background:var(--card2);border:1px solid var(--line);display:grid;place-items:center;font-size:22px;flex:none">${p.sex==='f'?'👩':'👨'}</div>
+          <div style="position:relative;flex:none">
+            <label for="pf_photo" style="display:block;width:52px;height:52px;border-radius:50%;overflow:hidden;cursor:pointer">
+              ${p.photo
+                ? `<img src="${p.photo}" alt="" style="width:100%;height:100%;object-fit:cover">`
+                : `<div style="width:100%;height:100%;background:var(--card2);border:1px solid var(--line);display:grid;place-items:center;font-size:22px">${p.sex==='f'?'👩':'👨'}</div>`}
+            </label>
+            <label for="pf_photo" class="iconbtn" style="position:absolute;bottom:-4px;right:-4px;width:22px;height:22px;margin:0;display:grid;place-items:center;font-size:11px">📷</label>
+            <input type="file" id="pf_photo" accept="image/*" hidden>
+          </div>
           <div style="min-width:0">
             <b style="font-size:17px;display:block">${esc(p.name)}</b>
             <span class="xs mut" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(authUser?authUser.email:'')}</span>
@@ -58,6 +66,28 @@ function renderProfile(){
   topWire();
   wireInstallCard(app);
   document.getElementById('pf_edit').onclick=openSettings;
+  document.getElementById('pf_photo').onchange=e=>{
+    const f=e.target.files[0];
+    if(!f) return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const size=200;
+        const canvas=document.createElement('canvas');
+        canvas.width=size; canvas.height=size;
+        const ctx=canvas.getContext('2d');
+        const s=Math.min(img.width, img.height);
+        ctx.drawImage(img, (img.width-s)/2, (img.height-s)/2, s, s, 0, 0, size, size);
+        S.profile.photo=canvas.toDataURL('image/jpeg', 0.8);
+        save();
+        renderProfile();
+        toast(t('profile_photo_updated'));
+      };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(f);
+  };
 }
 
 function historyList(rows, icon){

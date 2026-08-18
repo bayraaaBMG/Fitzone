@@ -38,7 +38,7 @@ const I18N = {
     st_lang_mn:'Монгол', st_lang_en:'English',
     st_profile_link:'Миний профайл',
 
-    profile_title:'Миний профайл', profile_edit:'Профайл засах',
+    profile_title:'Миний профайл', profile_edit:'Профайл засах', profile_photo_updated:'Зураг шинэчлэгдлээ',
     profile_goal:'Зорилго', profile_joined:'Эхэлсэн огноо',
     profile_start_weight:'Эхний жин', profile_cur_weight:'Одоогийн жин', profile_total_change:'Нийт өөрчлөлт',
     profile_streak:'Дараалсан өдөр', profile_total_workouts:'Нийт дасгал', profile_week_progress:'Энэ 7 хоногийн ахиц',
@@ -216,7 +216,7 @@ const I18N = {
     st_lang_mn:'Монгол', st_lang_en:'English',
     st_profile_link:'My profile',
 
-    profile_title:'My profile', profile_edit:'Edit profile',
+    profile_title:'My profile', profile_edit:'Edit profile', profile_photo_updated:'Photo updated',
     profile_goal:'Goal', profile_joined:'Joined',
     profile_start_weight:'Starting weight', profile_cur_weight:'Current weight', profile_total_change:'Total change',
     profile_streak:'Day streak', profile_total_workouts:'Total workouts', profile_week_progress:'This week’s progress',
