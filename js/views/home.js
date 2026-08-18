@@ -1,32 +1,75 @@
 /* ---------- HOME ---------- */
+function waterGoalMl(p){ return Math.round(p.weight*35/50)*50; } // ~35ml/kg, rounded to nearest 50ml
+function todayWaterMl(){ return S.waterLog[today()] || 0; }
+
+function nextActionFor(todayDay, consumed, nutGoal, waterMl, waterGoal){
+  if(todayDay && !todayDay.done) return {label:'▶ '+todayDay.title+' эхлүүлэх', action:'workout'};
+  if(consumed.kcal < nutGoal.cal*0.4) return {label:'🍽 Хоолоо тэмдэглэх', action:'nutrition'};
+  if(waterMl < waterGoal*0.5) return {label:'💧 Ус уух', action:'water'};
+  if(!S.weights.some(w=>w.d===today())) return {label:'⚖ Жингээ бүртгэх', action:'progress'};
+  return {label:'Маш сайн байна өнөөдөр! 🎉', action:null};
+}
+
 function renderHome(){
   const p=S.profile;
   const next = S.plan.find(d=>!d.done) || S.plan[0];
   const nIdx = S.plan.indexOf(next);
   const doneCount = S.plan.filter(d=>d.done).length;
   const nut = nutrition(p, 1.45);
+
+  const sched = weekSchedule(p.days);
+  const todayIdx = (new Date().getDay()+6)%7; // Mon=0
+  const todayPlanIdx = sched[todayIdx];
+  const todayDay = todayPlanIdx>=0 ? S.plan[todayPlanIdx] : null;
+
+  const consumed = consumedToday();
+  const waterGoal = waterGoalMl(p);
+  const waterMl = todayWaterMl();
+  const streak = calcStreak();
+  const na = nextActionFor(todayDay, consumed, nut, waterMl, waterGoal);
+
   app.innerHTML = `
     ${topBar()}
     <div class="view">
       <div class="hero" style="padding:24px 20px">
-        <div class="eyebrow">Өнөөдөр</div>
+        <div class="eyebrow">${t('home_today')}</div>
         <h1 style="font-size:28px">Тавтай морил,<br><span class="y">${esc(p.name)}</span></h1>
         <p>${goalName(p.goal)} · ${p.place==='home'?'Гэртээ':p.place==='gym'?'Жиймд':'Гэр + жийм'} · 7 хоногт ${p.days} өдөр</p>
-        <div style="margin-top:18px"><button class="btn p" id="goNext">▶ ${next.title} эхлүүлэх</button></div>
       </div>
 
-      <div class="grid g2" style="margin-top:14px">
-        <div class="card"><span class="xs mut">Энэ долоо хоног</span><div style="font-family:Archivo;font-weight:900;font-size:26px;margin-top:4px">${doneCount}/${p.days}</div><span class="xs mut">дасгал дууссан</span></div>
-        <div class="card"><span class="xs mut">Зорилгын калори</span><div style="font-family:Archivo;font-weight:900;font-size:26px;margin-top:4px;color:var(--acc)">${nut.cal}</div><span class="xs mut">ккал / өдөр</span></div>
+      <div class="card" style="margin-top:14px">
+        <div class="grid g2">
+          <div>
+            <span class="xs mut">${t('home_today_workout')}</span>
+            <div style="font-weight:700;font-size:15px;margin-top:4px">${todayDay ? todayDay.title : t('home_rest_day')}</div>
+            ${todayDay?`<span class="xs mut">${t('home_today_duration')}: ~${planEstMin(todayDay)} мин ${todayDay.done?'· ✓':''}</span>`:''}
+          </div>
+          <div>
+            <span class="xs mut">${t('home_today_food')}</span>
+            <div style="font-weight:700;font-size:15px;margin-top:4px">${consumed.kcal} / ${nut.cal} ккал</div>
+            <span class="xs mut">${t('home_today_calorie_goal')}</span>
+          </div>
+        </div>
+        <hr class="sep" style="margin:14px 0">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><span class="xs mut">${t('home_today_water_goal')}</span>
+            <div style="font-weight:700;font-size:15px;margin-top:4px">${(waterMl/1000).toFixed(2)} / ${(waterGoal/1000).toFixed(1)} л</div></div>
+          <button class="btn g sm" id="addWater">+250мл</button>
+        </div>
+        <hr class="sep" style="margin:14px 0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span class="xs mut">${t('profile_streak')}: ${streak}🔥 · ${doneCount}/${p.days} ${t('profile_week_progress').toLowerCase()}</span>
+        </div>
+        <button class="btn p" id="nextActionBtn" ${na.action?'':'disabled'}>${na.label}</button>
       </div>
 
-      <div class="secttl"><h2>Дасгал хийх</h2></div>
+      <div class="secttl"><h2>${t('home_workout_section')}</h2></div>
       <div class="grid g2">
-        <button class="tile acc" id="goHomeWO"><div class="ic">🏠</div><h3>Гэрийн дасгал</h3><p>Тоног хэрэгслэлгүй, хаана ч хийнэ</p></button>
-        <button class="tile" id="goGymWO"><div class="ic">🏋️</div><h3>Жийм дасгал</h3><p>Тоног төхөөрөмжтэй, хүчтэй ачаалал</p></button>
+        <button class="tile acc" id="goHomeWO"><div class="ic">🏠</div><h3>${t('home_home_workout')}</h3><p>${t('home_home_workout_p')}</p></button>
+        <button class="tile" id="goGymWO"><div class="ic">🏋️</div><h3>${t('home_gym_workout')}</h3><p>${t('home_gym_workout_p')}</p></button>
       </div>
 
-      <div class="secttl"><h2>Дараагийн дасгал</h2><a data-tab="plan" class="goTab">Бүгд ›</a></div>
+      <div class="secttl"><h2>${t('home_next_workout')}</h2><a data-tab="plan" class="goTab">${t('home_all')}</a></div>
       <div class="card">
         <div class="dayhead" style="margin:0 0 12px;background:transparent;border:none;padding:0">
           <div class="n">${nIdx+1}</div>
@@ -39,7 +82,7 @@ function renderHome(){
         ${next.ex.length>3?`<p class="xs mut center" style="margin:10px 0 0">+${next.ex.length-3} дасгал</p>`:''}
       </div>
 
-      <div class="secttl"><h2>Эмчийн зөвлөгөө 🩺</h2></div>
+      <div class="secttl"><h2>${t('home_doctor')}</h2></div>
       <div class="card">
         <p class="sm mut" style="margin:0 0 12px">Юу өвдөж, эвгүй байгаагаа бичээрэй — тохирсон зөвлөмж өгье. Хүсвэл зураг хавсаргаж болно.</p>
         <div class="scrollrow" style="margin:0 0 12px; padding-bottom:0">
@@ -58,10 +101,23 @@ function renderHome(){
       <p class="xs mut center" style="margin-top:20px">Эмчилгээний зөвлөгөө биш. Гэмтэл, өвчтэй бол эмчтэйгээ зөвлөл.</p>
     </div>`;
   topWire();
-  document.getElementById('goNext').onclick=()=>openDay(nIdx);
   document.getElementById('goHomeWO').onclick=()=>{ libF.loc='home'; S.tab='library'; render(); };
   document.getElementById('goGymWO').onclick=()=>{ libF.loc='gym'; S.tab='library'; render(); };
   app.querySelectorAll('.goTab').forEach(a=>a.onclick=()=>{S.tab=a.dataset.tab;render();});
+
+  document.getElementById('addWater').onclick=()=>{
+    const d=today();
+    S.waterLog[d]=(S.waterLog[d]||0)+250;
+    save(); render();
+  };
+  const naBtn=document.getElementById('nextActionBtn');
+  if(na.action) naBtn.onclick=()=>{
+    if(na.action==='workout') openDay(todayPlanIdx);
+    else if(na.action==='nutrition'){ S.tab='nutrition'; render(); }
+    else if(na.action==='progress'){ S.tab='progress'; render(); }
+    else if(na.action==='water'){ const d=today(); S.waterLog[d]=(S.waterLog[d]||0)+250; save(); render(); }
+  };
+
   app.querySelectorAll('.ai').forEach(b=> b.onclick=()=>{ document.getElementById('askInput').value=b.dataset.q; askDoctor(); });
   document.getElementById('askBtn').onclick=askDoctor;
   document.getElementById('askInput').onkeydown=e=>{ if(e.key==='Enter') askDoctor(); };

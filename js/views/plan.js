@@ -7,9 +7,9 @@ function renderPlan(){
   app.innerHTML = `
     ${topBar()}
     <div class="view">
-      <div class="secttl" style="margin-top:4px"><h2>Миний хөтөлбөр</h2><a class="regen">↻ Шинэчлэх</a></div>
+      <div class="secttl" style="margin-top:4px"><h2>${t('plan_title')}</h2><a class="regen">${t('plan_regen')}</a></div>
       <p class="mut sm" style="margin:0 0 16px">${goalName(p.goal)} · ${LVL_NAMES[p.level]} · ${p.place==='home'?'Гэр':p.place==='gym'?'Жийм':'Гэр+Жийм'} · долоо хоногт ${p.days} өдөр</p>
-      <p class="xs mut" style="margin:0 0 6px">7 ХОНОГИЙН ХУВААРЬ</p>
+      <p class="xs mut" style="margin:0 0 6px">${t('plan_week')}</p>
       <div class="weekgrid">
         ${sched.map((di,wi)=>{
           if(di===-1) return `<div class="wd rest"><div class="lbl">${WD_NAMES[wi]}</div><div class="ic">😴</div></div>`;
@@ -74,8 +74,9 @@ function openDay(i){
   const cb=sheet.querySelector('#complete');
   if(cb) cb.onclick=()=>{
     d.done=true;
-    const t=today();
-    if(!S.completed.includes(t)) S.completed.push(t);
+    const dt=today();
+    if(!S.completed.includes(dt)) S.completed.push(dt);
+    S.completedLog[dt] = {title:d.title, focus:d.focus};
     save(); closeSheet(); render();
     toast('Бэрхээ! Дасгал бүртгэгдлээ 🔥');
   };

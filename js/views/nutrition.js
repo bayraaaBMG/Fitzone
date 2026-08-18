@@ -26,29 +26,29 @@ function renderNutrition(){
   app.innerHTML = `
     ${topBar()}
     <div class="view">
-      <div class="secttl" style="margin-top:4px"><h2>Хооллолт</h2></div>
+      <div class="secttl" style="margin-top:4px"><h2>${t('nut_title')}</h2></div>
       <p class="mut sm" style="margin:0 0 14px">${esc(p.name)} · ${p.weight}кг · ${goalName(p.goal)}</p>
-      <p class="xs mut" style="margin:0 0 6px">ӨДРИЙН ИДЭВХ</p>
+      <p class="xs mut" style="margin:0 0 6px">${t('nut_activity')}</p>
       <div class="scrollrow" id="acts">
         ${acts.map(([nm,v])=>`<button class="chip ${Math.abs(actLevel-v)<.01?'on':''}" data-v="${v}">${nm}</button>`).join('')}
       </div>
 
       <div class="card" style="margin-top:16px">
         <div style="display:flex;justify-content:space-between;align-items:baseline">
-          <div><span class="xs mut">Өнөөдөр идсэн</span>
-            <div style="font-family:Archivo;font-weight:900;font-size:34px;color:var(--acc);line-height:1">${c.kcal}</div>
+          <div><span class="xs mut">${t('nut_today_eaten')}</span>
+            <div style="font-family:Archivo;font-weight:900;font-size:34px;color:var(--acc-ink);line-height:1">${c.kcal}</div>
             <span class="xs mut">/ ${n.cal} ккал зорилго (${n.label})</span></div>
         </div>
         <hr class="sep">
         <div class="macro"><b style="color:var(--coral)">${c.protein}г / ${n.protein}г</b><div class="bar"><i style="width:${pct(c.protein,n.protein)}%;background:var(--coral)"></i></div><span class="sm mut" style="width:64px">Уураг</span></div>
-        <div class="macro"><b style="color:var(--acc)">${c.carb}г / ${n.carb}г</b><div class="bar"><i style="width:${pct(c.carb,n.carb)}%;background:var(--acc)"></i></div><span class="sm mut" style="width:64px">Нүүрс ус</span></div>
+        <div class="macro"><b style="color:var(--acc-ink)">${c.carb}г / ${n.carb}г</b><div class="bar"><i style="width:${pct(c.carb,n.carb)}%;background:var(--acc)"></i></div><span class="sm mut" style="width:64px">Нүүрс ус</span></div>
         <div class="macro"><b style="color:var(--warn)">${c.fat}г / ${n.fat}г</b><div class="bar"><i style="width:${pct(c.fat,n.fat)}%;background:var(--warn)"></i></div><span class="sm mut" style="width:64px">Өөх тос</span></div>
       </div>
 
-      <div class="secttl"><h2>Өнөөдрийн тэмдэглэл</h2></div>
+      <div class="secttl"><h2>${t('nut_diary')}</h2></div>
       <div id="diary"></div>
 
-      <div class="secttl"><h2>Биеийн жин (BMI)</h2></div>
+      <div class="secttl"><h2>${t('nut_bmi')}</h2></div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:baseline">
           <div><span class="xs mut">Таны үзүүлэлт</span>
@@ -60,17 +60,17 @@ function renderNutrition(){
         <div class="bmiscale"><span>Дутуу</span><span>Хэвийн</span><span>Илүүдэл</span><span>Таргалалт</span></div>
       </div>
 
-      <div class="secttl"><h2>Гэрийн нөөц</h2></div>
+      <div class="secttl"><h2>${t('nut_pantry')}</h2></div>
       <p class="mut sm" style="margin:0 0 12px">Гэртээ байгаа бүтээгдэхүүнээ тэмдэглээрэй — тэдгээрт тулгуурлан хоолны санаа гаргана.</p>
       <div id="pantry"></div>
 
-      <div class="secttl"><h2>Хоолны санаа</h2></div>
+      <div class="secttl"><h2>${t('nut_recipes')}</h2></div>
       <p class="mut sm" style="margin:0 0 10px">Гэрийн нөөцөндөө тэмдэглэсэн зүйлээрээ шууд хийж болох хоол эхэнд ✓ тэмдэгтэй жагсаана.</p>
       <div class="scrollrow" id="recipeF"></div>
       <div class="scrollrow" id="recipeCat" style="margin-top:6px"></div>
       <div id="recipelist" style="margin-top:12px"></div>
 
-      <div class="secttl"><h2>Хоолны төлөвлөгөө</h2></div>
+      <div class="secttl"><h2>${t('nut_mealplan')}</h2></div>
       <div class="chiprow" id="planDaysSel">
         <button class="chip ${planDays===7?'on':''}" data-d="7">7 хоног</button>
         <button class="chip ${planDays===30?'on':''}" data-d="30">30 хоног</button>

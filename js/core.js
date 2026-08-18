@@ -15,12 +15,13 @@ function render(){
   else if(S.tab==='library') renderLibrary();
   else if(S.tab==='progress') renderProgress();
   else if(S.tab==='nutrition') renderNutrition();
+  else if(S.tab==='profile') renderProfile();
   window.scrollTo(0,0);
 }
 
 /* ---------- NAV ---------- */
 function renderNav(){
-  const tabs=[['home','🏠','Нүүр'],['plan','📋','Хөтөлбөр'],['library','🏋️','Дасгал'],['progress','📈','Ахиц'],['nutrition','🍳','Хоол']];
+  const tabs=[['home','🏠',t('nav_home')],['plan','📋',t('nav_plan')],['library','🏋️',t('nav_library')],['progress','📈',t('nav_progress')],['nutrition','🍳',t('nav_nutrition')]];
   navEl.innerHTML = tabs.map(([id,ic,nm])=>
     `<button class="${S.tab===id?'on':''}" data-tab="${id}"><span class="ni">${ic}</span>${nm}</button>`).join('');
   navEl.querySelectorAll('button').forEach(b=> b.onclick=()=>{ S.tab=b.dataset.tab; render(); });
@@ -29,12 +30,14 @@ function renderNav(){
 /* ---------- shared bits ---------- */
 function topBar(){
   return `<div class="top"><div class="logo"><img src="icons/logo-mark.svg" alt="MongolFit">Mongol<b>Fit</b></div>
-    <div class="who">${esc(S.profile.name)}<br><span style="color:var(--acc)">${goalName(S.profile.goal)}</span></div>
-    <button class="iconbtn" id="settingsBtn" aria-label="Тохиргоо">⚙</button></div>`;
+    <button class="who" id="whoBtn">${esc(S.profile.name)}<br><span style="color:var(--acc-ink)">${goalName(S.profile.goal)}</span></button>
+    <button class="iconbtn" id="settingsBtn" aria-label="${t('settings')}">⚙</button></div>`;
 }
 function topWire(){
   const b=document.getElementById('settingsBtn');
   if(b) b.onclick=openSettings;
+  const w=document.getElementById('whoBtn');
+  if(w) w.onclick=()=>{ S.tab='profile'; render(); };
 }
 function mkSheet(){
   closeSheet();
@@ -105,6 +108,16 @@ function isStandalone(){
 }
 function isIOS(){
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+function isMobile(){
+  return isIOS() || /android|windows phone|mobi/i.test(navigator.userAgent);
+}
+
+/* ---------- theme ---------- */
+function applyTheme(theme){
+  if(theme==='light' || theme==='dark') document.documentElement.setAttribute('data-theme', theme);
+  else document.documentElement.removeAttribute('data-theme'); // 'system' — follow prefers-color-scheme
+  try{ localStorage.setItem('mf_theme', theme); }catch(e){}
 }
 function installBoxHTML(){
   if(isStandalone()) return `<p class="xs mut">✓ Апп болгож суулгасан байна.</p>`;

@@ -16,14 +16,21 @@ function applyStateData(d){
   S.plan = d.plan || (d.profile ? generatePlan(d.profile) : null);
   S.weights = d.weights || [];
   S.completed = d.completed || [];
+  S.completedLog = d.completedLog || {};
   S.challenge = d.challenge || null;
   S.pantry = d.pantry || [];
   S.foodLog = d.foodLog || {};
+  S.waterLog = d.waterLog || {};
+  S.theme = d.theme || 'dark';
+  S.lang = d.lang || 'mn';
   S.tab = 'home';
+  applyTheme(S.theme);
+  applyLangLabels();
 }
 function resetLocalState(){
-  S.profile=null; S.plan=null; S.weights=[]; S.completed=[];
-  S.challenge=null; S.pantry=[]; S.foodLog={}; S.tab='home';
+  S.profile=null; S.plan=null; S.weights=[]; S.completed=[]; S.completedLog={};
+  S.challenge=null; S.pantry=[]; S.foodLog={}; S.waterLog={}; S.tab='home';
+  // theme/lang are device/browser preferences, not account data — keep as-is on logout
 }
 
 /* pulls this account's data from Firestore; migrates any pre-login local
@@ -58,13 +65,25 @@ async function loadCloudState(uid){
 function signUp(email, pass){ return firebase.auth().createUserWithEmailAndPassword(email, pass); }
 function logIn(email, pass){ return firebase.auth().signInWithEmailAndPassword(email, pass); }
 
-/* popup on desktop; redirect on standalone-PWA/iOS or if the popup gets blocked —
-   those environments routinely block/mishandle window.open-based OAuth popups */
+/* popup on desktop; redirect on any mobile browser or standalone PWA.
+   Mobile popups are unreliable even when not outright blocked — backgrounding
+   the opener tab while the Google account picker is up routinely breaks the
+   window.opener/postMessage channel signInWithPopup depends on, which is the
+   most common cause of "picks an account, bounces back to the login screen"
+   on Android/iOS. Redirect avoids that channel entirely. */
 function googleSignIn(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  if(isStandalone() || isIOS()) return firebase.auth().signInWithRedirect(provider);
-  return firebase.auth().signInWithPopup(provider).catch(e=>{
+  const useRedirect = isMobile() || isStandalone();
+  const persistence = firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+  if(useRedirect){
+    return persistence.then(()=>{
+      try{ sessionStorage.setItem('mf_google_redirect_pending', '1'); }catch(e){}
+      return firebase.auth().signInWithRedirect(provider);
+    });
+  }
+  return persistence.then(()=> firebase.auth().signInWithPopup(provider)).catch(e=>{
     if(e.code==='auth/popup-blocked' || e.code==='auth/operation-not-supported-in-this-environment'){
+      try{ sessionStorage.setItem('mf_google_redirect_pending', '1'); }catch(err){}
       return firebase.auth().signInWithRedirect(provider);
     }
     throw e;

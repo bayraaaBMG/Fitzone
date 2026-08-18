@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MongolFit — Гэр & Жийм дасгалын платформ</title>
+<script>
+/* apply the last-known theme before first paint — avoids a flash of the
+   wrong theme while Firestore/auth resolves the account's real preference */
+(function(){
+  try{
+    var t = localStorage.getItem('mf_theme');
+    if(t==='light' || t==='dark') document.documentElement.setAttribute('data-theme', t);
+  }catch(e){}
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -32,6 +42,7 @@
 <script src="js/firebase-config.js"></script>
 <script src="js/data.js"></script>
 <script src="js/foods.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/state.js"></script>
 <script src="js/planner.js"></script>
 <script src="js/auth.js"></script>
@@ -45,6 +56,7 @@
 <script src="js/views/progress.js"></script>
 <script src="js/views/nutrition.js"></script>
 <script src="js/views/settings.js"></script>
+<script src="js/views/profile.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

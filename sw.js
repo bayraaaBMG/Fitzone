@@ -1,11 +1,11 @@
-const CACHE = 'mongolfit-v5';
+const CACHE = 'mongolfit-v6';
 const ASSETS = [
   './', './Fitzone.html', './css/style.css',
   './js/firebase-config.js',
-  './js/data.js','./js/foods.js','./js/state.js','./js/planner.js','./js/auth.js','./js/core.js',
+  './js/data.js','./js/foods.js','./js/i18n.js','./js/state.js','./js/planner.js','./js/auth.js','./js/core.js',
   './js/views/authgate.js','./js/views/onboard.js','./js/views/home.js','./js/views/exercise.js',
   './js/views/plan.js','./js/views/library.js','./js/views/progress.js','./js/views/nutrition.js',
-  './js/views/settings.js','./js/app.js','./manifest.json'
+  './js/views/settings.js','./js/views/profile.js','./js/app.js','./manifest.json'
 ];
 
 self.addEventListener('install', e=>{

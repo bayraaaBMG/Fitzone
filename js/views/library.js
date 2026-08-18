@@ -4,23 +4,23 @@ function renderLibrary(){
   app.innerHTML = `
     ${topBar()}
     <div class="view">
-      <div class="secttl" style="margin-top:4px"><h2>Дасгалын сан</h2></div>
+      <div class="secttl" style="margin-top:4px"><h2>${t('lib_title')}</h2></div>
       <p class="mut sm" style="margin:0 0 14px">${EX.length} дасгал. Шүүж сонгоод дэлгэрэнгүйг нь үз.</p>
-      <p class="xs mut" style="margin:0 0 6px">БАЙРШИЛ</p>
+      <p class="xs mut" style="margin:0 0 6px">${t('lib_loc')}</p>
       <div class="scrollrow" id="fLoc"></div>
-      <p class="xs mut" style="margin:10px 0 6px">ТҮВШИН</p>
+      <p class="xs mut" style="margin:10px 0 6px">${t('lib_lvl')}</p>
       <div class="scrollrow" id="fLvl"></div>
-      <p class="xs mut" style="margin:10px 0 6px">ЗОРИЛГО</p>
+      <p class="xs mut" style="margin:10px 0 6px">${t('lib_goal')}</p>
       <div class="scrollrow" id="fGoal"></div>
-      <p class="xs mut" style="margin:10px 0 6px">БУЛЧИН</p>
+      <p class="xs mut" style="margin:10px 0 6px">${t('lib_muscle')}</p>
       <div class="scrollrow" id="fM"></div>
       <div id="exlist" style="margin-top:16px"></div>
     </div>`;
   topWire();
-  const locs=[['all','Бүгд'],['home','🏠 Гэр'],['gym','🏋️ Жийм']];
-  const lvls=[['all','Бүгд'],[1,'Анхан'],[2,'Дунд'],[3,'Ахисан']];
-  const goals=[['all','Бүгд'],['fatloss','🔥 Турах'],['muscle','💪 Булчин нэмэх'],['tone','✨ Галбиржих']];
-  const ms=[['all','Бүгд'],...Object.keys(M_NAMES).map(k=>[k,M_NAMES[k]])];
+  const locs=[['all',t('all')],['home','🏠 Гэр'],['gym','🏋️ Жийм']];
+  const lvls=[['all',t('all')],[1,LVL_NAMES[1]],[2,LVL_NAMES[2]],[3,LVL_NAMES[3]]];
+  const goals=[['all',t('all')],['fatloss','🔥 '+goalName('fatloss')],['muscle','💪 '+goalName('muscle')],['tone','✨ '+goalName('tone')]];
+  const ms=[['all',t('all')],...Object.keys(M_NAMES).map(k=>[k,M_NAMES[k]])];
   const fLoc=document.getElementById('fLoc'), fLvl=document.getElementById('fLvl'),
     fGoal=document.getElementById('fGoal'), fM=document.getElementById('fM');
   fLoc.innerHTML=locs.map(([v,n])=>`<button class="chip ${libF.loc===v?'on':''}" data-v="${v}">${n}</button>`).join('');

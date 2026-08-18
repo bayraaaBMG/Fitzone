@@ -138,7 +138,7 @@ function bmi(weight, height){
   return weight/(h*h);
 }
 function bmiCategory(b){
-  if(b<18.5) return {n:'Дутуу жинтэй', c:'var(--acc)'};
+  if(b<18.5) return {n:'Дутуу жинтэй', c:'var(--acc-ink)'};
   if(b<25)   return {n:'Хэвийн', c:'var(--ok)'};
   if(b<30)   return {n:'Илүүдэл жинтэй', c:'var(--warn)'};
   return {n:'Таргалалттай', c:'var(--coral)'};

@@ -2,12 +2,49 @@
   --bg:#0A0B0D; --bg2:#101216; --card:#15181E; --card2:#1B1F27;
   --line:#262B34; --line2:#333A45;
   --txt:#F2F4F7; --mut:#9099A6; --mut2:#646C78;
-  --acc:#C9F73B;            /* neon lime */
+  --acc:#C9F73B;            /* neon lime — used as FILL (dark text always on top) */
+  --acc-ink:#C9F73B;        /* accent used as TEXT/stroke — darkens in light mode for contrast */
   --acc-d:#9ECC16;
   --coral:#FF6A3D;          /* warm secondary */
   --ok:#3DDC84; --warn:#FFB23D;
+  --top-bg:rgba(10,11,13,.82);
+  --hero-base:linear-gradient(180deg,#13161C,#0d0f13);
+  --hero-t1:rgba(201,247,59,.20); --hero-t2:rgba(255,106,61,.16);
+  --panel-g:linear-gradient(150deg,#1d2230,#13161c);
+  --tile-acc-g:linear-gradient(160deg,#1c220f,#15181E); --tile-acc-border:#3a4a16;
+  --note-warn-bg:#1d1708; --note-warn-border:#5a4318;
+  --note-ok-bg:#0c1a12; --note-ok-border:#1d4a30;
   --r:16px; --rs:11px;
   --maxw:520px;
+}
+/* follow OS preference unless the user picked a theme explicitly */
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#F4F5F7; --bg2:#FFFFFF; --card:#FFFFFF; --card2:#F0F1F4;
+    --line:#E4E6EB; --line2:#D5D8E0;
+    --txt:#15171B; --mut:#5B6270; --mut2:#868D99;
+    --acc-ink:#5C7A00;
+    --coral:#C24A1F; --ok:#1F9D5C; --warn:#B8720A;
+    --top-bg:rgba(255,255,255,.82);
+    --hero-base:linear-gradient(180deg,#FFFFFF,#F1F3ED);
+    --panel-g:linear-gradient(150deg,#F0F1F4,#FFFFFF);
+    --tile-acc-g:linear-gradient(160deg,#EEFAD1,#FFFFFF); --tile-acc-border:#CFE896;
+    --note-warn-bg:#FFF6E5; --note-warn-border:#F0C878;
+    --note-ok-bg:#E7F7EE; --note-ok-border:#A8DFC0;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#F4F5F7; --bg2:#FFFFFF; --card:#FFFFFF; --card2:#F0F1F4;
+  --line:#E4E6EB; --line2:#D5D8E0;
+  --txt:#15171B; --mut:#5B6270; --mut2:#868D99;
+  --acc-ink:#5C7A00;
+  --coral:#C24A1F; --ok:#1F9D5C; --warn:#B8720A;
+  --top-bg:rgba(255,255,255,.82);
+  --hero-base:linear-gradient(180deg,#FFFFFF,#F1F3ED);
+  --panel-g:linear-gradient(150deg,#F0F1F4,#FFFFFF);
+  --tile-acc-g:linear-gradient(160deg,#EEFAD1,#FFFFFF); --tile-acc-border:#CFE896;
+  --note-warn-bg:#FFF6E5; --note-warn-border:#F0C878;
+  --note-ok-bg:#E7F7EE; --note-ok-border:#A8DFC0;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
 html,body{margin:0; padding:0}
@@ -24,12 +61,12 @@ input,select{font-family:inherit; font-size:16px}
 .mut{color:var(--mut)} .sm{font-size:13px} .xs{font-size:11.5px}
 
 /* ---------- top bar ---------- */
-.top{position:sticky; top:0; z-index:30; background:rgba(10,11,13,.82); backdrop-filter:blur(12px);
+.top{position:sticky; top:0; z-index:30; background:var(--top-bg); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
   border-bottom:1px solid var(--line); padding:14px 18px; display:flex; align-items:center; gap:10px}
 .logo{display:flex; align-items:center; gap:9px; font-family:'Archivo'; font-weight:900; font-size:18px; letter-spacing:.02em}
 .logo img{width:28px; height:28px; border-radius:8px; display:block; flex:none}
-.logo b{color:var(--acc)}
-.top .who{margin-left:auto; font-size:12px; color:var(--mut); text-align:right; line-height:1.25}
+.logo b{color:var(--acc-ink)}
+.top .who{margin-left:auto; padding:0; font-size:12px; color:var(--mut); text-align:right; line-height:1.25}
 .iconbtn{flex:none; width:34px; height:34px; margin-left:10px; border-radius:10px; background:var(--card2);
   border:1px solid var(--line2); display:grid; place-items:center; font-size:16px; color:var(--mut)}
 .iconbtn:active{transform:scale(.95)}
@@ -40,13 +77,13 @@ input,select{font-family:inherit; font-size:16px}
 /* ---------- hero ---------- */
 .hero{position:relative; border-radius:22px; overflow:hidden; padding:30px 22px 26px;
   background:
-    radial-gradient(120% 90% at 85% 0%, rgba(201,247,59,.20), transparent 55%),
-    radial-gradient(120% 120% at 0% 100%, rgba(255,106,61,.16), transparent 50%),
-    linear-gradient(180deg,#13161C,#0d0f13);
+    radial-gradient(120% 90% at 85% 0%, var(--hero-t1), transparent 55%),
+    radial-gradient(120% 120% at 0% 100%, var(--hero-t2), transparent 50%),
+    var(--hero-base);
   border:1px solid var(--line); }
-.hero .eyebrow{font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--acc); font-weight:700; margin-bottom:14px}
+.hero .eyebrow{font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--acc-ink); font-weight:700; margin-bottom:14px}
 .hero h1{font-size:clamp(30px,9.2vw,42px); line-height:.98; font-weight:900; text-transform:uppercase}
-.hero h1 .y{color:var(--acc)}
+.hero h1 .y{color:var(--acc-ink)}
 .hero p{color:var(--mut); margin:14px 0 0; font-size:14.5px; max-width:30ch}
 .hero .stats{display:flex; gap:22px; margin-top:22px}
 .hero .stats div b{font-family:'Archivo'; font-weight:900; font-size:22px; display:block}
@@ -63,7 +100,7 @@ input,select{font-family:inherit; font-size:16px}
 
 .secttl{display:flex; align-items:baseline; justify-content:space-between; margin:26px 2px 12px}
 .secttl h2{font-size:20px; font-weight:900; text-transform:uppercase}
-.secttl a{font-size:12px; color:var(--acc); font-weight:600}
+.secttl a{font-size:12px; color:var(--acc-ink); font-weight:600}
 
 /* ---------- cards ---------- */
 .grid{display:grid; gap:12px}
@@ -74,7 +111,7 @@ input,select{font-family:inherit; font-size:16px}
 .tile .ic{font-size:24px; margin-bottom:10px}
 .tile h3{font-size:15px; font-weight:700; font-family:'Inter'}
 .tile p{margin:4px 0 0; font-size:12px; color:var(--mut); line-height:1.35}
-.tile.acc{background:linear-gradient(160deg,#1c220f,#15181E); border-color:#3a4a16}
+.tile.acc{background:var(--tile-acc-g); border-color:var(--tile-acc-border)}
 
 .chip{display:inline-flex; align-items:center; gap:6px; padding:8px 13px; border-radius:999px;
   border:1px solid var(--line2); background:var(--card); font-size:13px; font-weight:500; color:var(--mut); white-space:nowrap; transition:.14s}
@@ -91,7 +128,7 @@ input,select{font-family:inherit; font-size:16px}
 .inrow .field{min-width:0}
 .txin{width:100%; background:var(--card); border:1px solid var(--line2); color:var(--txt);
   border-radius:11px; padding:14px 14px; outline:none; transition:.15s}
-.txin:focus{border-color:var(--acc)}
+.txin:focus{border-color:var(--acc-ink)}
 
 /* ---------- ask-the-doctor ---------- */
 .askrow{display:flex; align-items:center}
@@ -124,29 +161,29 @@ label.iconbtn{cursor:pointer}
 .exrow .info{flex:1; min-width:0}
 .exrow .info b{font-size:14.5px; font-weight:600; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .exrow .info span{font-size:12px; color:var(--mut)}
-.exrow .sr{font-family:'Archivo'; font-weight:800; font-size:13px; color:var(--acc); text-align:right; flex:none}
+.exrow .sr{font-family:'Archivo'; font-weight:800; font-size:13px; color:var(--acc-ink); text-align:right; flex:none}
 .exrow .sr small{display:block; color:var(--mut2); font-weight:500; font-family:'Inter'; font-size:10px; text-transform:uppercase}
 
 /* ---------- exercise detail / modal ---------- */
-.sheet{position:fixed; inset:0; z-index:60; background:rgba(0,0,0,.55); backdrop-filter:blur(2px);
+.sheet{position:fixed; inset:0; z-index:60; background:rgba(0,0,0,.55); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
   display:flex; align-items:flex-end; justify-content:center; animation:fade .2s}
 .sheet .inner{background:var(--bg2); border:1px solid var(--line); border-bottom:none;
   border-radius:22px 22px 0 0; width:100%; max-width:var(--maxw); max-height:90vh; overflow-y:auto; padding:22px 20px 32px;
   animation:up .28s cubic-bezier(.2,.8,.2,1)}
 @keyframes up{from{transform:translateY(40px); opacity:.4} to{transform:none; opacity:1}}
 .sheet .grab{width:42px; height:4px; background:var(--line2); border-radius:4px; margin:0 auto 16px}
-.bigthumb{height:150px; border-radius:16px; background:linear-gradient(150deg,#1d2230,#13161c);
+.bigthumb{height:150px; border-radius:16px; background:var(--panel-g);
   border:1px solid var(--line); display:grid; place-items:center; font-size:60px; margin-bottom:16px}
 .kv{display:flex; gap:10px; margin:14px 0}
 .kv .k{flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:11px; text-align:center}
-.kv .k b{font-family:'Archivo'; font-weight:900; font-size:17px; display:block; color:var(--acc)}
+.kv .k b{font-family:'Archivo'; font-weight:900; font-size:17px; display:block; color:var(--acc-ink)}
 .kv .k span{font-size:10.5px; color:var(--mut2); text-transform:uppercase; letter-spacing:.05em}
 .block{margin-top:16px}
 .block .lab{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--mut); margin-bottom:7px}
 .note{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; font-size:13.5px}
-.note.warn{border-color:#5a4318; background:#1d1708}
+.note.warn{border-color:var(--note-warn-border); background:var(--note-warn-bg)}
 .note.warn .lab{color:var(--warn)}
-.note.ok{border-color:#1d4a30; background:#0c1a12}
+.note.ok{border-color:var(--note-ok-border); background:var(--note-ok-bg)}
 .note.ok .lab{color:var(--ok)}
 .vtag{display:inline-block; font-size:11px; padding:3px 9px; border-radius:7px; background:var(--card2); border:1px solid var(--line2); color:var(--mut); margin-right:6px}
 
@@ -155,7 +192,7 @@ label.iconbtn{cursor:pointer}
 .statbig .s{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:15px}
 .statbig .s b{font-family:'Archivo'; font-weight:900; font-size:26px; display:block; line-height:1}
 .statbig .s span{font-size:11.5px; color:var(--mut); text-transform:uppercase; letter-spacing:.05em}
-.statbig .s.acc b{color:var(--acc)}
+.statbig .s.acc b{color:var(--acc-ink)}
 .chartwrap{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 14px 8px; margin-bottom:14px}
 svg.chart{width:100%; height:160px; display:block}
 .streakrow{display:flex; gap:7px; justify-content:space-between; margin-top:6px}
@@ -182,15 +219,15 @@ svg.chart{width:100%; height:160px; display:block}
   background:var(--card2); border:1px solid var(--line2); border-radius:10px; font-size:13px}
 .dmeal .e{font-size:18px; flex:none}
 .dmeal .n{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.dmeal .k{flex:none; color:var(--acc); font-weight:700; font-size:12px}
+.dmeal .k{flex:none; color:var(--acc-ink); font-weight:700; font-size:12px}
 
 /* ---------- bottom nav ---------- */
 .nav{position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:var(--maxw); z-index:50;
-  background:rgba(13,15,19,.92); backdrop-filter:blur(16px); border-top:1px solid var(--line);
+  background:var(--top-bg); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); border-top:1px solid var(--line);
   display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom)); }
 .nav button{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 2px; color:var(--mut2); font-size:10.5px; font-weight:600}
 .nav button .ni{font-size:21px; line-height:1}
-.nav button.on{color:var(--acc)}
+.nav button.on{color:var(--acc-ink)}
 
 .toast{position:fixed; bottom:100px; left:50%; transform:translateX(-50%); z-index:80;
   background:var(--acc); color:#0b0d08; font-weight:700; padding:13px 22px; border-radius:13px; font-size:14px;
@@ -206,7 +243,7 @@ hr.sep{border:none; border-top:1px solid var(--line); margin:20px 0}
 .timerbar{position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:90;
   background:var(--card2); border:1px solid var(--line2); color:var(--txt); font-weight:700; padding:10px 16px; border-radius:13px; font-size:14px;
   display:flex; align-items:center; gap:14px; box-shadow:0 10px 30px rgba(0,0,0,.3)}
-.timerbar b{color:var(--acc); font-family:'Archivo'; font-size:16px}
+.timerbar b{color:var(--acc-ink); font-family:'Archivo'; font-size:16px}
 .timerbar button{font-size:12px; color:var(--mut); text-decoration:underline}
 
 /* ---------- set-by-set tracking ---------- */
@@ -220,7 +257,7 @@ hr.sep{border:none; border-top:1px solid var(--line); margin:20px 0}
 /* ---------- video embed ---------- */
 .vidwrap{position:relative; width:100%; padding-top:56.25%; border-radius:14px; overflow:hidden; background:#000; margin-bottom:14px}
 .vidwrap iframe, .vidwrap video{position:absolute; inset:0; width:100%; height:100%; border:0; object-fit:cover}
-.novideo{height:140px; border-radius:14px; background:linear-gradient(150deg,#1d2230,#13161c); border:1px solid var(--line);
+.novideo{height:140px; border-radius:14px; background:var(--panel-g); border:1px solid var(--line);
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--mut); font-size:12.5px; margin-bottom:14px; text-align:center; padding:10px}
 .novideo .e{font-size:34px}
 
@@ -230,7 +267,7 @@ hr.sep{border:none; border-top:1px solid var(--line); margin:20px 0}
 .excard .info{flex:1; min-width:0}
 .excard .info b{font-size:15px; font-weight:700; display:block}
 .excard .tags{display:flex; gap:6px; flex-wrap:wrap; margin:7px 0 0}
-.excard .sr2{font-size:12px; color:var(--acc); font-weight:700; margin-top:6px; display:block}
+.excard .sr2{font-size:12px; color:var(--acc-ink); font-weight:700; margin-top:6px; display:block}
 .excard .chev{flex:none; color:var(--mut2); font-size:20px}
 
 /* ---------- 7-day week plan ---------- */
@@ -238,7 +275,7 @@ hr.sep{border:none; border-top:1px solid var(--line); margin:20px 0}
 .weekgrid .wd{background:var(--card2); border:1px solid var(--line); border-radius:11px; padding:10px 2px; text-align:center; cursor:pointer}
 .weekgrid .wd.rest{opacity:.5; cursor:default}
 .weekgrid .wd.done{background:var(--acc); border-color:var(--acc); color:#0b0d08}
-.weekgrid .wd.today{border-color:var(--acc)}
+.weekgrid .wd.today{border-color:var(--acc-ink)}
 .weekgrid .wd .lbl{font-size:9.5px; text-transform:uppercase; color:var(--mut2); margin-bottom:5px}
 .weekgrid .wd.done .lbl{color:#0b0d08}
 .weekgrid .wd .ic{font-size:15px}
@@ -247,7 +284,7 @@ hr.sep{border:none; border-top:1px solid var(--line); margin:20px 0}
 .challgrid{display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin:12px 0}
 .challgrid .cd{aspect-ratio:1; border-radius:9px; background:var(--card2); border:1px solid var(--line2); display:grid; place-items:center; font-size:12px; font-weight:700; color:var(--mut); cursor:pointer}
 .challgrid .cd.done{background:var(--acc); color:#0b0d08; border-color:var(--acc)}
-.challgrid .cd.today{border-color:var(--acc); color:var(--acc)}
+.challgrid .cd.today{border-color:var(--acc-ink); color:var(--acc-ink)}
 .challgrid .cd.future{opacity:.4; cursor:default}
 
 /* ---------- BMI ---------- */
