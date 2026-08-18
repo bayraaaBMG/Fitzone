@@ -63,6 +63,8 @@ function renderHome(){
         <button class="btn p" id="nextActionBtn" ${na.action?'':'disabled'}>${na.label}</button>
       </div>
 
+      ${installCardHTML()}
+
       <div class="secttl"><h2>${t('home_workout_section')}</h2></div>
       <div class="grid g2">
         <button class="tile acc" id="goHomeWO"><div class="ic">🏠</div><h3>${t('home_home_workout')}</h3><p>${t('home_home_workout_p')}</p></button>
@@ -101,6 +103,7 @@ function renderHome(){
       <p class="xs mut center" style="margin-top:20px">Эмчилгээний зөвлөгөө биш. Гэмтэл, өвчтэй бол эмчтэйгээ зөвлөл.</p>
     </div>`;
   topWire();
+  wireInstallCard(app);
   document.getElementById('goHomeWO').onclick=()=>{ libF.loc='home'; S.tab='library'; render(); };
   document.getElementById('goGymWO').onclick=()=>{ libF.loc='gym'; S.tab='library'; render(); };
   app.querySelectorAll('.goTab').forEach(a=>a.onclick=()=>{S.tab=a.dataset.tab;render();});

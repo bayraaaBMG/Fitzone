@@ -54,6 +54,7 @@ const I18N = {
     home_gym_workout:'Жийм дасгал', home_gym_workout_p:'Тоног төхөөрөмжтэй, хүчтэй ачаалал',
     home_next_workout:'Дараагийн дасгал', home_all:'Бүгд ›',
     home_doctor:'Эмчийн зөвлөгөө 🩺',
+    home_install_title:'FitZone-г төхөөрөмждөө суулгах', home_install_btn:'Суулгах', home_installed:'Суулгасан ✓',
 
     plan_title:'Миний хөтөлбөр', plan_regen:'↻ Шинэчлэх', plan_week:'7 ХОНОГИЙН ХУВААРЬ',
 
@@ -119,6 +120,7 @@ const I18N = {
     home_gym_workout:'Gym workout', home_gym_workout_p:'Equipment-based, higher load',
     home_next_workout:'Next workout', home_all:'All ›',
     home_doctor:'Ask about aches & pains 🩺',
+    home_install_title:'Install FitZone on your device', home_install_btn:'Install', home_installed:'Installed ✓',
 
     plan_title:'My program', plan_regen:'↻ Regenerate', plan_week:'7-DAY SCHEDULE',
 

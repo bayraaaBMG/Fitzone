@@ -38,6 +38,8 @@ function renderProfile(){
         <div class="s"><b>${doneCount}/${p.days}</b><span>${t('profile_week_progress')}</span></div>
       </div>
 
+      ${installCardHTML()}
+
       ${profileSummaryCard(startWeight, curWeight, joined)}
 
       <div class="secttl"><h2>${t('profile_weight_history')}</h2></div>
@@ -54,6 +56,7 @@ function renderProfile(){
       ${timelineRows(ws)}
     </div>`;
   topWire();
+  wireInstallCard(app);
   document.getElementById('pf_edit').onclick=openSettings;
 }
 

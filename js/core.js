@@ -133,3 +133,53 @@ function wireInstallBox(root){
     deferredInstallPrompt.userChoice.finally(()=>{ deferredInstallPrompt=null; });
   };
 }
+
+/* prominent install card — shown on Home, distinct from the compact
+   Settings version above (installBoxHTML/wireInstallBox) */
+function installCardHTML(){
+  const title = t('home_install_title');
+  if(isStandalone()){
+    return `<div class="card" style="margin-top:14px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:26px">✅</div>
+        <div><b>${t('home_installed')}</b><div class="xs mut" style="margin-top:2px">FitZone таны төхөөрөмж дээр апп болгож суулгасан байна.</div></div>
+      </div>
+    </div>`;
+  }
+  if(deferredInstallPrompt){
+    return `<div class="card" style="margin-top:14px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:26px">📲</div>
+        <div style="flex:1"><b>${title}</b><div class="xs mut" style="margin-top:2px">Апп мэт хурдан нээгдэж, offline ч ажиллана.</div></div>
+      </div>
+      <button class="btn p" id="installCardBtn" style="margin-top:12px">📲 ${t('home_install_btn')}</button>
+    </div>`;
+  }
+  if(isIOS()){
+    return `<div class="card" style="margin-top:14px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:26px">📲</div>
+        <div><b>${title}</b></div>
+      </div>
+      <ol class="xs mut" style="margin:10px 0 0;padding-left:18px;line-height:1.7">
+        <li>Доорх Safari цэснээс "Хуваалцах" 📤 дар</li>
+        <li>Жагсаалтаас "Add to Home Screen" сонго</li>
+        <li>Баруун дээд буланд "Нэмэх" дар — болоо</li>
+      </ol>
+    </div>`;
+  }
+  return `<div class="card" style="margin-top:14px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:26px">📲</div>
+      <div><b>${title}</b><div class="xs mut" style="margin-top:2px">Browser-ийн цэснээс "Install app" / "Add to Home Screen" сонголтыг хайж ашиглаарай.</div></div>
+    </div>
+  </div>`;
+}
+function wireInstallCard(root){
+  const b=root.querySelector('#installCardBtn');
+  if(!b) return;
+  b.onclick=()=>{
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.finally(()=>{ deferredInstallPrompt=null; render(); });
+  };
+}
