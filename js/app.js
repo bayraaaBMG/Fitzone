@@ -24,30 +24,30 @@
     return;
   }
 
-  // was this load returning from a signInWithRedirect() round-trip? Trust
-  // sessionStorage but also fall back to document.referrer, in case Safari's
-  // storage partitioning dropped the flag across the cross-origin bounce
-  // through accounts.google.com / the firebaseapp.com auth handler.
+  // Google sign-in now uses signInWithPopup() everywhere (see auth.js) —
+  // it resolves synchronously within this same page load via onAuthStateChanged
+  // below, no redirect round-trip needed. signInWithRedirect only still runs
+  // as a last-resort fallback for environments where a popup can't open at
+  // all (installed iOS PWAs). This block exists solely to finish that rare
+  // fallback path correctly if it was used.
   let redirectPending = false;
   try{ redirectPending = sessionStorage.getItem('mf_google_redirect_pending')==='1'; sessionStorage.removeItem('mf_google_redirect_pending'); }catch(e){}
   if(!redirectPending && /accounts\.google\.com|firebaseapp\.com/.test(document.referrer)) redirectPending = true;
+  if(redirectPending) diagLog('boot: detected possible redirect return', {referrer: document.referrer});
 
-  // resolve any pending Google redirect-based sign-in (and surface its real
-  // error, if any) before the auth-state listener starts clearing authErr —
-  // but a null result here is NOT proof of failure: getRedirectResult()'s
-  // promise and the persisted-session restore that drives onAuthStateChanged
-  // are two separate internal mechanisms that don't always settle in lockstep
-  // (most visible on Safari), so a null redirect result plus a still-empty
-  // currentUser right after is checked again below with a short grace period
-  // before we ever tell the user it failed.
   let redirectUser = null;
-  try{ const res = await firebase.auth().getRedirectResult(); redirectUser = res && res.user; }
-  catch(e){ console.error('[GoogleAuth] getRedirectResult failed:', e.code, e.message); authErr = authErrMsg(e.code); }
+  try{
+    const res = await firebase.auth().getRedirectResult();
+    redirectUser = res && res.user;
+    if(redirectPending) diagLog('getRedirectResult resolved', {hasUser: !!redirectUser});
+  }
+  catch(e){ diagLog('getRedirectResult threw', {code: e.code, message: e.message}); authErr = authErrMsg(e.code); }
 
   let sawUser = false; // did ANY onAuthStateChanged firing on this load report a signed-in user?
   firebase.auth().onAuthStateChanged(async user=>{
     authBusy = false;
     authDraft = {email:'', pass:'', pass2:''};
+    if(redirectPending) diagLog('onAuthStateChanged fired', {hasUser: !!user});
     if(user){
       sawUser = true;
       authUser = user; authReady = true; authErr='';
@@ -56,17 +56,15 @@
       return;
     }
 
-    // no user on this callback. If we're mid-redirect-restore, give Firebase
-    // one more short beat to finish reconciling currentUser before we
-    // conclude the round-trip genuinely lost the session — never flash the
-    // login gate as "failed" while restore may still be in flight.
+    // no user on this callback. Known limitation (not a timing race): this
+    // app is hosted off Firebase Hosting, so authDomain is a different site
+    // from this domain — browsers' third-party storage partitioning (Chrome
+    // 115+/Firefox 109+/Safari 16.1+) isolates the cross-origin auth-handler
+    // iframe's storage, so a redirect-based sign-in can genuinely never
+    // resolve here. See https://firebase.google.com/docs/auth/web/redirect-best-practices.
+    // Give it one short, bounded grace window anyway (real restores that DO
+    // succeed can still take a beat), then give up cleanly.
     if(redirectPending && !sawUser && !redirectUser && !authErr){
-      // a single fixed-length wait is a guess; on real mobile hardware
-      // (especially iOS Safari) the persisted-session restore after the
-      // accounts.google.com -> firebaseapp.com -> app redirect bounce can
-      // take longer than that, so poll for a few seconds instead of
-      // checking once — getRedirectResult()===null here is NOT proof of
-      // failure, only that onAuthStateChanged hasn't reconciled yet
       let settled = null;
       for(let waited=0; waited<4500 && !settled; waited+=300){
         await new Promise(r=>setTimeout(r, 300));
@@ -78,7 +76,7 @@
         render();
         return;
       }
-      console.error('[GoogleAuth] redirect session restore did not complete after grace period', {
+      diagLog('redirect fallback did not restore a session — giving up', {
         redirectPending, sawUser, redirectUser: !!redirectUser, currentUser: !!firebase.auth().currentUser,
       });
       authErr = (isStandalone() && isIOS()) ? t('err_ios_standalone_google') : t('err_redirect_incomplete');

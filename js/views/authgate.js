@@ -36,7 +36,11 @@ function renderAuthGate(){
       <div class="field"><label>${t('auth_email')}</label><input class="txin" id="au_email" type="email" placeholder="tanii@mail.com" autocomplete="email" value="${esc(authDraft.email)}"></div>
       <div class="field"><label>${t('auth_pass')}</label><input class="txin" id="au_pass" type="password" placeholder="${t('auth_pass_placeholder')}" autocomplete="${authMode==='login'?'current-password':'new-password'}" value="${esc(authDraft.pass)}"></div>
       ${authMode==='signup' ? `<div class="field"><label>${t('auth_pass2')}</label><input class="txin" id="au_pass2" type="password" placeholder="${t('auth_pass2_placeholder')}" value="${esc(authDraft.pass2)}"></div>` : ''}
-      ${authErr ? `<p class="sm" style="color:var(--coral);margin:0 0 14px">${esc(authErr)}</p>` : ''}
+      ${authErr ? `<p class="sm" style="color:var(--coral);margin:0 0 6px">${esc(authErr)}</p>` : ''}
+      ${(authErr && authDiagLog.length) ? `<details style="margin:0 0 14px">
+        <summary class="xs mut" style="cursor:pointer">Debug info</summary>
+        <pre class="xs mut" style="white-space:pre-wrap;word-break:break-all;margin:6px 0 0">${esc(authDiagLog.join('\n'))}</pre>
+      </details>` : ''}
       <button class="btn p" id="au_submit" ${authBusy?'disabled':''}>${authBusy ? t('auth_wait') : (authMode==='login' ? t('auth_login_btn') : t('auth_signup_btn'))}</button>
       <button class="btn g" id="au_switch" style="margin-top:10px">${authMode==='login' ? t('auth_switch_to_signup') : t('auth_switch_to_login')}</button>
       ${authMode==='login' ? `<button class="chip" id="au_forgot" style="margin-top:14px">${t('auth_forgot')}</button>` : ''}

@@ -3,6 +3,16 @@ let authUser = null;        // firebase.User | null
 let authReady = false;      // true once the initial auth check resolves
 let authInitError = false;  // true if Firebase itself failed to load (offline/blocked)
 
+/* rolling diagnostic trail for the Google sign-in flow specifically —
+   surfaced in the UI under the login error (see authgate.js) so a real
+   failure on a real device carries actual evidence instead of a guess */
+let authDiagLog = [];
+function diagLog(msg, extra){
+  const line = `${new Date().toISOString().slice(11,19)} ${msg}` + (extra!==undefined ? ' ' + JSON.stringify(extra) : '');
+  authDiagLog.push(line);
+  console.log('[GoogleAuth]', line);
+}
+
 function initFirebase(){
   if(typeof firebase==='undefined') return;
   if(!FIREBASE_CONFIG || !FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.startsWith('YOUR_')) return;
@@ -65,24 +75,36 @@ async function loadCloudState(uid){
 function signUp(email, pass){ return firebase.auth().createUserWithEmailAndPassword(email, pass); }
 function logIn(email, pass){ return firebase.auth().signInWithEmailAndPassword(email, pass); }
 
-/* popup on desktop; redirect on any mobile browser or standalone PWA.
-   Mobile popups are unreliable even when not outright blocked — backgrounding
-   the opener tab while the Google account picker is up routinely breaks the
-   window.opener/postMessage channel signInWithPopup depends on, which is the
-   most common cause of "picks an account, bounces back to the login screen"
-   on Android/iOS. Redirect avoids that channel entirely. */
+/* popup everywhere, including mobile — redirect only as a last-resort
+   fallback when a popup genuinely can't open (e.g. installed iOS PWAs,
+   which don't support window.open).
+
+   This app is hosted on Vercel, not Firebase Hosting, so authDomain is
+   the default fitzone-7f325.firebaseapp.com — a different site from
+   fitzone-five-jet.vercel.app. signInWithRedirect's round trip depends on
+   a hidden cross-origin iframe (from authDomain, embedded in this page)
+   to read back the "redirect complete" state that Firebase's auth
+   handler wrote during the full-page visit to that domain. Since Chrome
+   115+ / Firefox 109+ / Safari 16.1+ all now partition iframe storage per
+   top-level site, that iframe's storage bucket when embedded here is NOT
+   the same bucket the full-page authDomain visit wrote to — so
+   getRedirectResult() legitimately, deterministically returns no user on
+   real devices. This is a known Firebase limitation for apps not hosted
+   on Firebase Hosting with a matching custom domain (see
+   https://firebase.google.com/docs/auth/web/redirect-best-practices,
+   "Option 2: switch to signInWithPopup"), not a timing race — no amount
+   of waiting after the redirect fixes it. signInWithPopup avoids the
+   problem entirely: the whole exchange happens via postMessage while the
+   popup is open in the same page load, with no cross-origin storage
+   read-back required. */
 function googleSignIn(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  const useRedirect = isMobile() || isStandalone();
   const persistence = firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
-  if(useRedirect){
-    return persistence.then(()=>{
-      try{ sessionStorage.setItem('mf_google_redirect_pending', '1'); }catch(e){}
-      return firebase.auth().signInWithRedirect(provider);
-    });
-  }
+  diagLog('googleSignIn: attempting signInWithPopup', {isMobile: isMobile(), isStandalone: isStandalone()});
   return persistence.then(()=> firebase.auth().signInWithPopup(provider)).catch(e=>{
+    diagLog('signInWithPopup failed', {code: e.code, message: e.message});
     if(e.code==='auth/popup-blocked' || e.code==='auth/operation-not-supported-in-this-environment'){
+      diagLog('falling back to signInWithRedirect (popup unavailable in this environment)');
       try{ sessionStorage.setItem('mf_google_redirect_pending', '1'); }catch(err){}
       return firebase.auth().signInWithRedirect(provider);
     }

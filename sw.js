@@ -1,4 +1,8 @@
-const CACHE = 'mongolfit-v7';
+const CACHE = 'mongolfit-v8';
+// never intercept Google/Firebase auth traffic — this SW's own fetch()
+// re-issue + cache-fallback has no business anywhere near the sign-in
+// handshake, so these are left to the browser's default handling untouched
+const AUTH_HOST_RE = /^https:\/\/([^/]+\.)?(google\.com|googleapis\.com|googleusercontent\.com|gstatic\.com|firebaseapp\.com|web\.app)\//;
 const ASSETS = [
   './', './Fitzone.html', './css/style.css',
   './js/firebase-config.js',
@@ -20,6 +24,7 @@ self.addEventListener('activate', e=>{
 
 self.addEventListener('fetch', e=>{
   if(e.request.method !== 'GET') return;
+  if(AUTH_HOST_RE.test(e.request.url)) return;
   e.respondWith(
     fetch(e.request).then(res=>{
       const copy = res.clone();
