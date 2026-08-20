@@ -24,62 +24,34 @@
     return;
   }
 
-  // Google sign-in now uses signInWithPopup() everywhere (see auth.js) —
-  // it resolves synchronously within this same page load via onAuthStateChanged
-  // below, no redirect round-trip needed. signInWithRedirect only still runs
-  // as a last-resort fallback for environments where a popup can't open at
-  // all (installed iOS PWAs). This block exists solely to finish that rare
-  // fallback path correctly if it was used.
-  let redirectPending = false;
-  try{ redirectPending = sessionStorage.getItem('mf_google_redirect_pending')==='1'; sessionStorage.removeItem('mf_google_redirect_pending'); }catch(e){}
-  if(!redirectPending && /accounts\.google\.com|firebaseapp\.com/.test(document.referrer)) redirectPending = true;
-  if(redirectPending) diagLog('boot: detected possible redirect return', {referrer: document.referrer});
+  // Google sign-in is popup-only now (see auth.js) — it resolves
+  // synchronously within this same page load via onAuthStateChanged below.
+  // signInWithRedirect is no longer used anywhere in this app, so there is
+  // no redirect round-trip left to reconcile on boot. Clear out any stale
+  // pending-redirect flag a previous app version may have left behind, so
+  // it can never be read or acted on by anything.
+  try{ sessionStorage.removeItem('mf_google_redirect_pending'); }catch(e){}
 
-  let redirectUser = null;
+  // getRedirectResult() is kept ONLY in case some already-open tab is mid a
+  // redirect started by a now-removed code path (or a browser-cached old
+  // version of this app) — it is never used to decide success or failure,
+  // and a null result here is completely normal and expected on every
+  // regular page load, not an error condition.
   try{
     const res = await firebase.auth().getRedirectResult();
-    redirectUser = res && res.user;
-    if(redirectPending) diagLog('getRedirectResult resolved', {hasUser: !!redirectUser});
-  }
-  catch(e){ diagLog('getRedirectResult threw', {code: e.code, message: e.message}); authErr = authErrMsg(e.code); }
+    if(res && res.user) diagLog('getRedirectResult: found a stray pending sign-in from a stale/legacy redirect', {uid: res.user.uid});
+  }catch(e){ diagLog('getRedirectResult threw (harmless, ignored)', {code: e.code, message: e.message}); }
 
-  let sawUser = false; // did ANY onAuthStateChanged firing on this load report a signed-in user?
+  // onAuthStateChanged is the single source of truth for auth state — no
+  // extra grace periods, polling, or redirect-specific branching.
   firebase.auth().onAuthStateChanged(async user=>{
     authBusy = false;
     authDraft = {email:'', pass:'', pass2:''};
-    if(redirectPending) diagLog('onAuthStateChanged fired', {hasUser: !!user});
     if(user){
-      sawUser = true;
       authUser = user; authReady = true; authErr='';
       await loadCloudState(user.uid);
       render();
       return;
-    }
-
-    // no user on this callback. Known limitation (not a timing race): this
-    // app is hosted off Firebase Hosting, so authDomain is a different site
-    // from this domain — browsers' third-party storage partitioning (Chrome
-    // 115+/Firefox 109+/Safari 16.1+) isolates the cross-origin auth-handler
-    // iframe's storage, so a redirect-based sign-in can genuinely never
-    // resolve here. See https://firebase.google.com/docs/auth/web/redirect-best-practices.
-    // Give it one short, bounded grace window anyway (real restores that DO
-    // succeed can still take a beat), then give up cleanly.
-    if(redirectPending && !sawUser && !redirectUser && !authErr){
-      let settled = null;
-      for(let waited=0; waited<4500 && !settled; waited+=300){
-        await new Promise(r=>setTimeout(r, 300));
-        settled = firebase.auth().currentUser;
-      }
-      if(settled){
-        authUser = settled; authReady = true; authErr='';
-        await loadCloudState(settled.uid);
-        render();
-        return;
-      }
-      diagLog('redirect fallback did not restore a session — giving up', {
-        redirectPending, sawUser, redirectUser: !!redirectUser, currentUser: !!firebase.auth().currentUser,
-      });
-      authErr = (isStandalone() && isIOS()) ? t('err_ios_standalone_google') : t('err_redirect_incomplete');
     }
     authUser = null; authReady = true;
     resetLocalState();
