@@ -1,4 +1,4 @@
-const CACHE = 'mongolfit-v6';
+const CACHE = 'mongolfit-v7';
 const ASSETS = [
   './', './Fitzone.html', './css/style.css',
   './js/firebase-config.js',

@@ -42,7 +42,7 @@
   // before we ever tell the user it failed.
   let redirectUser = null;
   try{ const res = await firebase.auth().getRedirectResult(); redirectUser = res && res.user; }
-  catch(e){ authErr = authErrMsg(e.code); }
+  catch(e){ console.error('[GoogleAuth] getRedirectResult failed:', e.code, e.message); authErr = authErrMsg(e.code); }
 
   let sawUser = false; // did ANY onAuthStateChanged firing on this load report a signed-in user?
   firebase.auth().onAuthStateChanged(async user=>{
@@ -61,14 +61,26 @@
     // conclude the round-trip genuinely lost the session — never flash the
     // login gate as "failed" while restore may still be in flight.
     if(redirectPending && !sawUser && !redirectUser && !authErr){
-      await new Promise(r=>setTimeout(r, 1200));
-      const settled = firebase.auth().currentUser;
+      // a single fixed-length wait is a guess; on real mobile hardware
+      // (especially iOS Safari) the persisted-session restore after the
+      // accounts.google.com -> firebaseapp.com -> app redirect bounce can
+      // take longer than that, so poll for a few seconds instead of
+      // checking once — getRedirectResult()===null here is NOT proof of
+      // failure, only that onAuthStateChanged hasn't reconciled yet
+      let settled = null;
+      for(let waited=0; waited<4500 && !settled; waited+=300){
+        await new Promise(r=>setTimeout(r, 300));
+        settled = firebase.auth().currentUser;
+      }
       if(settled){
         authUser = settled; authReady = true; authErr='';
         await loadCloudState(settled.uid);
         render();
         return;
       }
+      console.error('[GoogleAuth] redirect session restore did not complete after grace period', {
+        redirectPending, sawUser, redirectUser: !!redirectUser, currentUser: !!firebase.auth().currentUser,
+      });
       authErr = (isStandalone() && isIOS()) ? t('err_ios_standalone_google') : t('err_redirect_incomplete');
     }
     authUser = null; authReady = true;
