@@ -53,7 +53,8 @@ function renderHome(){
         <hr class="sep" style="margin:14px 0">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div><span class="xs mut">${t('home_today_water_goal')}</span>
-            <div style="font-weight:700;font-size:15px;margin-top:4px">${(waterMl/1000).toFixed(2)} / ${(waterGoal/1000).toFixed(1)} ${t('unit_liter')}</div></div>
+            <div style="font-weight:700;font-size:15px;margin-top:4px">${(waterMl/1000).toFixed(2)} / ${(waterGoal/1000).toFixed(1)} ${t('unit_liter')}</div>
+            ${refBadge('efsa_water')}</div>
           <button class="btn g sm" id="addWater">+250${t('unit_ml')}</button>
         </div>
         <hr class="sep" style="margin:14px 0">
@@ -137,46 +138,46 @@ function renderHome(){
 function askDoctor(){
   const q=(document.getElementById('askInput').value||'').trim();
   const file=document.getElementById('askImg').files[0];
-  let msg = S.lang==='en' ? healthAdviceEN(q) : healthAdviceMN(q);
+  let {text, ref} = S.lang==='en' ? healthAdviceEN(q) : healthAdviceMN(q);
   let imgHtml='';
   if(file){
     imgHtml=`<img src="${URL.createObjectURL(file)}" alt="">`;
-    msg += ' ' + t('doctor_photo_note');
+    text += ' ' + t('doctor_photo_note');
   }
-  document.getElementById('askResult').innerHTML = `<div class="askresp">${imgHtml}<p>${esc(msg)}</p>
-    <p class="xs mut" style="margin-top:10px">${t('doctor_disclaimer')}</p></div>`;
+  document.getElementById('askResult').innerHTML = `<div class="askresp">${imgHtml}<p>${esc(text)}</p>
+    <p class="xs mut" style="margin-top:10px">${t('doctor_disclaimer')} ${ref?refBadge(ref):''}</p></div>`;
 }
 
 function healthAdviceMN(q){
   const s=(q||'').toLowerCase();
   const has=(...ws)=>ws.some(w=>s.includes(w));
-  if(!s) return 'Юу өвдөж байгаа эсвэл ямар асуулт байгаагаа дээрх талбарт бичнэ үү.';
-  if(has('ядар')) return 'Зүгээр. Өнөөдөр хөнгөн өдөр болгоё: 15–20 мин сунгалт + хөнгөн алхалт. Маргааш эрчтэй эргэж ороорой.';
-  if(has('гэдэс')) return 'Гэдсийг "цэгцэлж" хасах боломжгүй — нийт өөх багасна. Калорийн дутагдал + Plank, Bicycle crunch, Mountain climber тогтмол хий.';
-  if(has('20')) return '20 минутын full-body: Squat, Push up, Glute bridge, Plank — тус бүр 3 set, амралт богино. Дасгалын сангаас сонгоорой.';
-  if(has('цээж','амьсгаад','зүрх')) return '⚠️ Дасгал хийж байхдаа цээжээр огцом өвдөх, амьсгаадах мэдрэмж гарвал шууд зогсоож амраарай — энэ нь зүрхтэй холбоотой байж болзошгүй тул яаралтай эмчид хандаарай.';
-  if(has('өвдөг','овдог')) return 'Өвдөгний эвгүйцэлтэй үед Squat, Lunge, үсрэлттэй дасгалуудыг түр алгасаарай. Glute bridge, хөнгөн Wall sit, сунгалт хий. Хөл шулуун дээр өвдвөл ачаалал/гүнзгийрэлтийг бууруул.';
-  if(has('нуруу','бэлхүүс','бэлхуус')) return 'Нурууны эвгүйцэлтэй үед Deadlift, жинтэй Squat, Sit up зэргийг алгасаж Glute bridge, Bird dog, Plank, зөөлөн сунгалт хий. Нуруугаа дугуйлахгүй, тэгш байлгаарай.';
-  if(has('мөр','мөрөн')) return 'Мөрний эвгүйцэлтэй үед Overhead press, Push up, Pike push up зэргийг түр алгасаж, өвдөлгүй хүрээнд хөнгөн сунгалт, Band дасгал хий.';
-  if(has('гартаа','гарын','бугуй','тохой','мутар')) return 'Гар/бугуй/тохойн эвгүйцэлтэй үед Push up, Curl, Pushdown зэргийг алгасаж доод биеийн дасгал (Squat, Lunge, Glute bridge, Plank-аа fist дээр) руу шилжээрэй.';
-  if(has('хөл','шилбэ','өсгий','осгий','шагай')) return 'Хөл/шагайн эвгүйцэлтэй үед Lunge, Jump, Calf raise, Burpee зэргийг алгасаж сууж/хэвтэж хийдэг дасгал (Glute bridge, Plank, Bird dog, дээд биеийн дасгал) руу шилжээрэй.';
-  if(has('хүзүү','хузуу')) return 'Хүзүүний эвгүйцэлтэй үед Crunch, хүнд Overhead дасгал хийхдээ хүзүүгээ чангалахгүй, толгойгоо төв байрлалд барь. Эвгүйцэл тогтмол үргэлжилбэл эмчид үзүүлээрэй.';
-  return 'Зорилго, дасгал эсвэл өвдөж буй хэсгээ дэлгэрэнгүй бичвэл тохирсон зөвлөмж өгье. Жишээ нь: "Өвдөг өвдөж байна, squat хийж болох уу?"';
+  if(!s) return {text:'Юу өвдөж байгаа эсвэл ямар асуулт байгаагаа дээрх талбарт бичнэ үү.'};
+  if(has('ядар')) return {text:'Зүгээр. Өнөөдөр хөнгөн өдөр болгоё: 15–20 мин сунгалт + хөнгөн алхалт. Маргааш эрчтэй эргэж ороорой.'};
+  if(has('гэдэс')) return {text:'Гэдсийг "цэгцэлж" хасах боломжгүй — нийт өөх багасна. Калорийн дутагдал + Plank, Bicycle crunch, Mountain climber тогтмол хий.', ref:'spot_reduction'};
+  if(has('20')) return {text:'20 минутын full-body: Squat, Push up, Glute bridge, Plank — тус бүр 3 set, амралт богино. Дасгалын сангаас сонгоорой.'};
+  if(has('цээж','амьсгаад','зүрх')) return {text:'⚠️ Дасгал хийж байхдаа цээжээр огцом өвдөх, амьсгаадах мэдрэмж гарвал шууд зогсоож амраарай — энэ нь зүрхтэй холбоотой байж болзошгүй тул яаралтай эмчид хандаарай.', ref:'aha_warning'};
+  if(has('өвдөг','овдог')) return {text:'Өвдөгний эвгүйцэлтэй үед Squat, Lunge, үсрэлттэй дасгалуудыг түр алгасаарай. Glute bridge, хөнгөн Wall sit, сунгалт хий. Хөл шулуун дээр өвдвөл ачаалал/гүнзгийрэлтийг бууруул.'};
+  if(has('нуруу','бэлхүүс','бэлхуус')) return {text:'Нурууны эвгүйцэлтэй үед Deadlift, жинтэй Squat, Sit up зэргийг алгасаж Glute bridge, Bird dog, Plank, зөөлөн сунгалт хий. Нуруугаа дугуйлахгүй, тэгш байлгаарай.'};
+  if(has('мөр','мөрөн')) return {text:'Мөрний эвгүйцэлтэй үед Overhead press, Push up, Pike push up зэргийг түр алгасаж, өвдөлгүй хүрээнд хөнгөн сунгалт, Band дасгал хий.'};
+  if(has('гартаа','гарын','бугуй','тохой','мутар')) return {text:'Гар/бугуй/тохойн эвгүйцэлтэй үед Push up, Curl, Pushdown зэргийг алгасаж доод биеийн дасгал (Squat, Lunge, Glute bridge, Plank-аа fist дээр) руу шилжээрэй.'};
+  if(has('хөл','шилбэ','өсгий','осгий','шагай')) return {text:'Хөл/шагайн эвгүйцэлтэй үед Lunge, Jump, Calf raise, Burpee зэргийг алгасаж сууж/хэвтэж хийдэг дасгал (Glute bridge, Plank, Bird dog, дээд биеийн дасгал) руу шилжээрэй.'};
+  if(has('хүзүү','хузуу')) return {text:'Хүзүүний эвгүйцэлтэй үед Crunch, хүнд Overhead дасгал хийхдээ хүзүүгээ чангалахгүй, толгойгоо төв байрлалд барь. Эвгүйцэл тогтмол үргэлжилбэл эмчид үзүүлээрэй.'};
+  return {text:'Зорилго, дасгал эсвэл өвдөж буй хэсгээ дэлгэрэнгүй бичвэл тохирсон зөвлөмж өгье. Жишээ нь: "Өвдөг өвдөж байна, squat хийж болох уу?"'};
 }
 
 function healthAdviceEN(q){
   const s=(q||'').toLowerCase();
   const has=(...ws)=>ws.some(w=>s.includes(w));
-  if(!s) return 'Tell me what hurts, or what your question is, in the field above.';
-  if(has('tired','exhaust','fatigue')) return "That's fine. Let's make today light: 15–20 min of stretching + a light walk. Come back strong tomorrow.";
-  if(has('belly','stomach','fat loss','gut')) return 'You can\'t "spot reduce" belly fat — overall body fat drops instead. Combine a calorie deficit with consistent Plank, Bicycle crunch, and Mountain climber.';
-  if(has('20 min','20min','quick workout')) return '20-minute full-body: Squat, Push up, Glute bridge, Plank — 3 sets each, short rests. Pick more from the exercise library.';
-  if(has('chest pain',"can't breathe",'heart','breathless')) return "⚠️ If you feel sudden chest pain or breathlessness while training, stop and rest immediately — this could be heart-related, so seek urgent medical care.";
-  if(has('knee')) return 'With knee discomfort, skip Squat, Lunge, and jumping moves for now. Do Glute bridge, a light Wall sit, and stretching. Reduce load/depth if it hurts on a straight leg.';
-  if(has('back','lower back','spine')) return 'With back discomfort, skip Deadlift, loaded Squat, and Sit ups — do Glute bridge, Bird dog, Plank, and gentle stretching instead. Keep your back neutral, never rounded.';
-  if(has('shoulder')) return 'With shoulder discomfort, skip Overhead press, Push up, and Pike push up for now — stick to pain-free light stretching and band work.';
-  if(has('wrist','elbow','arm','hand')) return 'With wrist/elbow/arm discomfort, skip Push up, Curl, and Pushdown — switch to lower-body work (Squat, Lunge, Glute bridge, Plank on fists).';
-  if(has('ankle','calf','foot','shin')) return 'With ankle/foot discomfort, skip Lunge, jumps, Calf raise, and Burpee — switch to seated/lying moves (Glute bridge, Plank, Bird dog, upper-body work).';
-  if(has('neck')) return "With neck discomfort, don't strain your neck during Crunches or heavy Overhead moves — keep your head neutral. See a doctor if it persists.";
-  return 'Describe your goal, exercise, or what hurts in more detail and I\'ll suggest something. Example: "My knee hurts, can I still squat?"';
+  if(!s) return {text:'Tell me what hurts, or what your question is, in the field above.'};
+  if(has('tired','exhaust','fatigue')) return {text:"That's fine. Let's make today light: 15–20 min of stretching + a light walk. Come back strong tomorrow."};
+  if(has('belly','stomach','fat loss','gut')) return {text:'You can\'t "spot reduce" belly fat — overall body fat drops instead. Combine a calorie deficit with consistent Plank, Bicycle crunch, and Mountain climber.', ref:'spot_reduction'};
+  if(has('20 min','20min','quick workout')) return {text:'20-minute full-body: Squat, Push up, Glute bridge, Plank — 3 sets each, short rests. Pick more from the exercise library.'};
+  if(has('chest pain',"can't breathe",'heart','breathless')) return {text:"⚠️ If you feel sudden chest pain or breathlessness while training, stop and rest immediately — this could be heart-related, so seek urgent medical care.", ref:'aha_warning'};
+  if(has('knee')) return {text:'With knee discomfort, skip Squat, Lunge, and jumping moves for now. Do Glute bridge, a light Wall sit, and stretching. Reduce load/depth if it hurts on a straight leg.'};
+  if(has('back','lower back','spine')) return {text:'With back discomfort, skip Deadlift, loaded Squat, and Sit ups — do Glute bridge, Bird dog, Plank, and gentle stretching instead. Keep your back neutral, never rounded.'};
+  if(has('shoulder')) return {text:'With shoulder discomfort, skip Overhead press, Push up, and Pike push up for now — stick to pain-free light stretching and band work.'};
+  if(has('wrist','elbow','arm','hand')) return {text:'With wrist/elbow/arm discomfort, skip Push up, Curl, and Pushdown — switch to lower-body work (Squat, Lunge, Glute bridge, Plank on fists).'};
+  if(has('ankle','calf','foot','shin')) return {text:'With ankle/foot discomfort, skip Lunge, jumps, Calf raise, and Burpee — switch to seated/lying moves (Glute bridge, Plank, Bird dog, upper-body work).'};
+  if(has('neck')) return {text:"With neck discomfort, don't strain your neck during Crunches or heavy Overhead moves — keep your head neutral. See a doctor if it persists."};
+  return {text:'Describe your goal, exercise, or what hurts in more detail and I\'ll suggest something. Example: "My knee hurts, can I still squat?"'};
 }

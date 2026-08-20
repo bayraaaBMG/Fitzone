@@ -186,6 +186,8 @@ label.iconbtn{cursor:pointer}
 .note.ok{border-color:var(--note-ok-border); background:var(--note-ok-bg)}
 .note.ok .lab{color:var(--ok)}
 .vtag{display:inline-block; font-size:11px; padding:3px 9px; border-radius:7px; background:var(--card2); border:1px solid var(--line2); color:var(--mut); margin-right:6px}
+.refbadge{display:inline-flex; align-items:center; gap:3px; padding:2px 7px; border-radius:20px; border:1px solid var(--line); background:transparent; color:var(--mut); font-size:10px; font-weight:600}
+.refbadge:active{background:var(--card2)}
 
 /* ---------- progress ---------- */
 .statbig{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px}

@@ -62,10 +62,13 @@ function renderProfile(){
 
       <div class="secttl"><h2>${t('profile_timeline')}</h2></div>
       ${timelineRows(ws)}
+
+      <button class="btn g" id="pf_sources" style="margin-top:16px">📚 ${t('sources_link')}</button>
     </div>`;
   topWire();
   wireInstallCard(app);
   document.getElementById('pf_edit').onclick=openSettings;
+  document.getElementById('pf_sources').onclick=()=> openSourcesPage();
   document.getElementById('pf_photo').onchange=e=>{
     const f=e.target.files[0];
     if(!f) return;

@@ -26,6 +26,7 @@ function openExercise(id){
       <div class="k"><b>${sch.rest}${t('unit_sec')}</b><span>${t('rest')}</span></div>
       <div class="k"><b>~${x.kcal}</b><span>${t('kcal_per_min')}</span></div>
     </div>
+    <p class="xs mut" style="margin:-6px 0 6px">${refBadge('acsm_resistance')}</p>
     <div class="block"><div class="lab">🎯 ${t('target_muscle')}</div><div class="note">${x.tgt}</div></div>
     <div class="block"><div class="lab">📐 ${t('proper_technique')}</div><div class="note">${x.tech}</div></div>
     <div class="block"><div class="lab">⚠ ${t('common_mistakes')}</div><div class="note warn">${x.err}</div></div>

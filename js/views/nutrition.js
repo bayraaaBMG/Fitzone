@@ -43,6 +43,7 @@ function renderNutrition(){
         <div class="macro"><b style="color:var(--coral)">${c.protein}${t('unit_g')} / ${n.protein}${t('unit_g')}</b><div class="bar"><i style="width:${pct(c.protein,n.protein)}%;background:var(--coral)"></i></div><span class="sm mut" style="width:64px">${t('macro_protein')}</span></div>
         <div class="macro"><b style="color:var(--acc-ink)">${c.carb}${t('unit_g')} / ${n.carb}${t('unit_g')}</b><div class="bar"><i style="width:${pct(c.carb,n.carb)}%;background:var(--acc)"></i></div><span class="sm mut" style="width:64px">${t('macro_carb')}</span></div>
         <div class="macro"><b style="color:var(--warn)">${c.fat}${t('unit_g')} / ${n.fat}${t('unit_g')}</b><div class="bar"><i style="width:${pct(c.fat,n.fat)}%;background:var(--warn)"></i></div><span class="sm mut" style="width:64px">${t('macro_fat')}</span></div>
+        <p class="xs mut" style="margin:10px 0 0">${refBadge('mifflin_stjeor','issn_protein','amdr_fat')}</p>
       </div>
 
       <div class="secttl"><h2>${t('nut_diary')}</h2></div>
@@ -58,6 +59,7 @@ function renderNutrition(){
         </div>
         <div class="bmibar"><div class="marker" style="left:${bpos}%"></div></div>
         <div class="bmiscale"><span>${t('bmi_underweight')}</span><span>${t('bmi_normal')}</span><span>${t('bmi_overweight')}</span><span>${t('bmi_obese')}</span></div>
+        <p class="xs mut" style="margin:10px 0 0">${refBadge('who_bmi')}</p>
       </div>
 
       <div class="secttl"><h2>${t('nut_pantry')}</h2></div>

@@ -44,6 +44,7 @@ function paintSettings(sheet, sdraft){
     </div>
 
     <div class="field" style="margin-top:6px"><label>${t('st_install')}</label>${installBoxHTML()}</div>
+    <button class="btn g" id="st_sources" style="margin-top:10px">📚 ${t('sources_link')}</button>
     <button class="btn g" id="st_logout" style="margin-top:10px">🚪 ${t('logout')}</button>
     <button class="btn g" id="st_reset" style="margin-top:10px">${t('st_reset')}</button>
   `;
@@ -81,6 +82,8 @@ function paintSettings(sheet, sdraft){
     save();
     paintSettings(sheet, sdraft);
   });
+
+  sheet.querySelector('#st_sources').onclick=()=>{ openSourcesPage(); };
 
   sheet.querySelector('#st_logout').onclick=async()=>{
     closeSheet();

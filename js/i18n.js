@@ -71,6 +71,11 @@ const I18N = {
 
     /* units & abbreviations */
     unit_kcal:'ккал', unit_kg:'кг', unit_g:'г', unit_cm:'см', unit_min:'мин', unit_sec:'с', unit_ml:'мл', unit_liter:'л', unit_meals:'хоол',
+
+    ref_source:'Эх сурвалж', ref_title:'Эх сурвалж', sources_link:'Мэдээллийн эх сурвалж',
+    sources_title:'Мэдээллийн эх сурвалж', ref_used_for:'Ашигласан газар',
+    sources_intro:'FitZone доторх дасгал, идэвх, шим тэжээл, аюулгүй байдлын зөвлөмжүүдийг доорх олон улсын эрх бүхий байгууллагуудын мэдээлэлтэй тулгаж бэлдсэн. Эдгээр нь эмнэлгийн зөвлөгөө биш — жагсаалт доторх линкээр эх сурвалж руугаа орж болно.',
+    sources_footer:'DAREBEE, Strongr Fastr зэрэг апп-уудаас текст/зураг/хөтөлбөр шууд хуулаагүй — зөвхөн жишиг, санаа болгон ашигласан. Асуулт байвал дээрх эх сурвалжуудыг шалгана уу.',
     unit_exercises:'дасгал', unit_days:'өдөр', unit_days_word:'хоног', unit_entries:'бичлэг', unit_kg:'кг',
     abbr_p:'Б', abbr_c:'Н', abbr_f:'Ө',
     goal_word:'зорилго',
@@ -249,6 +254,11 @@ const I18N = {
 
     /* units & abbreviations */
     unit_kcal:'kcal', unit_kg:'kg', unit_g:'g', unit_cm:'cm', unit_min:'min', unit_sec:'s', unit_ml:'ml', unit_liter:'L', unit_meals:'meals',
+
+    ref_source:'Source', ref_title:'Source', sources_link:'Information Sources',
+    sources_title:'Information Sources', ref_used_for:'Used for',
+    sources_intro:"FitZone's exercise, activity, nutrition, and safety guidance is checked against the international authoritative sources listed below. This is not medical advice — tap a link to open the original source.",
+    sources_footer:"No text, images, or workout plans were copied from apps like DAREBEE or Strongr Fastr — they were used only as a benchmark/inspiration. If you have questions, check the sources above.",
     unit_exercises:'exercises', unit_days:'days', unit_days_word:'days', unit_entries:'entries',
     abbr_p:'P', abbr_c:'C', abbr_f:'F',
     goal_word:'goal',

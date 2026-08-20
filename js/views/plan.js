@@ -21,7 +21,7 @@ function renderPlan(){
         }).join('')}
       </div>
       <div id="days"></div>
-      <div class="note warn" style="margin-top:18px"><div class="lab">⚠ ${t('warmup_title')}</div>${t('warmup_note')}</div>
+      <div class="note warn" style="margin-top:18px"><div class="lab">⚠ ${t('warmup_title')}</div>${t('warmup_note')} ${refBadge('who_activity','acsm_resistance')}</div>
     </div>`;
   topWire();
   app.querySelectorAll('.weekgrid .wd[data-i]').forEach(w=> w.onclick=()=>openDay(+w.dataset.i));
