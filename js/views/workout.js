@@ -80,16 +80,18 @@ async function wsStartCamera(){
   const sess = WS; // the overlay may be closed/reopened while permission + model load are pending
   WS.camState = 'loading'; WS.camErr = null; wsRender();
   const m = wsMedia();
+  const signal = {aborted:false};
+  WS.camSignal = signal;
   try{
     const cam = await startPoseCamera({
       video: m.querySelector('video'), canvas: m.querySelector('canvas'),
-      exId: sess.exId, facing: sess.camFacing, onFrame: wsOnPose, onEnded: ()=>wsCameraEnded(sess),
+      exId: sess.exId, facing: sess.camFacing, onFrame: wsOnPose, onEnded: ()=>wsCameraEnded(sess), signal,
     });
-    if(WS!==sess){ cam.stop(); return; }
+    if(WS!==sess || signal.aborted){ cam.stop(); return; }
     WS.cam = cam; WS.camState = 'on';
     if(WS.step!=='active' || WS.paused) cam.pause();
   }catch(err){
-    if(WS!==sess) return;
+    if(WS!==sess || err.code==='aborted') return; // whoever aborted already set the state
     WS.cam = null; WS.camState = 'error'; WS.camErr = err.code || 'model';
   }
   wsRender();
@@ -101,7 +103,13 @@ function wsCameraEnded(sess){
   WS.camState = 'error'; WS.camErr = 'ended';
   wsRender();
 }
+/* cancels a still-loading start too, so no stream survives a close/background mid-load */
+function wsAbortCameraLoad(){
+  const sg = WS && WS.camSignal;
+  if(sg && !sg.aborted){ sg.aborted = true; if(sg.onabort) sg.onabort(); }
+}
 function wsStopCamera(){
+  wsAbortCameraLoad();
   if(WS.cam){ WS.cam.stop(); WS.cam = null; }
   WS.camState = 'off'; WS.pose = null;
 }
@@ -468,6 +476,7 @@ function wsClose(){
 function wsTeardown(){
   if(!WS) return;
   clearInterval(WS.ticker); clearInterval(WS.cueT); clearTimeout(WS.countT); clearTimeout(WS.noteT);
+  wsAbortCameraLoad();
   if(WS.cam) WS.cam.stop();
   if(WS.wake) WS.wake.release().catch(()=>{});
   const root = wsRoot(); if(root) root.remove();
@@ -483,12 +492,12 @@ function wsTeardown(){
 document.addEventListener('visibilitychange', ()=>{
   if(!document.hidden || !WS) return;
   if(WS.step==='active' && !WS.paused) wsTogglePause();
-  if(WS.cam){ wsStopCamera(); WS.camState = 'error'; WS.camErr = 'hidden'; wsRender(); }
+  if(WS.cam || WS.camState==='loading'){ wsStopCamera(); WS.camState = 'error'; WS.camErr = 'hidden'; wsRender(); }
 });
 // page being unloaded / put in bfcache: never leave a camera stream running
 window.addEventListener('pagehide', ()=>{
-  if(!WS || !WS.cam) return;
-  WS.cam.stop(); WS.cam = null; WS.camState = 'error'; WS.camErr = 'hidden';
+  if(!WS || !(WS.cam || WS.camState==='loading')) return;
+  wsStopCamera(); WS.camState = 'error'; WS.camErr = 'hidden';
   if(WS.step==='active' && !WS.paused) wsTogglePause();
   wsRender(); // if the page comes back from bfcache it must not show a dead camera layout
 });

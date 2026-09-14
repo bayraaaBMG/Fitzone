@@ -37,12 +37,19 @@ function poseErrorCode(err){
 
 /* starts camera + detection loop. onFrame({status, warnKey, event, reps, heldSec, formScore, tracked})
    is called ~12x/sec. Resolves to a controller; rejects with Error{code}. */
-async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded}){
+async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded, signal}){
   if(!poseCameraSupported()){ const e=new Error('unsupported'); e.code='nocamera'; throw e; }
   let stream;
   try{
     stream = await navigator.mediaDevices.getUserMedia({audio:false, video:{facingMode:facing||'user', width:{ideal:640}, height:{ideal:480}}});
   }catch(err){ const e=new Error(err && err.message); e.code=poseErrorCode(err); throw e; }
+  // the caller can cancel while the multi-MB model is still loading (app backgrounded,
+  // overlay closed): release the camera immediately instead of after the download
+  const abortErr = () => { stream.getTracks().forEach(tr=>tr.stop()); video.srcObject = null; const e=new Error('aborted'); e.code='aborted'; return e; };
+  if(signal){
+    if(signal.aborted) throw abortErr();
+    signal.onabort = () => stream.getTracks().forEach(tr=>tr.stop());
+  }
 
   video.muted = true; video.setAttribute('playsinline',''); video.setAttribute('muted','');
   video.srcObject = stream;
@@ -51,6 +58,7 @@ async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded}){
   let landmarker;
   try{ landmarker = await loadPoseLandmarker(); }
   catch(err){ stream.getTracks().forEach(tr=>tr.stop()); const e=new Error(err && err.message); e.code='model'; throw e; }
+  if(signal && signal.aborted) throw abortErr();
 
   const coach = COACH[exId];
   const makeCounter = () => coach && coach.pose ? createPoseCounter(coach.pose, {exId}) : null;

@@ -1,4 +1,4 @@
-const CACHE = 'mongolfit-v10';
+const CACHE = 'mongolfit-v11';
 // the pose model/runtime (MediaPipe on jsDelivr, model on storage.googleapis.com)
 // is multi-MB and opt-in only — leave it to the browser's HTTP cache, never this SW
 const HEAVY_HOST_RE = /^https:\/\/cdn\.jsdelivr\.net\//;
