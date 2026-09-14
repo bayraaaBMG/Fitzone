@@ -44,6 +44,7 @@ function toast(msg){
   document.body.appendChild(t); clearTimeout(toastT);
   toastT=setTimeout(()=>t.remove(), 2200);
 }
+let _saveErrShown = false;
 async function save(){
   const data = {
     profile:S.profile, plan:S.plan, weights:S.weights, completed:S.completed, completedLog:S.completedLog,
@@ -53,7 +54,9 @@ async function save(){
   const key = authUser ? 'mf_state_'+authUser.uid : 'mf_state';
   await Store.set(key, data);
   if(authUser){
-    try{ await usersDoc(authUser.uid).set({...data, updatedAt: Date.now()}, {merge:true}); }catch(e){}
+    // local copy above is already written, so a cloud failure never loses data — tell the user once
+    try{ await usersDoc(authUser.uid).set({...data, updatedAt: Date.now()}, {merge:true}); _saveErrShown = false; }
+    catch(e){ if(!_saveErrShown){ _saveErrShown = true; toast(t('toast_save_failed')); } }
   }
 }
 function esc(t){ return (t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }

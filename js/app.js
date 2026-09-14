@@ -58,3 +58,6 @@
     render();
   });
 })();
+
+window.addEventListener('offline', ()=> toast(t('toast_offline')));
+window.addEventListener('online', ()=> toast(t('toast_back_online')));

@@ -93,7 +93,7 @@ function renderHome(){
             `<button class="chip ai" data-q="${esc(t(k))}">💬 ${t(k)}</button>`).join('')}
         </div>
         <div class="askrow">
-          <input class="txin" id="askInput" placeholder="${t('doctor_placeholder')}">
+          <input class="txin" id="askInput" placeholder="${t('doctor_placeholder')}" aria-label="${t('doctor_placeholder')}">
           <label class="iconbtn" for="askImg" title="${t('attach_photo')}">📷</label>
           <input type="file" id="askImg" accept="image/*" hidden>
           <button class="iconbtn acc" id="askBtn" aria-label="${t('send')}">→</button>

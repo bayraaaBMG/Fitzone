@@ -4,14 +4,37 @@
    form status. Loaded up-front (tiny); the heavy MediaPipe model itself is
    only fetched by js/pose.js after the user explicitly turns the camera on.
 
-   Honesty rules baked in here:
-   - a rep only counts after a full range-of-motion cycle (start → peak →
-     start) during which most confident frames had no form warning
-   - partial reps and bad-form reps are reported, never counted
-   - low landmark confidence freezes counting and reports 'lowconf'
-   - landmarks can't see spinal rounding, bar path or grip, so those cues
-     stay coaching text only — never claimed as detected */
+   Rep state machine (reps rules):
+     IDLE ──start pose held readyFrames──▶ READY
+     READY ──leaves start zone──▶ DESCENDING
+     DESCENDING ──peak zone confirmed──▶ BOTTOM      (back to start w/o peak → READY, "partial" if it got close)
+     BOTTOM ──leaves peak zone──▶ ASCENDING
+     ASCENDING ──peak again──▶ BOTTOM                 (bobbing at the bottom never adds reps)
+     ASCENDING ──start zone confirmed──▶ COMPLETE → READY
+   COMPLETE counts a rep only if the cycle took ≥ minRepMs and at most
+   maxBadRatio of its frames had a form warning or low confidence.
+   "Descending/bottom" are generic names: for a press "bottom" is the top.
+
+   Robustness: EMA-smoothed metric, N-frame confirmation for every zone
+   change (debounce), lostFrames of low confidence disarm back to IDLE
+   (person left / occluded — the half-finished cycle is discarded), and a
+   sudden torso jump/scale change is treated as a glitch frame.
+
+   Honesty: landmarks can't see spinal rounding, bar path or grip, so those
+   cues stay coaching text only — never claimed as detected. */
 const PL = {nose:0, lSh:11, rSh:12, lEl:13, rEl:14, lWr:15, rWr:16, lHip:23, rHip:24, lKn:25, rKn:26, lAn:27, rAn:28};
+
+const POSE_DEFAULTS = {
+  minMeanVisibility: 0.55, // mean visibility of the rule's key points
+  minPointVisibility: 0.3, // every key point must be at least this visible
+  readyFrames: 3,          // start pose held this many frames before counting is armed
+  confirmFrames: 2,        // consecutive frames needed to confirm a zone change
+  lostFrames: 8,           // consecutive low-confidence frames that disarm to IDLE
+  maxBadRatio: 0.35,       // max share of warning/low-confidence frames in a counted rep
+  minRepMs: 350,           // faster "cycles" are jitter, not reps
+  maxJump: 0.25,           // torso-centre jump per frame (image-height units) = glitch
+  smoothing: 0.6,          // EMA weight of the newest numeric metric sample
+};
 
 function poseAngle(a, b, c){ // angle ABC in degrees
   const v1x=a.x-b.x, v1y=a.y-b.y, v2x=c.x-b.x, v2y=c.y-b.y;
@@ -30,19 +53,27 @@ function poseLineDev(a, mid, b){
   return mid.y - yAt;
 }
 
-/* builds {l:{sh,el,...}, r:{...}, side:{...best-visible side}} in an
-   aspect-corrected space (x scaled by width/height) so angles are real */
+/* {l:{sh,el,...}, r:{...}, side:{best-visible side}} in an aspect-corrected
+   space (x scaled by width/height) so angles are real */
 function posePoints(lm, aspect){
-  const p = i => lm[i] ? {x:lm[i].x*aspect, y:lm[i].y, v:(lm[i].visibility==null?1:lm[i].visibility)} : {x:0,y:0,v:0};
+  const p = i => {
+    const q = lm[i];
+    if(!q || !isFinite(q.x) || !isFinite(q.y)) return {x:0,y:0,v:0};
+    return {x:q.x*aspect, y:q.y, v:(q.visibility==null?1:q.visibility)};
+  };
   const l = {sh:p(PL.lSh), el:p(PL.lEl), wr:p(PL.lWr), hip:p(PL.lHip), kn:p(PL.lKn), an:p(PL.lAn)};
   const r = {sh:p(PL.rSh), el:p(PL.rEl), wr:p(PL.rWr), hip:p(PL.rHip), kn:p(PL.rKn), an:p(PL.rAn)};
   const vis = s => Object.values(s).reduce((a,q)=>a+q.v,0);
   return {l, r, side: vis(l)>=vis(r) ? l : r, nose:p(PL.nose)};
 }
-function poseConf(P, keys, both){
+function poseConf(P, keys, both, cfg){
   const pts = both ? keys.flatMap(k=>[P.l[k],P.r[k]]) : keys.map(k=>P.side[k]);
   const mean = pts.reduce((a,q)=>a+q.v,0)/pts.length;
-  return mean >= 0.55 && Math.min(...pts.map(q=>q.v)) >= 0.3;
+  return mean >= cfg.minMeanVisibility && Math.min(...pts.map(q=>q.v)) >= cfg.minPointVisibility;
+}
+function poseTorso(P){
+  const s = P.side;
+  return {cx:(s.sh.x+s.hip.x)/2, cy:(s.sh.y+s.hip.y)/2, len:Math.hypot(s.sh.x-s.hip.x, s.sh.y-s.hip.y)};
 }
 
 /* rule shape:
@@ -127,60 +158,118 @@ function createPoseCounter(ruleId, opts){
   opts = opts || {};
   const rule = POSE_RULES[ruleId];
   if(!rule) return null;
-  const st = {phase:'start', reps:0, heldMs:0, cycleFrames:0, cycleBad:0, cycleLow:0, leftStart:false, reachedPeak:false,
-    partialHit:false, lastTs:null, confFrames:0, goodFrames:0, rejected:0, partials:0, lastWarn:null};
+  const cfg = Object.assign({}, POSE_DEFAULTS, opts.config || {});
+  const st = {
+    phase:'idle', reps:0, heldMs:0, lastTs:null,
+    startStreak:0, peakStreak:0, okStreak:0, lowStreak:0,
+    cycleStartTs:0, cycleFrames:0, cycleBad:0, cycleLow:0, partialHit:false,
+    ema:null, prevTorso:null,
+    confFrames:0, goodFrames:0, rejected:0, partials:0, jitter:0, lost:0,
+    lastWarn:null, shownWarn:null, warnStreak:0,
+  };
+  const inCycle = () => st.phase==='descending' || st.phase==='bottom' || st.phase==='ascending';
+  const resetCycle = () => { st.cycleFrames=0; st.cycleBad=0; st.cycleLow=0; st.partialHit=false; st.peakStreak=0; };
+
+  function lowFrame(){
+    st.lowStreak++;
+    st.startStreak = 0; st.peakStreak = 0; st.okStreak = 0;
+    if(inCycle()) st.cycleLow++;
+    let event = null;
+    if(st.lowStreak >= cfg.lostFrames && st.phase!=='idle'){
+      if(inCycle() || rule.kind==='time') { event = 'lost'; st.lost++; }
+      st.phase = 'idle'; st.ema = null; resetCycle();
+    }
+    return event;
+  }
+
   return {
-    rule, state: st,
+    rule, state: st, config: cfg,
     get formScore(){ return st.confFrames ? Math.round(st.goodFrames/st.confFrames*100) : null; },
     update(lm, ts, aspect){
       const dt = st.lastTs==null ? 0 : Math.min(250, Math.max(0, ts-st.lastTs));
       st.lastTs = ts;
-      if(!lm || !lm.length) return this._out('lowconf', null, null);
+      if(!lm || !lm.length) return this._out('lowconf', null, lowFrame());
       const P = posePoints(lm, aspect || 1);
-      if(!poseConf(P, rule.keys, rule.both)){
-        if(st.phase!=='start') st.cycleLow++;
-        return this._out('lowconf', null, null);
+      if(!poseConf(P, rule.keys, rule.both, cfg)) return this._out('lowconf', null, lowFrame());
+      // glitch guard: sudden torso jump or scale change (camera knocked, detector swap)
+      const tor = poseTorso(P), prev = st.prevTorso;
+      st.prevTorso = tor;
+      if(prev && (Math.hypot(tor.cx-prev.cx, tor.cy-prev.cy) > cfg.maxJump || (prev.len && (tor.len/prev.len > 1.55 || tor.len/prev.len < 0.65)))){
+        return this._out('lowconf', null, lowFrame());
       }
+      st.lowStreak = 0;
       st.confFrames++;
+
       if(rule.kind==='time'){
         const h = rule.hold(P, opts);
-        if(h.ok){ st.heldMs += dt; st.goodFrames++; }
-        st.lastWarn = h.warn;
-        return this._out(h.ok ? 'good' : 'warn', h.warn, null);
+        if(h.ok){
+          st.okStreak++;
+          if(st.okStreak >= cfg.confirmFrames){ st.phase='holding'; st.heldMs += dt; }
+          st.goodFrames++;
+        } else {
+          st.okStreak = 0;
+          if(st.phase==='holding') st.phase='broken';
+        }
+        return this._out(h.ok ? 'good' : 'warn', this._warn(h.warn), null);
       }
-      const v = rule.metric(P, opts);
+
+      let v = rule.metric(P, opts);
+      if(typeof v==='number'){ st.ema = st.ema==null ? v : cfg.smoothing*v + (1-cfg.smoothing)*st.ema; v = st.ema; }
       const w = rule.warn(P, v, opts);
       if(!w) st.goodFrames++;
+      const isStart = rule.start(v), isPeak = rule.peak(v);
+      st.startStreak = isStart ? st.startStreak+1 : 0;
+      st.peakStreak = isPeak ? st.peakStreak+1 : 0;
       let event = null;
-      if(st.phase==='start'){
-        if(rule.peak(v)){ st.phase='peak'; st.reachedPeak=true; }
-        else if(!rule.start(v)){
-          st.leftStart = true;
+
+      switch(st.phase){
+        case 'idle':
+          if(st.startStreak >= cfg.readyFrames) st.phase = 'ready';
+          break;
+        case 'ready':
+          if(!isStart){ st.phase='descending'; resetCycle(); st.cycleStartTs = ts; st.peakStreak = isPeak?1:0; }
+          break;
+        case 'descending':
           if(rule.partial(v)) st.partialHit = true;
-        } else if(st.leftStart){
-          // came back to start without ever reaching the peak
-          if(st.partialHit){ event='partial'; st.partials++; }
-          this._resetCycle();
-        }
-        if(st.leftStart || st.phase==='peak'){ st.cycleFrames++; if(w) st.cycleBad++; }
-      } else { // peak reached, waiting to return to start
-        st.cycleFrames++; if(w) st.cycleBad++;
-        if(rule.start(v)){
-          const bad = st.cycleFrames ? (st.cycleBad+st.cycleLow)/(st.cycleFrames+st.cycleLow) : 0;
-          if(bad <= 0.35){ st.reps++; event='rep'; }
-          else { st.rejected++; event='rejected'; }
-          st.phase='start'; this._resetCycle();
-        }
+          if(st.peakStreak >= cfg.confirmFrames) st.phase = 'bottom';
+          else if(st.startStreak >= cfg.confirmFrames){
+            if(st.partialHit){ event='partial'; st.partials++; }
+            st.phase = 'ready'; resetCycle();
+          }
+          break;
+        case 'bottom':
+          if(!isPeak) st.phase = 'ascending';
+          break;
+        case 'ascending':
+          if(st.peakStreak >= cfg.confirmFrames) st.phase = 'bottom';
+          else if(st.startStreak >= cfg.confirmFrames){
+            const bad = (st.cycleBad + st.cycleLow) / Math.max(1, st.cycleFrames + st.cycleLow);
+            if(ts - st.cycleStartTs < cfg.minRepMs){ event='jitter'; st.jitter++; }
+            else if(bad <= cfg.maxBadRatio){ st.reps++; event='rep'; }
+            else { st.rejected++; event='rejected'; }
+            st.phase = 'ready'; resetCycle();
+          }
+          break;
       }
-      if(w) st.lastWarn = w;
-      const warnKey = w || (event==='partial' ? rule.partialWarn : null);
-      return this._out(warnKey ? 'warn' : 'good', warnKey, event);
+      if(inCycle()){ st.cycleFrames++; if(w) st.cycleBad++; }
+
+      let warnKey = w || (event==='partial' ? rule.partialWarn : null);
+      if(!warnKey && st.phase==='idle' && !isStart) warnKey = 'pose_get_in_position';
+      return this._out(warnKey ? 'warn' : 'good', this._warn(warnKey, event==='partial'), event);
     },
-    _resetCycle(){ st.cycleFrames=0; st.cycleBad=0; st.cycleLow=0; st.leftStart=false; st.reachedPeak=false; st.partialHit=false; },
+    // a warning must persist confirmFrames before it's shown (no flicker); partial events show at once
+    _warn(key, immediate){
+      if(key) st.lastWarn = key;
+      if(key && (immediate || key===st.shownWarn)){ st.warnStreak = cfg.confirmFrames; st.shownWarn = key; return key; }
+      if(key){ st.warnStreak = (st.pendingWarn===key ? st.warnStreak+1 : 1); st.pendingWarn = key;
+        if(st.warnStreak >= cfg.confirmFrames){ st.shownWarn = key; return key; } return st.shownWarn; }
+      st.shownWarn = null; st.pendingWarn = null; st.warnStreak = 0; return null;
+    },
     _out(status, warnKey, event){
-      return {status, warnKey, event, reps:st.reps, heldSec:Math.floor(st.heldMs/1000), formScore:this.formScore};
+      return {status: (status==='warn' && !warnKey) ? 'good' : status, warnKey, event, phase: st.phase,
+        reps: st.reps, heldSec: Math.floor(st.heldMs/1000), formScore: this.formScore};
     },
   };
 }
 
-if(typeof module!=='undefined') module.exports = {POSE_RULES, createPoseCounter, poseAngle, PL};
+if(typeof module!=='undefined') module.exports = {POSE_RULES, POSE_DEFAULTS, createPoseCounter, poseAngle, PL};

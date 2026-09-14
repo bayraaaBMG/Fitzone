@@ -56,14 +56,16 @@ function recordTargetFor(exId, duration){
 function buildWorkoutResult(o){
   const reps = o.mode==='reps' ? o.amount : 0;
   const heldSec = o.mode==='time' ? o.amount : 0;
+  const completedAt = Date.now();
   return {
+    id: `${o.exId}-${completedAt}`,
     userId: (typeof authUser!=='undefined' && authUser) ? authUser.uid : null,
     exerciseId: o.exId, mode: o.mode, reps, heldSec,
     duration: o.duration, activeSec: o.activeSec || o.duration, score: workoutScore(o.amount, o.formScore),
     formScore: o.formScore==null ? null : o.formScore,
     opponent: {type:o.oppType, level:o.oppLevel||null, target:o.oppAmount},
     won: o.oppType==='target' ? o.amount>=o.oppAmount : o.amount>o.oppAmount,
-    completedAt: Date.now(),
+    completedAt,
   };
 }
 
@@ -71,6 +73,7 @@ function buildWorkoutResult(o){
 function recordWorkoutResult(r){
   if(!S.exStats) S.exStats = {};
   if(!Array.isArray(S.workoutResults)) S.workoutResults = [];
+  if(r.id && S.workoutResults.some(x=>x && x.id===r.id)) return null; // same result submitted twice
   const prev = exStatsFor(r.exerciseId);
   const amount = r.mode==='time' ? r.heldSec : r.reps;
   const prevBest = r.mode==='time' ? prev.bestTime : prev.bestReps;

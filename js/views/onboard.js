@@ -58,12 +58,12 @@ function renderS1(){
   document.getElementById('formbody').innerHTML = `
     <h2 class="disp" style="font-size:24px; margin-bottom:6px">${t('onb_s1_h')}</h2>
     <p class="mut sm" style="margin:0 0 22px">${t('onb_s1_p')}</p>
-    <div class="field"><label>${t('onb_name')}</label><input class="txin" id="f_name" placeholder="${t('onb_name_placeholder')}" value="${draft.name||''}"></div>
+    <div class="field"><label for="f_name">${t('onb_name')}</label><input class="txin" id="f_name" placeholder="${t('onb_name_placeholder')}" value="${esc(draft.name||'')}"></div>
     <div class="field"><label>${t('onb_sex')}</label>${chips(draft,'sex',[{v:'m',n:t('onb_male'),e:'♂'},{v:'f',n:t('onb_female'),e:'♀'}])}</div>
     <div class="inrow">
-      <div class="field" style="flex:1"><label>${t('onb_age')}</label><input class="txin" id="f_age" type="number" inputmode="numeric" placeholder="22" value="${draft.age||''}"></div>
-      <div class="field" style="flex:1"><label>${t('onb_height')}</label><input class="txin" id="f_h" type="number" inputmode="numeric" placeholder="175" value="${draft.height||''}"></div>
-      <div class="field" style="flex:1"><label>${t('onb_weight')}</label><input class="txin" id="f_w" type="number" inputmode="numeric" placeholder="82" value="${draft.weight||''}"></div>
+      <div class="field" style="flex:1"><label for="f_age">${t('onb_age')}</label><input class="txin" id="f_age" type="number" inputmode="numeric" placeholder="22" value="${draft.age||''}"></div>
+      <div class="field" style="flex:1"><label for="f_h">${t('onb_height')}</label><input class="txin" id="f_h" type="number" inputmode="numeric" placeholder="175" value="${draft.height||''}"></div>
+      <div class="field" style="flex:1"><label for="f_w">${t('onb_weight')}</label><input class="txin" id="f_w" type="number" inputmode="numeric" placeholder="82" value="${draft.weight||''}"></div>
     </div>
     <button class="btn p" id="next1">${t('continue')}</button>`;
   wireChips(app, draft, onboardChipChange);

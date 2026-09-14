@@ -12,12 +12,12 @@ function paintSettings(sheet, sdraft){
     <h2 class="disp" style="font-size:22px; margin-bottom:2px">${t('st_title')}</h2>
     <p class="xs mut" style="margin:0 0 14px">${esc(authUser?authUser.email:'')}</p>
     <button class="btn g" id="st_profile" style="margin-bottom:18px">👤 ${t('st_profile_link')}</button>
-    <div class="field"><label>${t('onb_name')}</label><input class="txin" id="st_name" value="${esc(sdraft.name||'')}"></div>
+    <div class="field"><label for="st_name">${t('onb_name')}</label><input class="txin" id="st_name" value="${esc(sdraft.name||'')}"></div>
     <div class="field"><label>${t('onb_sex')}</label>${chips(sdraft,'sex',[{v:'m',n:t('onb_male'),e:'♂'},{v:'f',n:t('onb_female'),e:'♀'}])}</div>
     <div class="inrow">
-      <div class="field" style="flex:1"><label>${t('onb_age')}</label><input class="txin" id="st_age" type="number" inputmode="numeric" value="${sdraft.age||''}"></div>
-      <div class="field" style="flex:1"><label>${t('onb_height')}</label><input class="txin" id="st_h" type="number" inputmode="numeric" value="${sdraft.height||''}"></div>
-      <div class="field" style="flex:1"><label>${t('onb_weight')}</label><input class="txin" id="st_w" type="number" inputmode="numeric" value="${sdraft.weight||''}"></div>
+      <div class="field" style="flex:1"><label for="st_age">${t('onb_age')}</label><input class="txin" id="st_age" type="number" inputmode="numeric" value="${sdraft.age||''}"></div>
+      <div class="field" style="flex:1"><label for="st_h">${t('onb_height')}</label><input class="txin" id="st_h" type="number" inputmode="numeric" value="${sdraft.height||''}"></div>
+      <div class="field" style="flex:1"><label for="st_w">${t('onb_weight')}</label><input class="txin" id="st_w" type="number" inputmode="numeric" value="${sdraft.weight||''}"></div>
     </div>
     <div class="field"><label>${t('onb_goal')}</label>${chips(sdraft,'goal',GOALS.map(g=>({v:g.id,n:g.n,e:g.e})))}</div>
     <div class="field"><label>${t('onb_level')}</label>${chips(sdraft,'level',[{v:1,n:t('onb_lvl1')},{v:2,n:t('onb_lvl2')},{v:3,n:t('onb_lvl3')}])}</div>

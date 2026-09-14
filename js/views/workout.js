@@ -3,6 +3,7 @@
    Works for every exercise in EX (via COACH). Camera + pose detection is
    strictly opt-in per session; without it reps are counted by tapping. */
 let WS = null;
+let wsIgnorePop = false; // set while we pop our own history entry on close
 
 function openWorkout(exId, battle){
   if(!COACH[exId] || !ex(exId)) return;
@@ -21,8 +22,14 @@ function openWorkout(exId, battle){
   root.setAttribute('role','dialog'); root.setAttribute('aria-modal','true');
   document.body.appendChild(root);
   document.documentElement.classList.add('ws-open');
+  // an extra history entry lets the Android/browser Back button close the
+  // overlay instead of leaving the app mid-workout (see popstate below)
+  if(wsIgnorePop) WS.pendingPush = true; // our previous entry is still being popped — push after it's gone
+  else { try{ history.pushState({fzWorkout:true}, ''); WS.hist = true; }catch(e){} }
   wsRender();
+  wsFocus('#wsGo');
 }
+function wsFocus(sel){ const el = wsRoot() && wsRoot().querySelector(sel); if(el) try{ el.focus({preventScroll:true}); }catch(e){} }
 
 /* ---------- helpers ---------- */
 function wsRoot(){ return document.getElementById('ws'); }
@@ -70,20 +77,28 @@ function wsAttachMedia(host){
 /* ---------- camera ---------- */
 async function wsStartCamera(){
   if(!WS || WS.camState==='loading' || WS.camState==='on') return;
+  const sess = WS; // the overlay may be closed/reopened while permission + model load are pending
   WS.camState = 'loading'; WS.camErr = null; wsRender();
   const m = wsMedia();
   try{
     const cam = await startPoseCamera({
       video: m.querySelector('video'), canvas: m.querySelector('canvas'),
-      exId: WS.exId, facing: WS.camFacing, onFrame: wsOnPose,
+      exId: sess.exId, facing: sess.camFacing, onFrame: wsOnPose, onEnded: ()=>wsCameraEnded(sess),
     });
-    if(!WS){ cam.stop(); return; }
+    if(WS!==sess){ cam.stop(); return; }
     WS.cam = cam; WS.camState = 'on';
     if(WS.step!=='active' || WS.paused) cam.pause();
   }catch(err){
-    if(!WS) return;
+    if(WS!==sess) return;
     WS.cam = null; WS.camState = 'error'; WS.camErr = err.code || 'model';
   }
+  wsRender();
+}
+/* camera track ended from outside (permission revoked, another app took the camera, device unplugged) */
+function wsCameraEnded(sess){
+  if(!WS || WS!==sess) return;
+  wsStopCamera();
+  WS.camState = 'error'; WS.camErr = 'ended';
   wsRender();
 }
 function wsStopCamera(){
@@ -203,7 +218,7 @@ function wsRenderIntro(root){
 
       <div class="ws-card"><div class="lab">${t('ws_camera')}</div>
         ${WS.camState==='on' || WS.camState==='loading' ? `<div class="ws-stage" id="wsPreview" style="min-height:220px;margin:0 0 10px">
-            <div class="ws-pill" id="wsPill"></div>
+            <div class="ws-pill" id="wsPill" role="status" aria-live="polite"></div>
             <div class="ws-camctl"><button class="ws-chipbtn" id="wsFlip">${t('ws_cam_flip')}</button><button class="ws-chipbtn" id="wsCamOff">${t('ws_cam_off')}</button></div>
           </div>` : `<button class="ws-chipbtn" id="wsCam" style="width:100%">${t('ws_cam_btn')}</button>`}
         ${camNote}
@@ -259,7 +274,7 @@ function wsRenderCount(root){
 }
 
 function wsStartActive(){
-  WS.step = 'active'; WS.amount = 0; WS.elapsed = 0; WS.paused = false;
+  WS.step = 'active'; WS.amount = 0; WS.elapsed = 0; WS.paused = false; WS.finishing = false;
   if(WS.cam){ WS.cam.reset(); WS.cam.resume(); }
   WS.tickAt = performance.now();
   WS.ticker = setInterval(wsTick, 200);
@@ -295,7 +310,7 @@ function wsRenderActive(root){
     ${wsTopBar(x.n)}
     <div class="ws-hud">
       <div class="ws-hudrow">
-        <div class="ws-side l"><div class="ws-name">${t('ws_you')}</div><div class="ws-score" id="wsMe">0</div></div>
+        <div class="ws-side l"><div class="ws-name">${t('ws_you')}</div><div class="ws-score" id="wsMe" aria-live="polite" aria-atomic="true">0</div></div>
         <div class="ws-time"><small>${t('ws_time')}</small><b id="wsClock">0</b></div>
         <div class="ws-side r"><div class="ws-name">${esc(wsOppName())}</div><div class="ws-score" id="wsOpp">0</div></div>
       </div>
@@ -303,7 +318,7 @@ function wsRenderActive(root){
     </div>
     <div class="ws-stage" id="wsStage">
       ${camOn ? '' : `<div class="ws-demo"><div class="e">${x.e}</div><div class="ws-cue" id="wsCue">${wsCueHTML()}</div></div>`}
-      <div class="ws-pill" id="wsPill"></div>
+      <div class="ws-pill" id="wsPill" role="status" aria-live="polite"></div>
       <div class="ws-flash"></div>
       <div class="ws-camctl">${camOn
         ? `<button class="ws-chipbtn" id="wsCamOff">${t('ws_cam_off')}</button>`
@@ -363,7 +378,8 @@ function wsTogglePause(){
 }
 
 function wsFinish(){
-  if(!WS || WS.step!=='active') return;
+  if(!WS || WS.step!=='active' || WS.finishing) return; // timer end + Finish tap in the same tick, double taps
+  WS.finishing = true;
   clearInterval(WS.ticker); clearInterval(WS.cueT);
   if(WS.cam) WS.cam.pause();
   if(WS.wake){ WS.wake.release().catch(()=>{}); WS.wake = null; }
@@ -383,6 +399,7 @@ function wsFinish(){
   wsStopCamera();
   WS.step = 'result';
   wsRender();
+  wsFocus('#wsDone');
 }
 
 function wsRenderResult(root){
@@ -455,10 +472,49 @@ function wsTeardown(){
   if(WS.wake) WS.wake.release().catch(()=>{});
   const root = wsRoot(); if(root) root.remove();
   document.documentElement.classList.remove('ws-open');
+  const hadHist = WS.hist;
   WS = null;
+  if(hadHist){ wsIgnorePop = true; try{ history.back(); }catch(e){ wsIgnorePop = false; } }
 }
 
-/* leaving the tab mid-set pauses the session instead of silently running the clock */
+/* ---------- lifecycle guards (registered once) ---------- */
+// app backgrounded: pause the clock and release the camera (mobile OSes freeze or
+// revoke it anyway) — the user resumes and can turn the camera back on
 document.addEventListener('visibilitychange', ()=>{
-  if(document.hidden && WS && WS.step==='active' && !WS.paused) wsTogglePause();
+  if(!document.hidden || !WS) return;
+  if(WS.step==='active' && !WS.paused) wsTogglePause();
+  if(WS.cam){ wsStopCamera(); WS.camState = 'error'; WS.camErr = 'hidden'; wsRender(); }
+});
+// page being unloaded / put in bfcache: never leave a camera stream running
+window.addEventListener('pagehide', ()=>{
+  if(!WS || !WS.cam) return;
+  WS.cam.stop(); WS.cam = null; WS.camState = 'error'; WS.camErr = 'hidden';
+  if(WS.step==='active' && !WS.paused) wsTogglePause();
+  wsRender(); // if the page comes back from bfcache it must not show a dead camera layout
+});
+// refresh / tab close with unsaved reps: native "leave site?" confirmation
+window.addEventListener('beforeunload', e=>{
+  if(WS && WS.step==='active' && WS.amount>0){ e.preventDefault(); e.returnValue = ''; }
+});
+// Back button closes the overlay (asking first if reps would be lost)
+window.addEventListener('popstate', ()=>{
+  if(wsIgnorePop){
+    wsIgnorePop = false;
+    if(WS && WS.pendingPush){ WS.pendingPush = false; try{ history.pushState({fzWorkout:true}, ''); WS.hist = true; }catch(e){} }
+    return;
+  }
+  if(!WS || !WS.hist) return;
+  WS.hist = false;
+  if(WS.step==='active' && WS.amount>0 && !confirm(t('ws_confirm_quit'))){
+    try{ history.pushState({fzWorkout:true}, ''); WS.hist = true; }catch(e){}
+    return;
+  }
+  const wasResult = WS.step==='result';
+  wsTeardown();
+  if(wasResult) render();
+});
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Escape' || !WS) return;
+  e.preventDefault();
+  if(WS.step==='result') wsDone(); else wsClose();
 });

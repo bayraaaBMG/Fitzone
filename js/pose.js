@@ -28,16 +28,16 @@ function poseCameraSupported(){
   return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 }
 
+/* getUserMedia failures only — these are always camera problems, never the model */
 function poseErrorCode(err){
   const n = err && err.name;
-  if(n==='NotAllowedError' || n==='SecurityError') return 'denied';
-  if(n==='NotFoundError' || n==='OverconstrainedError' || n==='NotReadableError') return 'nocamera';
-  return 'model';
+  if(n==='NotAllowedError' || n==='PermissionDeniedError' || n==='SecurityError') return 'denied';
+  return 'nocamera'; // NotFound/DevicesNotFound, NotReadable/TrackStart, Overconstrained, Abort, TypeError, unknown
 }
 
 /* starts camera + detection loop. onFrame({status, warnKey, event, reps, heldSec, formScore, tracked})
    is called ~12x/sec. Resolves to a controller; rejects with Error{code}. */
-async function startPoseCamera({video, canvas, exId, facing, onFrame}){
+async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded}){
   if(!poseCameraSupported()){ const e=new Error('unsupported'); e.code='nocamera'; throw e; }
   let stream;
   try{
@@ -57,6 +57,11 @@ async function startPoseCamera({video, canvas, exId, facing, onFrame}){
   let counter = makeCounter();
   const ctx = canvas.getContext('2d');
   let raf = 0, stopped = false, paused = false, lastRun = 0, lastVideoTime = -1;
+  // track ended from outside (permission revoked, camera taken by another app, unplugged).
+  // stop() does not fire 'ended', so this only reports external loss.
+  const reportEnded = () => { if(!stopped && onEnded) onEnded(); };
+  stream.getVideoTracks().forEach(tr => tr.addEventListener('ended', reportEnded));
+  if(stream.getVideoTracks().some(tr => tr.readyState==='ended')) setTimeout(reportEnded, 0); // lost while the model loaded
 
   function draw(lm, status){
     if(canvas.width!==video.videoWidth || canvas.height!==video.videoHeight){
@@ -107,6 +112,7 @@ async function startPoseCamera({video, canvas, exId, facing, onFrame}){
     pause(){ paused = true; },
     resume(){ paused = false; if(counter) counter.state.lastTs = null; },
     stop(){
+      if(stopped) return;
       stopped = true; cancelAnimationFrame(raf);
       stream.getTracks().forEach(tr=>tr.stop());
       video.srcObject = null;

@@ -118,7 +118,7 @@ function drawDiary(){
   document.querySelectorAll('#diary .x').forEach(b=>b.onclick=()=>removeLogItem(b.dataset.slot, +b.dataset.i));
   document.querySelectorAll('#diary .foodthumb').forEach(img=>img.onclick=()=>{
     const sheet=mkSheet();
-    sheet.querySelector('.inner').innerHTML = `<div class="grab"></div><img src="${img.dataset.photo}" style="width:100%;border-radius:12px;margin-top:8px" alt="">`;
+    sheet.querySelector('.inner').innerHTML = `<div class="grab"></div><img src="${esc(img.dataset.photo)}" style="width:100%;border-radius:12px;margin-top:8px" alt="">`;
   });
 }
 function addLogItem(slot, item){
@@ -142,14 +142,14 @@ function openAddFood(slot){
       <input type="file" id="diaryImg" accept="image/*" hidden>
     </div>
     <div id="diaryImgPreview"></div>
-    <input class="txin" id="foodSearch" placeholder="${t('search_recipe_placeholder')}" style="margin-top:12px">
+    <input class="txin" id="foodSearch" placeholder="${t('search_recipe_placeholder')}" aria-label="${t('search_recipe_placeholder')}" style="margin-top:12px">
     <div id="foodResults" style="margin-top:6px"></div>
     <hr class="sep">
     <div class="block">
       <div class="lab">${t('manual_entry')}</div>
-      <input class="txin" id="mfName" placeholder="${t('food_name_placeholder')}" style="margin-bottom:8px">
+      <input class="txin" id="mfName" placeholder="${t('food_name_placeholder')}" aria-label="${t('food_name_placeholder')}" style="margin-bottom:8px">
       <div class="grid g2">
-        <input class="txin" id="mfKcal" type="number" placeholder="${t('unit_kcal')}">
+        <input class="txin" id="mfKcal" type="number" placeholder="${t('unit_kcal')}" aria-label="${t('unit_kcal')}">
         <input class="txin" id="mfProtein" type="number" placeholder="${t('macro_protein')} (${t('unit_g')})">
         <input class="txin" id="mfCarb" type="number" placeholder="${t('macro_carb')} (${t('unit_g')})">
         <input class="txin" id="mfFat" type="number" placeholder="${t('macro_fat')} (${t('unit_g')})">
@@ -168,7 +168,7 @@ function openAddFood(slot){
   };
 
   // хавсаргасан зураг зөвхөн энэ дэлгэц дээрх preview-д зориулагдсан —
-  // хаана ч хадгалагдахгvй, зөвхөн нэр/ккал/уураг зэрэг мэдээлэл л хадгалагдана
+  // хаана ч хадгалагдахгүй, зөвхөн нэр/ккал/уураг зэрэг мэдээлэл л хадгалагдана
   function finishAdd(item){
     addLogItem(slot, item);
     closeSheet();
@@ -207,7 +207,7 @@ function drawPantry(){
     </div>`).join('') + `
     <p class="xs mut" style="margin:12px 0 6px">${t('or_type')}</p>
     <div class="askrow">
-      <input class="txin" id="pantryText" placeholder="${t('pantry_text_placeholder')}">
+      <input class="txin" id="pantryText" placeholder="${t('pantry_text_placeholder')}" aria-label="${t('pantry_text_placeholder')}">
       <button class="iconbtn acc" id="pantryTextAdd" aria-label="${t('add')}">→</button>
     </div>`;
   document.querySelectorAll('#pantry .chip').forEach(c=>c.onclick=()=>{

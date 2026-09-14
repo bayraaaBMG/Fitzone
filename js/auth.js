@@ -3,15 +3,25 @@ let authUser = null;        // firebase.User | null
 let authReady = false;      // true once the initial auth check resolves
 let authInitError = false;  // true if Firebase itself failed to load (offline/blocked)
 
-/* rolling diagnostic trail for the Google sign-in flow specifically —
-   surfaced in the UI under the login error (see authgate.js) so a real
-   failure on a real device carries actual evidence instead of a guess */
+/* Debug mode is opt-in: open the site once with ?debug=1 (persists on this
+   device, ?debug=0 turns it off). Only then is the Google sign-in trail
+   logged to the console and shown under login errors — normal users never
+   see diagnostics. */
+const FZ_DEBUG = (()=>{ try{
+  if(/[?&]debug=1(&|$)/.test(location.search)) localStorage.setItem('mf_debug','1');
+  if(/[?&]debug=0(&|$)/.test(location.search)) localStorage.removeItem('mf_debug');
+  return localStorage.getItem('mf_debug')==='1';
+}catch(e){ return false; } })();
 let authDiagLog = [];
 function diagLog(msg, extra){
+  if(!FZ_DEBUG) return;
   const line = `${new Date().toISOString().slice(11,19)} ${msg}` + (extra!==undefined ? ' ' + JSON.stringify(extra) : '');
   authDiagLog.push(line);
   console.log('[GoogleAuth]', line);
 }
+/* embedded in-app browsers (Instagram, Facebook, LINE, KakaoTalk, TikTok, Android WebView)
+   are refused by Google sign-in ("disallowed_useragent") — warn before the user tries */
+function isInAppBrowser(){ return /FBAN|FBAV|Instagram|Line\/|KAKAOTALK|Snapchat|TikTok|musical_ly|; wv\)/i.test(navigator.userAgent||''); }
 
 function initFirebase(){
   if(typeof firebase==='undefined') return;
@@ -21,20 +31,57 @@ function initFirebase(){
 
 function usersDoc(uid){ return firebase.firestore().collection('users').doc(uid); }
 
+/* The Firestore doc / local cache is writable only by its owner, but it is
+   still untrusted input for rendering: coerce types so a malformed or
+   hand-edited document can't crash a view or smuggle markup into
+   attributes. Valid data passes through unchanged. */
+const asArr = v => Array.isArray(v) ? v : [];
+const asObj = v => (v && typeof v==='object' && !Array.isArray(v)) ? v : {};
+const asNum = (v, d=0) => { const n = +v; return isFinite(n) ? n : d; };
+function cleanProfile(p){
+  if(!p || typeof p!=='object' || Array.isArray(p)) return null;
+  const out = {...p,
+    name: String(p.name==null ? '' : p.name).slice(0,60),
+    age: asNum(p.age, 25), height: asNum(p.height, 170), weight: asNum(p.weight, 70),
+    days: Math.min(6, Math.max(2, Math.round(asNum(p.days, 3)))), minutes: asNum(p.minutes, 30),
+    level: [1,2,3].includes(+p.level) ? +p.level : 1,
+    equip: asArr(p.equip).filter(e=>typeof e==='string'),
+  };
+  // only our own canvas-generated image data URLs may reach an <img src>
+  if(!(typeof p.photo==='string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(p.photo))) delete out.photo;
+  return out;
+}
+function cleanFoodLog(fl){
+  const out = {};
+  for(const [d, day] of Object.entries(asObj(fl))){
+    const o = {};
+    ['breakfast','lunch','dinner','snack'].forEach(slot=>{
+      o[slot] = asArr(asObj(day)[slot]).filter(i=>i && typeof i==='object').map(i=>{
+        const c = {...i, n:String(i.n==null?'':i.n).slice(0,80), kcal:asNum(i.kcal), protein:asNum(i.protein), carb:asNum(i.carb), fat:asNum(i.fat)};
+        if(typeof c.photo!=='string') delete c.photo;
+        return c;
+      });
+    });
+    out[d] = o;
+  }
+  return out;
+}
 function applyStateData(d){
-  S.profile = d.profile || null;
-  S.plan = d.plan || (d.profile ? generatePlan(d.profile) : null);
-  S.weights = d.weights || [];
-  S.completed = d.completed || [];
-  S.completedLog = d.completedLog || {};
-  S.challenge = d.challenge || null;
-  S.pantry = d.pantry || [];
-  S.foodLog = d.foodLog || {};
-  S.waterLog = d.waterLog || {};
-  S.theme = d.theme || 'dark';
-  S.lang = d.lang || 'mn';
-  S.exStats = d.exStats || {};
-  S.workoutResults = d.workoutResults || [];
+  d = asObj(d);
+  S.profile = cleanProfile(d.profile);
+  const planOk = Array.isArray(d.plan) && d.plan.length && d.plan.every(x=>x && Array.isArray(x.ex));
+  S.plan = planOk ? d.plan : (S.profile ? generatePlan(S.profile) : null);
+  S.weights = asArr(d.weights).filter(w=>w && typeof w.d==='string' && isFinite(+w.kg)).map(w=>({d:w.d, kg:+w.kg}));
+  S.completed = asArr(d.completed).filter(x=>typeof x==='string');
+  S.completedLog = asObj(d.completedLog);
+  S.challenge = (d.challenge && typeof d.challenge.start==='string') ? {start:d.challenge.start, done:asArr(d.challenge.done).filter(x=>typeof x==='string')} : null;
+  S.pantry = asArr(d.pantry).filter(x=>typeof x==='string');
+  S.foodLog = cleanFoodLog(d.foodLog);
+  S.waterLog = Object.fromEntries(Object.entries(asObj(d.waterLog)).map(([k,v])=>[k, asNum(v)]));
+  S.theme = ['dark','light','system'].includes(d.theme) ? d.theme : 'dark';
+  S.lang = ['mn','en'].includes(d.lang) ? d.lang : 'mn';
+  S.exStats = Object.fromEntries(Object.entries(asObj(d.exStats)).filter(([,v])=>v && typeof v==='object'));
+  S.workoutResults = asArr(d.workoutResults).filter(r=>r && typeof r==='object');
   S.tab = 'home';
   applyTheme(S.theme);
   applyLangLabels();
@@ -139,6 +186,11 @@ function authErrMsg(code){
     'auth/account-exists-with-different-credential': t('autherr_account_exists'),
     'auth/unauthorized-domain': t('autherr_unauthorized_domain'),
     'popup-unavailable': t('autherr_popup_unavailable'),
+    'auth/invalid-login-credentials': t('autherr_invalid_credential'),
+    'auth/web-storage-unsupported': t('autherr_storage'),
+    'auth/user-disabled': t('autherr_user_disabled'),
+    'auth/internal-error': t('autherr_retry'),
+    'auth/timeout': t('autherr_timeout'),
   };
   return map[code] || t('autherr_generic');
 }

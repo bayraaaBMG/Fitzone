@@ -187,15 +187,15 @@ const I18N = {
     skip:'Алгасах', toast_rest_done:'Амралт дууслаа 💪',
 
     /* workout / battle session */
-    ws_start_btn:'Дасгал эхлүүлэх', ws_battle_btn:'⚔️ Өрсөлдөх', ex_pr_line:'Хувийн рекорд: {0} · Streak {1} өдөр', lib_best:'🏆 {0}',
-    ws_mode_workout:'Дасгал', ws_mode_battle:'⚔️ Өрсөлдөөн', ws_close:'Хаах', ws_start:'Эхлүүлэх',
+    ws_start_btn:'Дасгал эхлүүлэх', ws_battle_btn:'⚔️ AI сорилт', ex_pr_line:'Хувийн рекорд: {0} · Streak {1} өдөр', lib_best:'🏆 {0}',
+    ws_mode_workout:'Дасгал', ws_mode_battle:'⚔️ AI сорилт', ws_close:'Хаах', ws_start:'Эхлүүлэх',
     ws_lvl:'Түвшин', ws_mode_reps:'Давталтаар', ws_mode_time:'Хугацаагаар барих',
-    ws_pose_auto_tag:'📷 Автомат тоолол боломжтой', ws_pose_manual_tag:'✋ Гараар тоолно',
+    ws_pose_auto_tag:'📷 Camera автомат тоолол', ws_pose_manual_tag:'✋ Гараар тоолол · 📷 Camera хэлбэрийн заавар',
     ws_eq_none:'Тоног хэрэгсэлгүй', ws_eq_barbell:'Штанг', ws_eq_dumbbell:'Гантель', ws_eq_cable:'Кабель машин', ws_eq_machine:'Машин / турник',
     ws_recommended:'Санал болгох', ws_rest:'Амралт', ws_best:'Хувийн рекорд', ws_last:'Сүүлд',
     ws_opponent:'Өрсөлдөгч', ws_ai_level:'AI зорилт · {0}', ws_my_record:'Өөрийн рекорд', ws_target:'Зорилт',
     ws_no_record_yet:'Өөрийн рекордтой өрсөлдөхийн тулд эхлээд нэг удаа хийгээрэй.',
-    ws_ai_note:'AI зорилт бол бодит тоглогч биш — сонгосон түвшний тогтмол хурдаар өсдөг тооцоолсон зорилт.',
+    ws_ai_note:'AI зорилт бол бодит тоглогч биш — компьютерийн тооцоолсон, сонгосон түвшний тогтмол хурдаар өсдөг зорилт.',
     ws_duration:'Хугацаа', ws_target_hold:'Барих зорилт', ws_sec_short:'сек', ws_reps_short:'давталт',
     ws_how_to:'Зөв хийх арга', ws_mistakes:'Түгээмэл алдаа', ws_tips:'Дасгалжуулагчийн зөвлөгөө', ws_progression:'Ахих шат',
     ws_camera:'Camera шалгалт (заавал биш)', ws_cam_btn:'📷 Camera ашиглан шалгах', ws_cam_off:'Camera унтраах', ws_cam_flip:'↺ Камер солих',
@@ -238,6 +238,17 @@ const I18N = {
     pose_raise_higher:'Мөрний түвшин хүртэл өргө', pose_no_swing:'Биеэ бүү савлуул',
     pose_curl_full:'Гантелийг мөр хүртэл бүрэн өргө', pose_elbows_fixed:'Тохойгоо биеийн хажууд тогтоо',
     pose_full_jack:'Гараа дээш, хөлөө өргөн — бүтэн хөдөлгөөн хий', pose_sit_lower:'90° хүртэл доош суу',
+
+    /* hardening: errors & notices */
+    cam_err_ended:'Camera тасарлаа (зөвшөөрөл цуцлагдсан эсвэл өөр апп ашиглаж байна). Дахин асааж болно — дасгал camera-гүйгээр үргэлжилнэ.',
+    cam_err_hidden:'Апп далд орсон тул camera унтарлаа. Хүсвэл дахин асаагаарай.',
+    autherr_storage:'Энэ browser cookie/storage-ийг хаасан тул Google-ээр нэвтрэх боломжгүй. Safari/Chrome-ийн тохиргоог шалгах эсвэл имэйлээр нэвтэрнэ үү.',
+    autherr_user_disabled:'Энэ бүртгэл идэвхгүй болсон байна.',
+    autherr_retry:'Түр зуурын алдаа гарлаа. Хэсэг хүлээгээд дахин оролдоно уу.',
+    autherr_timeout:'Google нэвтрэх цонх хариу өгсөнгүй. Дахин оролдоно уу, эсвэл имэйлээр нэвтэрнэ үү.',
+    auth_inapp_hint:'Энэ апп доторх browser дээр Google нэвтрэлт ажиллахгүй байж магадгүй. Цэснээс "Open in Safari/Chrome"-ийг сонгоно уу.',
+    toast_save_failed:'Үүлэнд хадгалж чадсангүй — өгөгдөл энэ төхөөрөмж дээр хадгалагдсан, дараа нь дахин синк хийнэ.',
+    toast_offline:'Интернэт тасарлаа — өгөгдөл төхөөрөмж дээр хадгалагдана.', toast_back_online:'Интернэт холбогдлоо.',
   },
   en: {
     nav_home:'Home', nav_plan:'Plan', nav_library:'Exercises', nav_progress:'Progress', nav_nutrition:'Food',
@@ -424,15 +435,15 @@ const I18N = {
     skip:'Skip', toast_rest_done:'Rest done 💪',
 
     /* workout / battle session */
-    ws_start_btn:'Start exercise', ws_battle_btn:'⚔️ Challenge', ex_pr_line:'Personal record: {0} · Streak {1} days', lib_best:'🏆 {0}',
-    ws_mode_workout:'Workout', ws_mode_battle:'⚔️ Challenge', ws_close:'Close', ws_start:'Start',
+    ws_start_btn:'Start exercise', ws_battle_btn:'⚔️ AI Challenge', ex_pr_line:'Personal record: {0} · Streak {1} days', lib_best:'🏆 {0}',
+    ws_mode_workout:'Workout', ws_mode_battle:'⚔️ AI Challenge', ws_close:'Close', ws_start:'Start',
     ws_lvl:'Level', ws_mode_reps:'Reps', ws_mode_time:'Timed hold',
-    ws_pose_auto_tag:'📷 Auto-count available', ws_pose_manual_tag:'✋ Manual count',
+    ws_pose_auto_tag:'📷 Camera auto-count', ws_pose_manual_tag:'✋ Manual rep tracking · 📷 Camera form guidance',
     ws_eq_none:'No equipment', ws_eq_barbell:'Barbell', ws_eq_dumbbell:'Dumbbells', ws_eq_cable:'Cable machine', ws_eq_machine:'Machine / bar',
     ws_recommended:'Recommended', ws_rest:'Rest', ws_best:'Personal best', ws_last:'Last',
     ws_opponent:'Opponent', ws_ai_level:'AI Target · {0}', ws_my_record:'My record', ws_target:'Target',
     ws_no_record_yet:'Complete this exercise once to challenge your own record.',
-    ws_ai_note:'The AI Target is not a real player — it is a calculated target that climbs at a steady pace for the chosen level.',
+    ws_ai_note:'The AI Target is not a real player — it is a computer-generated target that climbs at a steady pace for the chosen level.',
     ws_duration:'Duration', ws_target_hold:'Hold target', ws_sec_short:'sec', ws_reps_short:'reps',
     ws_how_to:'Correct form', ws_mistakes:'Common mistakes', ws_tips:'Coaching tips', ws_progression:'Progression',
     ws_camera:'Camera check (optional)', ws_cam_btn:'📷 Check with camera', ws_cam_off:'Turn camera off', ws_cam_flip:'↺ Switch camera',
@@ -475,6 +486,17 @@ const I18N = {
     pose_raise_higher:'Raise to shoulder height', pose_no_swing:'Don’t swing your body',
     pose_curl_full:'Curl all the way up to your shoulders', pose_elbows_fixed:'Keep your elbows at your sides',
     pose_full_jack:'Arms up, feet wide — use the full motion', pose_sit_lower:'Sit down to 90°',
+
+    /* hardening: errors & notices */
+    cam_err_ended:'The camera stopped (permission revoked or another app is using it). You can turn it back on — the workout continues without it.',
+    cam_err_hidden:'The camera was turned off because the app went to the background. Turn it back on if you like.',
+    autherr_storage:'This browser blocks cookies/storage, so Google sign-in can’t work. Check Safari/Chrome settings or sign in with email.',
+    autherr_user_disabled:'This account has been disabled.',
+    autherr_retry:'A temporary error occurred. Please wait a moment and try again.',
+    autherr_timeout:'The Google sign-in window didn’t respond. Please try again, or sign in with email.',
+    auth_inapp_hint:'Google sign-in may not work inside this app’s browser. Use the menu to "Open in Safari/Chrome".',
+    toast_save_failed:'Couldn’t save to the cloud — your data is kept on this device and will sync later.',
+    toast_offline:'You’re offline — data is kept on this device.', toast_back_online:'Back online.',
   },
 };
 function t(key, ...args){

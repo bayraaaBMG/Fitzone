@@ -42,11 +42,17 @@ function topWire(){
 function mkSheet(){
   closeSheet();
   const s=document.createElement('div'); s.className='sheet'; s.id='sheet';
-  s.innerHTML=`<div class="inner"></div>`;
+  s.setAttribute('role','dialog'); s.setAttribute('aria-modal','true');
+  s.innerHTML=`<div class="inner" tabindex="-1"></div>`;
   s.onclick=e=>{ if(e.target===s) closeSheet(); };
   document.body.appendChild(s);
+  // move focus into the sheet once its content has been filled in (keyboard / screen readers)
+  setTimeout(()=>{ if(document.getElementById('sheet')===s) try{ s.querySelector('.inner').focus({preventScroll:true}); }catch(e){} }, 0);
   return s;
 }
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && document.getElementById('sheet') && !(typeof WS!=='undefined' && WS)) closeSheet();
+});
 function closeSheet(){ const s=document.getElementById('sheet'); if(s) s.remove(); }
 
 /* ---------- chip selectors (used by onboarding & settings) ---------- */

@@ -1,4 +1,4 @@
-const CACHE = 'mongolfit-v9';
+const CACHE = 'mongolfit-v10';
 // the pose model/runtime (MediaPipe on jsDelivr, model on storage.googleapis.com)
 // is multi-MB and opt-in only — leave it to the browser's HTTP cache, never this SW
 const HEAVY_HOST_RE = /^https:\/\/cdn\.jsdelivr\.net\//;
@@ -31,8 +31,11 @@ self.addEventListener('fetch', e=>{
   if(AUTH_HOST_RE.test(e.request.url) || HEAVY_HOST_RE.test(e.request.url)) return;
   e.respondWith(
     fetch(e.request).then(res=>{
-      const copy = res.clone();
-      caches.open(CACHE).then(c=>c.put(e.request, copy));
+      // only cache successful same-origin app files — never error pages or third-party responses
+      if(res.ok && new URL(e.request.url).origin===self.location.origin){
+        const copy = res.clone();
+        caches.open(CACHE).then(c=>c.put(e.request, copy));
+      }
       return res;
     }).catch(()=> caches.match(e.request))
   );

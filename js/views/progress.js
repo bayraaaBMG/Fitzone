@@ -26,7 +26,7 @@ function renderProgress(){
 
       <div class="card">
         <div class="inrow" style="align-items:flex-end">
-          <div class="field" style="flex:1;margin:0"><label>${t('todays_weight')}</label>
+          <div class="field" style="flex:1;margin:0"><label for="w_in">${t('todays_weight')}</label>
             <input class="txin" id="w_in" type="number" inputmode="decimal" placeholder="${cur}"></div>
           <button class="btn p" id="w_add" style="width:auto;flex:none;padding:14px 18px">${t('add')}</button>
         </div>

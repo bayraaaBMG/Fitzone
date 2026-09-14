@@ -48,7 +48,8 @@ html.ws-open, html.ws-open body{overflow:hidden}
 .ws-pill span.warn{color:#FFB23D; border-color:rgba(255,178,61,.5)}
 .ws-pill span.low{color:#C8CDD5}
 .ws-camctl{position:absolute; bottom:10px; left:10px; right:10px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; z-index:2}
-.ws-chipbtn{background:rgba(10,11,13,.8); border:1px solid rgba(255,255,255,.2); color:#F2F4F7; border-radius:999px; padding:10px 14px; font-size:13px; font-weight:700; max-width:100%}
+.ws-chipbtn{background:rgba(10,11,13,.8); border:1px solid rgba(255,255,255,.2); color:#F2F4F7; border-radius:999px; padding:10px 14px; font-size:13px; font-weight:700; max-width:100%; min-height:40px}
+.ws :focus-visible{outline:2px solid #C9F73B; outline-offset:2px}
 .ws-flash{position:absolute; inset:0; pointer-events:none; border:3px solid transparent; border-radius:18px; z-index:3}
 .ws-flash.rep{animation:wsrep .4s}
 @keyframes wsrep{from{border-color:#C9F73B} to{border-color:transparent}}

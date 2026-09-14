@@ -1,7 +1,7 @@
 :root{
   --bg:#0A0B0D; --bg2:#101216; --card:#15181E; --card2:#1B1F27;
   --line:#262B34; --line2:#333A45;
-  --txt:#F2F4F7; --mut:#9099A6; --mut2:#646C78;
+  --txt:#F2F4F7; --mut:#9099A6; --mut2:#7E8794;   /* mut2 ≥4.5:1 on every dark surface (WCAG AA) */
   --acc:#C9F73B;            /* neon lime — used as FILL (dark text always on top) */
   --acc-ink:#C9F73B;        /* accent used as TEXT/stroke — darkens in light mode for contrast */
   --acc-d:#9ECC16;
@@ -22,9 +22,9 @@
   :root:not([data-theme="dark"]){
     --bg:#F4F5F7; --bg2:#FFFFFF; --card:#FFFFFF; --card2:#F0F1F4;
     --line:#E4E6EB; --line2:#D5D8E0;
-    --txt:#15171B; --mut:#5B6270; --mut2:#868D99;
-    --acc-ink:#5C7A00;
-    --coral:#C24A1F; --ok:#1F9D5C; --warn:#B8720A;
+    --txt:#15171B; --mut:#5B6270; --mut2:#676E7B;
+    --acc-ink:#5A7800;
+    --coral:#BC481E; --ok:#197E4A; --warn:#9C6109;
     --top-bg:rgba(255,255,255,.82);
     --hero-base:linear-gradient(180deg,#FFFFFF,#F1F3ED);
     --panel-g:linear-gradient(150deg,#F0F1F4,#FFFFFF);
@@ -36,9 +36,9 @@
 :root[data-theme="light"]{
   --bg:#F4F5F7; --bg2:#FFFFFF; --card:#FFFFFF; --card2:#F0F1F4;
   --line:#E4E6EB; --line2:#D5D8E0;
-  --txt:#15171B; --mut:#5B6270; --mut2:#868D99;
-  --acc-ink:#5C7A00;
-  --coral:#C24A1F; --ok:#1F9D5C; --warn:#B8720A;
+  --txt:#15171B; --mut:#5B6270; --mut2:#676E7B;
+  --acc-ink:#5A7800;
+  --coral:#BC481E; --ok:#197E4A; --warn:#9C6109;
   --top-bg:rgba(255,255,255,.82);
   --hero-base:linear-gradient(180deg,#FFFFFF,#F1F3ED);
   --panel-g:linear-gradient(150deg,#F0F1F4,#FFFFFF);
@@ -275,7 +275,8 @@ hr.sep{border:none; border-top:1px solid var(--line); margin:20px 0}
 /* ---------- 7-day week plan ---------- */
 .weekgrid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:14px}
 .weekgrid .wd{background:var(--card2); border:1px solid var(--line); border-radius:11px; padding:10px 2px; text-align:center; cursor:pointer}
-.weekgrid .wd.rest{opacity:.5; cursor:default}
+.weekgrid .wd.rest{cursor:default; background:transparent}
+.weekgrid .wd.rest .ic{opacity:.55} /* dim the icon only — the day label must stay readable (WCAG AA) */
 .weekgrid .wd.done{background:var(--acc); border-color:var(--acc); color:#0b0d08}
 .weekgrid .wd.today{border-color:var(--acc-ink)}
 .weekgrid .wd .lbl{font-size:9.5px; text-transform:uppercase; color:var(--mut2); margin-bottom:5px}
@@ -293,3 +294,11 @@ hr.sep{border:none; border-top:1px solid var(--line); margin:20px 0}
 .bmibar{height:10px; border-radius:6px; background:linear-gradient(90deg,#3DDC84,#C9F73B,#FFB23D,#FF6A3D); position:relative; margin:14px 0 6px}
 .bmibar .marker{position:absolute; top:-4px; width:3px; height:18px; background:#fff; border-radius:2px; transform:translateX(-50%)}
 .bmiscale{display:flex; justify-content:space-between; font-size:10px; color:var(--mut2)}
+
+/* ---------- accessibility ---------- */
+:focus-visible{outline:2px solid var(--acc-ink); outline-offset:2px}
+.sheet .inner:focus{outline:none}
+.refbadge{min-height:28px}
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
+}

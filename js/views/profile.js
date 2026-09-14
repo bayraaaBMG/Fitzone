@@ -18,7 +18,7 @@ function renderProfile(){
           <div style="position:relative;flex:none">
             <label for="pf_photo" style="display:block;width:52px;height:52px;border-radius:50%;overflow:hidden;cursor:pointer">
               ${p.photo
-                ? `<img src="${p.photo}" alt="" style="width:100%;height:100%;object-fit:cover">`
+                ? `<img src="${esc(p.photo)}" alt="" style="width:100%;height:100%;object-fit:cover">`
                 : `<div style="width:100%;height:100%;background:var(--card2);border:1px solid var(--line);display:grid;place-items:center;font-size:22px">${p.sex==='f'?'👩':'👨'}</div>`}
             </label>
             <label for="pf_photo" class="iconbtn" style="position:absolute;bottom:-4px;right:-4px;width:22px;height:22px;margin:0;display:grid;place-items:center;font-size:11px">📷</label>
