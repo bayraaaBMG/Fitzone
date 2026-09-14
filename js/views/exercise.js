@@ -21,6 +21,11 @@ function openExercise(id){
       <span class="vtag">${x.loc==='home'?'🏠 '+t('onb_home'):'🏋️ '+t('onb_gym')}</span><span class="vtag">${M_NAMES[x.m]}</span><span class="vtag">${LVL_NAMES[x.lvl]}</span>
       ${(x.goals||[]).map(g=>`<span class="vtag">${goalName(g)}</span>`).join('')}
     </div>
+    <div class="exstart" style="margin-top:14px">
+      <button class="btn p" id="exStart">▶ ${t('ws_start_btn')}</button>
+      <button class="btn g" id="exBattle">${t('ws_battle_btn')}</button>
+    </div>
+    ${exPrLine(x.id)}
     <div class="kv">
       <div class="k"><b>${sch.sets}×${sch.reps}</b><span>Set·Reps</span></div>
       <div class="k"><b>${sch.rest}${t('unit_sec')}</b><span>${t('rest')}</span></div>
@@ -32,4 +37,12 @@ function openExercise(id){
     <div class="block"><div class="lab">⚠ ${t('common_mistakes')}</div><div class="note warn">${x.err}</div></div>
     <div class="block"><div class="lab">🔁 ${t('alt_exercises')}</div>
       <div class="note">${t('easier')}: <b>${x.easy}</b><br>${t('harder')}: <b>${x.hard}</b></div></div>`;
+  sheet.querySelector('#exStart').onclick=()=> openWorkout(x.id, false);
+  sheet.querySelector('#exBattle').onclick=()=> openWorkout(x.id, true);
+}
+function exPrLine(id){
+  const s=exStatsFor(id), c=COACH[id];
+  if(!s.sessions || !c) return '';
+  const best = c.mode==='time' ? `${s.bestTime} ${t('ws_sec_short')}` : `${s.bestReps} ${t('ws_reps_short')}`;
+  return `<p class="expr">${t('ex_pr_line', `<b>${best}</b>`, s.streak)}</p>`;
 }

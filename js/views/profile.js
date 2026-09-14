@@ -63,12 +63,16 @@ function renderProfile(){
       <div class="secttl"><h2>${t('profile_timeline')}</h2></div>
       ${timelineRows(ws)}
 
+      <div class="secttl"><h2>${t('pf_records')}</h2></div>
+      ${recordsListHTML()}
+
       <button class="btn g" id="pf_sources" style="margin-top:16px">📚 ${t('sources_link')}</button>
     </div>`;
   topWire();
   wireInstallCard(app);
   document.getElementById('pf_edit').onclick=openSettings;
   document.getElementById('pf_sources').onclick=()=> openSourcesPage();
+  app.querySelectorAll('#pfRecords [data-ex]').forEach(r=> r.onclick=()=> openExercise(r.dataset.ex));
   document.getElementById('pf_photo').onchange=e=>{
     const f=e.target.files[0];
     if(!f) return;
@@ -91,6 +95,24 @@ function renderProfile(){
     };
     reader.readAsDataURL(f);
   };
+}
+
+function recordsListHTML(){
+  const ids = Object.keys(S.exStats||{}).filter(id=>ex(id) && COACH[id])
+    .sort((a,b)=> (S.exStats[b].lastDay||'') < (S.exStats[a].lastDay||'') ? -1 : 1).slice(0,10);
+  if(!ids.length) return `<p class="xs mut" style="margin:0 0 10px">${t('pf_no_records')}</p>`;
+  return `<div class="card" id="pfRecords">${ids.map(id=>{
+    const x=ex(id), s=S.exStats[id], time=COACH[id].mode==='time';
+    const unit = time ? t('ws_sec_short') : t('ws_reps_short');
+    const best = time ? s.bestTime : s.bestReps;
+    const last = s.last ? (time ? s.last.heldSec : s.last.reps) : 0;
+    return `<div class="foodrow" data-ex="${id}" style="cursor:pointer">
+      <div class="e">${x.e}</div>
+      <div style="flex:1;min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.n)}</b>
+        <span class="xs mut">${t('ws_last')}: ${last} ${unit} · 🔥 ${s.streak}</span></div>
+      <span class="xs" style="flex:none;color:var(--acc-ink);font-weight:700">🏆 ${best} ${unit}</span>
+    </div>`;
+  }).join('')}</div>`;
 }
 
 function historyList(rows, icon){

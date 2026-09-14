@@ -1,0 +1,129 @@
+/* ============================================================
+   WORKOUT / BATTLE SESSION — full-screen, always-dark "cinematic"
+   screen (explicit colors, independent of the light/dark app theme).
+   ============================================================ */
+html.ws-open, html.ws-open body{overflow:hidden}
+.ws{position:fixed; inset:0; z-index:70; display:flex; flex-direction:column; color:#F2F4F7;
+  background:radial-gradient(120% 60% at 50% 0%, #1a2130 0%, #0a0b0d 62%);
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  height:100vh; height:100dvh; overscroll-behavior:contain; animation:fade .2s}
+.ws-inner{width:100%; max-width:var(--maxw); margin:0 auto; flex:1; display:flex; flex-direction:column; min-height:0; padding:12px 16px 14px}
+.ws-top{display:flex; align-items:center; gap:10px; margin-bottom:10px}
+.ws-x{width:40px; height:40px; border-radius:12px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+  display:grid; place-items:center; font-size:18px; color:#F2F4F7; flex:none}
+.ws-title{flex:1; min-width:0; font-family:'Archivo',sans-serif; font-weight:900; font-size:15px; text-transform:uppercase;
+  letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ws-xp{flex:none; font-size:12px; font-weight:800; color:#C9F73B; border:1px solid rgba(201,247,59,.35); border-radius:999px; padding:5px 10px}
+
+/* ---- HUD ---- */
+.ws-hud{background:rgba(21,24,30,.88); border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:12px}
+.ws-hudrow{display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:8px}
+.ws-side{min-width:0}
+.ws-side.r{text-align:right}
+.ws-name{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#9099A6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ws-score{font-family:'Archivo',sans-serif; font-weight:900; font-size:clamp(34px,11vw,48px); line-height:1}
+.ws-side.l .ws-score, .ws-score.l{color:#FF6A3D}
+.ws-side.r .ws-score, .ws-score.r{color:#3DA9FC}
+.ws-time{text-align:center}
+.ws-time small{display:block; font-size:10px; letter-spacing:.14em; color:#9099A6; font-weight:700}
+.ws-time b{font-family:'Archivo',sans-serif; font-weight:900; font-size:clamp(24px,8vw,32px); line-height:1.05; font-variant-numeric:tabular-nums}
+.ws-time b.low{color:#FF6A3D}
+.ws-bar{position:relative; height:10px; border-radius:6px; overflow:hidden; background:#3DA9FC; margin-top:12px}
+.ws-bar i{display:block; height:100%; background:#FF6A3D; transition:width .3s}
+.ws-bar.solo{background:rgba(255,255,255,.1)}
+.ws-bar.solo i{background:#C9F73B}
+
+/* ---- stage (demo or camera) ---- */
+.ws-stage{position:relative; flex:1; min-height:180px; margin:12px 0; border-radius:18px; overflow:hidden; background:#101216;
+  border:1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center}
+.ws-stage video, .ws-stage canvas{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.ws-stage .mirror{transform:scaleX(-1)}
+.ws-demo{text-align:center; padding:56px 16px; max-width:100%}
+.ws-demo .e{font-size:clamp(56px,20vw,96px); line-height:1}
+.ws-cue{margin-top:12px; font-size:15px; font-weight:600; min-height:2.9em; overflow-wrap:anywhere}
+.ws-cue small{display:block; font-size:11px; color:#9099A6; font-weight:700; text-transform:uppercase; letter-spacing:.1em; margin-bottom:4px}
+.ws-pill{position:absolute; top:10px; left:10px; right:10px; display:flex; justify-content:center; pointer-events:none; z-index:2}
+.ws-pill span{background:rgba(10,11,13,.8); border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:7px 13px; font-size:13px; font-weight:700; max-width:100%; text-align:center}
+.ws-pill span.good{color:#C9F73B; border-color:rgba(201,247,59,.5)}
+.ws-pill span.warn{color:#FFB23D; border-color:rgba(255,178,61,.5)}
+.ws-pill span.low{color:#C8CDD5}
+.ws-camctl{position:absolute; bottom:10px; left:10px; right:10px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; z-index:2}
+.ws-chipbtn{background:rgba(10,11,13,.8); border:1px solid rgba(255,255,255,.2); color:#F2F4F7; border-radius:999px; padding:10px 14px; font-size:13px; font-weight:700; max-width:100%}
+.ws-flash{position:absolute; inset:0; pointer-events:none; border:3px solid transparent; border-radius:18px; z-index:3}
+.ws-flash.rep{animation:wsrep .4s}
+@keyframes wsrep{from{border-color:#C9F73B} to{border-color:transparent}}
+
+/* ---- active controls ---- */
+.ws-sub{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; font-size:12px; color:#9099A6; min-width:0}
+.ws-sub b{color:#F2F4F7}
+.ws-sub > span{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ws-ctl{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1fr); gap:10px; align-items:stretch}
+.ws-btn{border-radius:14px; padding:12px 6px; font-weight:800; font-size:14px; min-height:56px; min-width:0; display:flex; align-items:center; justify-content:center;
+  gap:6px; text-align:center; line-height:1.15; overflow-wrap:anywhere}
+.ws-btn.g{background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:#F2F4F7}
+.ws-btn.p{background:#C9F73B; color:#0b0d08}
+.ws-btn.big{font-family:'Archivo',sans-serif; font-size:clamp(18px,6vw,24px); font-weight:900}
+.ws-btn:active{transform:scale(.97)}
+.ws-btn:disabled{opacity:.45}
+.ws-ctl.two{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)}
+.ws-media{position:absolute; inset:0}
+.ws-foot{padding-top:10px; display:grid; gap:10px}
+
+/* ---- intro / result scroll body ---- */
+.ws-body{flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:12px}
+.ws-h1{font-family:'Archivo',sans-serif; font-weight:900; font-size:clamp(24px,7.5vw,32px); line-height:1.02; text-transform:uppercase; margin:4px 0 8px; overflow-wrap:anywhere}
+.ws-lead{color:#C8CDD5; font-size:14px; margin:0}
+.ws-card{background:rgba(21,24,30,.9); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:14px; margin-top:12px}
+.ws-card .lab{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#9099A6; margin-bottom:8px}
+.ws-list{margin:0; padding:0; list-style:none}
+.ws-list li{position:relative; padding:5px 0 5px 22px; font-size:14px; line-height:1.4; overflow-wrap:anywhere}
+.ws-list li::before{content:'✓'; position:absolute; left:0; color:#C9F73B; font-weight:800}
+.ws-list.bad li::before{content:'✕'; color:#FF6A3D}
+.ws-list.tip li::before{content:'•'; color:#3DA9FC}
+.ws-kv{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:12px}
+.ws-kv div{background:rgba(21,24,30,.9); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px 6px; text-align:center; min-width:0}
+.ws-kv b{display:block; font-family:'Archivo',sans-serif; font-weight:900; font-size:16px; color:#C9F73B; overflow-wrap:anywhere}
+.ws-kv span{display:block; font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:#9099A6; overflow-wrap:anywhere}
+.ws-chips{display:flex; flex-wrap:wrap; gap:8px}
+.ws-chip{border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.04); color:#C8CDD5; border-radius:999px; padding:9px 13px; font-size:13px; font-weight:600; max-width:100%}
+.ws-chip.on{background:#C9F73B; border-color:#C9F73B; color:#0b0d08; font-weight:800}
+.ws-chip:disabled{opacity:.4}
+.ws-note{font-size:12px; color:#9099A6; margin-top:8px; line-height:1.45}
+.ws-note.ok{color:#C9F73B}
+.ws-note.err{color:#FFB23D}
+.ws-tags{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
+.ws-tags span{font-size:11px; padding:4px 9px; border-radius:7px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); color:#C8CDD5}
+.ws-ladder{display:flex; flex-direction:column; gap:6px}
+.ws-ladder div{font-size:13px; padding:8px 10px; border-radius:10px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); color:#9099A6; overflow-wrap:anywhere}
+.ws-ladder div.cur{color:#0b0d08; background:#C9F73B; border-color:#C9F73B; font-weight:800}
+
+/* ---- countdown ---- */
+.ws-count{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:10px}
+.ws-count b{font-family:'Archivo',sans-serif; font-weight:900; font-size:clamp(96px,40vw,180px); line-height:1; color:#C9F73B; animation:wspop .9s ease}
+.ws-count b.go{font-size:clamp(56px,20vw,110px)}
+.ws-count p{color:#9099A6; font-size:14px; margin:0; max-width:32ch}
+@keyframes wspop{from{transform:scale(1.4); opacity:0} 30%{opacity:1} to{transform:scale(1); opacity:1}}
+
+/* ---- result ---- */
+.ws-res{text-align:center; padding-top:8px}
+.ws-crown{font-size:44px; line-height:1}
+.ws-verdict{font-family:'Archivo',sans-serif; font-weight:900; font-size:clamp(30px,10vw,44px); line-height:1; text-transform:uppercase; margin:8px 0 4px; overflow-wrap:anywhere}
+.ws-verdict.win{color:#C9F73B}
+.ws-vs{display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:8px; margin-top:14px}
+.ws-vs .ws-score{font-size:clamp(40px,14vw,58px)}
+.ws-vs .dash{font-family:'Archivo',sans-serif; font-weight:900; font-size:28px; color:#646C78}
+.ws-msg{color:#C8CDD5; font-size:14px; margin:10px 0 0}
+.ws-res .ws-card{text-align:left}
+
+/* ---- entry points in the existing exercise sheet ---- */
+.exstart{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; margin:4px 0 6px}
+.exstart .btn{padding:14px 8px; min-width:0}
+.expr{font-size:12.5px; color:var(--mut); margin:6px 0 0}
+.expr b{color:var(--acc-ink)}
+
+@media (min-width:768px){ .ws-inner{padding:20px 24px} .ws-stage{min-height:300px} }
+@media (max-height:640px){
+  .ws-hud{padding:8px 10px} .ws-score{font-size:30px} .ws-bar{margin-top:8px}
+  .ws-stage{min-height:110px; margin:8px 0} .ws-demo{padding:40px 12px} .ws-demo .e{font-size:48px}
+  .ws-btn{min-height:48px; padding:8px 6px}
+}

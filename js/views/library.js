@@ -61,9 +61,14 @@ function drawLib(){
           <span class="vtag">${M_NAMES[x.m]}</span>
           <span class="vtag">${LVL_NAMES[x.lvl]}</span>
         </div>
-        <span class="sr2">${sch.sets}×${sch.reps} · ${t('rest')} ${sch.rest}${t('unit_sec')}</span>
+        <span class="sr2">${sch.sets}×${sch.reps} · ${t('rest')} ${sch.rest}${t('unit_sec')}${libBest(x.id)}</span>
       </div>
       <div class="chev">›</div>
     </button>`).join('');
   el.querySelectorAll('.excard').forEach(r=>r.onclick=()=>openExercise(r.dataset.ex));
+}
+function libBest(id){
+  const s=exStatsFor(id), c=COACH[id];
+  const best = c && c.mode==='time' ? s.bestTime : s.bestReps;
+  return best ? ` · ${t('lib_best', best)}` : '';
 }

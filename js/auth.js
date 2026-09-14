@@ -33,6 +33,8 @@ function applyStateData(d){
   S.waterLog = d.waterLog || {};
   S.theme = d.theme || 'dark';
   S.lang = d.lang || 'mn';
+  S.exStats = d.exStats || {};
+  S.workoutResults = d.workoutResults || [];
   S.tab = 'home';
   applyTheme(S.theme);
   applyLangLabels();
@@ -40,6 +42,7 @@ function applyStateData(d){
 function resetLocalState(){
   S.profile=null; S.plan=null; S.weights=[]; S.completed=[]; S.completedLog={};
   S.challenge=null; S.pantry=[]; S.foodLog={}; S.waterLog={}; S.tab='home';
+  S.exStats={}; S.workoutResults=[];
   // theme/lang are device/browser preferences, not account data — keep as-is on logout
 }
 

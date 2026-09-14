@@ -30,6 +30,8 @@ let S = {
   waterLog:{},          // {'YYYY-MM-DD': ml}
   theme:'dark',         // 'dark' | 'light' | 'system'
   lang:'mn',            // 'mn' | 'en'
+  exStats:{},           // {exerciseId: {sessions,bestReps,bestTime,bestScore,bestRate,streak,lastDay,last}} — see js/records.js
+  workoutResults:[],    // [WorkoutResult] newest first, capped — see js/records.js
   tab:'home',
 };
 
@@ -46,6 +48,7 @@ async function save(){
   const data = {
     profile:S.profile, plan:S.plan, weights:S.weights, completed:S.completed, completedLog:S.completedLog,
     challenge:S.challenge, pantry:S.pantry, foodLog:S.foodLog, waterLog:S.waterLog, theme:S.theme, lang:S.lang,
+    exStats:S.exStats, workoutResults:S.workoutResults,
   };
   const key = authUser ? 'mf_state_'+authUser.uid : 'mf_state';
   await Store.set(key, data);
