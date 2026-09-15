@@ -10,6 +10,23 @@ function renderAuthLoading(){
     <p class="mut sm">${t('auth_loading')}</p></div>`;
 }
 
+/* signed in, but the account's data couldn't be loaded and there is no local copy */
+function renderCloudError(){
+  app.innerHTML = `<div class="view center" style="padding-top:100px">
+    <div class="logo" style="justify-content:center;margin-bottom:16px"><img src="icons/logo-mark.svg" alt="MongolFit" style="height:32px"></div>
+    <p class="mut sm" role="alert">${t('cloud_load_failed')}</p>
+    <button class="btn p" id="cl_retry" style="margin-top:16px">${t('cloud_retry')}</button>
+    <button class="btn g" id="cl_logout" style="margin-top:10px">${t('logout')}</button>
+  </div>`;
+  document.getElementById('cl_retry').onclick = async ()=>{
+    if(!authUser) return;
+    renderAuthLoading();
+    await loadCloudState(authUser.uid);
+    render();
+  };
+  document.getElementById('cl_logout').onclick = ()=> logOut();
+}
+
 function renderAuthGate(){
   if(authInitError){
     app.innerHTML = `<div class="view center" style="padding-top:100px">

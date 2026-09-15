@@ -7,6 +7,7 @@ const navEl = document.getElementById('nav');
 function render(){
   if(!authReady){ renderAuthLoading(); navEl.classList.add('hidden'); return; }
   if(!authUser){ renderAuthGate(); navEl.classList.add('hidden'); return; }
+  if(cloudLoadFailed){ renderCloudError(); navEl.classList.add('hidden'); return; }
   if(!S.profile){ renderOnboard(); navEl.classList.add('hidden'); return; }
   navEl.classList.remove('hidden');
   renderNav();
@@ -40,8 +41,10 @@ function topWire(){
   if(w) w.onclick=()=>{ S.tab='profile'; render(); };
 }
 function mkSheet(){
+  const opener = document.activeElement;
   closeSheet();
   const s=document.createElement('div'); s.className='sheet'; s.id='sheet';
+  s._opener = opener;
   s.setAttribute('role','dialog'); s.setAttribute('aria-modal','true');
   s.innerHTML=`<div class="inner" tabindex="-1"></div>`;
   s.onclick=e=>{ if(e.target===s) closeSheet(); };
@@ -53,7 +56,12 @@ function mkSheet(){
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape' && document.getElementById('sheet') && !(typeof WS!=='undefined' && WS)) closeSheet();
 });
-function closeSheet(){ const s=document.getElementById('sheet'); if(s) s.remove(); }
+function closeSheet(){
+  const s=document.getElementById('sheet'); if(!s) return;
+  const o=s._opener; s.remove();
+  // keyboard / screen-reader users get their place back on the control that opened the sheet
+  if(o && o.isConnected && o!==document.body) try{ o.focus({preventScroll:true}); }catch(e){}
+}
 
 /* ---------- chip selectors (used by onboarding & settings) ---------- */
 function chips(state, name, opts, multi){

@@ -34,6 +34,7 @@ const POSE_DEFAULTS = {
   minRepMs: 350,           // faster "cycles" are jitter, not reps
   maxJump: 0.25,           // torso-centre jump per frame (image-height units) = glitch
   smoothing: 0.6,          // EMA weight of the newest numeric metric sample
+  frameMargin: 0.05,       // key points this far outside the image count as not visible (person leaving the frame)
 };
 
 function poseAngle(a, b, c){ // angle ABC in degrees
@@ -55,11 +56,14 @@ function poseLineDev(a, mid, b){
 
 /* {l:{sh,el,...}, r:{...}, side:{best-visible side}} in an aspect-corrected
    space (x scaled by width/height) so angles are real */
-function posePoints(lm, aspect){
+function posePoints(lm, aspect, margin){
+  const m = margin==null ? Infinity : margin;
   const p = i => {
     const q = lm[i];
     if(!q || !isFinite(q.x) || !isFinite(q.y)) return {x:0,y:0,v:0};
-    return {x:q.x*aspect, y:q.y, v:(q.visibility==null?1:q.visibility)};
+    // the detector extrapolates joints that left the image, sometimes still with high visibility
+    const outside = q.x < -m || q.x > 1+m || q.y < -m || q.y > 1+m;
+    return {x:q.x*aspect, y:q.y, v: outside ? 0 : (q.visibility==null?1:q.visibility)};
   };
   const l = {sh:p(PL.lSh), el:p(PL.lEl), wr:p(PL.lWr), hip:p(PL.lHip), kn:p(PL.lKn), an:p(PL.lAn)};
   const r = {sh:p(PL.rSh), el:p(PL.rEl), wr:p(PL.rWr), hip:p(PL.rHip), kn:p(PL.rKn), an:p(PL.rAn)};
@@ -189,7 +193,7 @@ function createPoseCounter(ruleId, opts){
       const dt = st.lastTs==null ? 0 : Math.min(250, Math.max(0, ts-st.lastTs));
       st.lastTs = ts;
       if(!lm || !lm.length) return this._out('lowconf', null, lowFrame());
-      const P = posePoints(lm, aspect || 1);
+      const P = posePoints(lm, aspect || 1, cfg.frameMargin);
       if(!poseConf(P, rule.keys, rule.both, cfg)) return this._out('lowconf', null, lowFrame());
       // glitch guard: sudden torso jump or scale change (camera knocked, detector swap)
       const tor = poseTorso(P), prev = st.prevTorso;

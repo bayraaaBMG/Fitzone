@@ -25,7 +25,7 @@
 const WORKOUT_RESULTS_CAP = 50;
 const AI_LEVEL_MULT = {1:0.6, 2:1, 3:1.4};
 
-function dayBefore(ymd){ const d=new Date(ymd+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()-1); return d.toISOString().slice(0,10); }
+function dayBefore(ymd){ return addDays(ymd, -1); }
 
 function workoutScore(amount, formScore){
   return amount*10 + (formScore==null ? 0 : Math.round(formScore/2));
@@ -77,7 +77,7 @@ function recordWorkoutResult(r){
   const prev = exStatsFor(r.exerciseId);
   const amount = r.mode==='time' ? r.heldSec : r.reps;
   const prevBest = r.mode==='time' ? prev.bestTime : prev.bestReps;
-  const d = today();
+  const d = getWorkoutDate(r.completedAt); // Mongolia calendar day (js/dates.js)
   const streak = prev.lastDay===d ? prev.streak : (prev.lastDay===dayBefore(d) ? prev.streak+1 : 1);
   const next = {
     sessions: prev.sessions+1,

@@ -36,7 +36,6 @@ let S = {
 };
 
 /* ---------- utils ---------- */
-const today = ()=> new Date().toISOString().slice(0,10);
 const ex = id => EX.find(x=>x.id===id);
 let toastT;
 function toast(msg){
@@ -53,7 +52,7 @@ async function save(){
   };
   const key = authUser ? 'mf_state_'+authUser.uid : 'mf_state';
   await Store.set(key, data);
-  if(authUser){
+  if(authUser && !cloudLoadFailed){ // never overwrite a cloud doc we failed to load
     // local copy above is already written, so a cloud failure never loses data — tell the user once
     try{ await usersDoc(authUser.uid).set({...data, updatedAt: Date.now()}, {merge:true}); _saveErrShown = false; }
     catch(e){ if(!_saveErrShown){ _saveErrShown = true; toast(t('toast_save_failed')); } }

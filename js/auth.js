@@ -95,30 +95,51 @@ function resetLocalState(){
 
 /* pulls this account's data from Firestore; migrates any pre-login local
    draft into a brand-new account; falls back to the last-synced local
-   cache if the network is unavailable */
+   cache if the network is unavailable.
+   With no local copy to show, a failed read (e.g. the SDK's transport
+   dropping a request — the intermittent "Listen/channel 400" in the
+   console) is retried with a short backoff. If it still fails the app shows
+   a retry screen instead of onboarding, because onboarding would save a
+   fresh empty profile over the real cloud document. A load that finishes
+   after the user signed out or switched accounts is discarded. */
+let cloudLoadFailed = false;
+let _cloudLoadSeq = 0;
+const CLOUD_RETRY_MS = [700, 2000];
 async function loadCloudState(uid){
-  const localKey = 'mf_state_'+uid;
-  try{
-    const snap = await usersDoc(uid).get();
+  const seq = ++_cloudLoadSeq;
+  const stale = () => seq!==_cloudLoadSeq || !authUser || authUser.uid!==uid;
+  cloudLoadFailed = false;
+  const cached = await Store.get('mf_state_'+uid);
+  let snap = null;
+  for(let attempt=0; ; attempt++){
+    try{ snap = await usersDoc(uid).get(); break; }
+    catch(e){
+      if(stale()) return;
+      const permanent = e && (e.code==='permission-denied' || e.code==='unauthenticated');
+      if((cached && cached.profile) || permanent || attempt>=CLOUD_RETRY_MS.length || navigator.onLine===false) break;
+      await new Promise(r=>setTimeout(r, CLOUD_RETRY_MS[attempt]));
+      if(stale()) return;
+    }
+  }
+  if(stale()) return;
+  if(snap){
     if(snap.exists){
       applyStateData(snap.data() || {});
     } else {
       resetLocalState();
       const legacy = await Store.get('mf_state');
+      if(stale()) return;
       if(legacy && legacy.profile){
         applyStateData(legacy);
         await save();
         await Store.set('mf_state', null);
       }
     }
-  }catch(e){
-    const cached = await Store.get(localKey);
-    if(cached && cached.profile){
-      applyStateData(cached);
-      toast(t('toast_offline_mode'));
-    } else {
-      toast(t('toast_load_error'));
-    }
+  } else if(cached && cached.profile){
+    applyStateData(cached);
+    toast(t('toast_offline_mode'));
+  } else {
+    cloudLoadFailed = true;
   }
 }
 
@@ -165,6 +186,7 @@ function googleSignIn(){
 
 async function logOut(){
   const uid = authUser && authUser.uid;
+  _cloudLoadSeq++; cloudLoadFailed = false; // drop any load still in flight
   await firebase.auth().signOut();
   if(uid) await Store.set('mf_state_'+uid, null);
 }

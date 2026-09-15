@@ -37,10 +37,10 @@
   // version of this app) — it is never used to decide success or failure,
   // and a null result here is completely normal and expected on every
   // regular page load, not an error condition.
-  try{
-    const res = await firebase.auth().getRedirectResult();
+  // Not awaited: it never decides auth state, so it must not delay the first auth check.
+  firebase.auth().getRedirectResult().then(res=>{
     if(res && res.user) diagLog('getRedirectResult: found a stray pending sign-in from a stale/legacy redirect', {uid: res.user.uid});
-  }catch(e){ diagLog('getRedirectResult threw (harmless, ignored)', {code: e.code, message: e.message}); }
+  }).catch(e=>{ diagLog('getRedirectResult threw (harmless, ignored)', {code: e.code, message: e.message}); });
 
   // onAuthStateChanged is the single source of truth for auth state — no
   // extra grace periods, polling, or redirect-specific branching.
@@ -53,7 +53,7 @@
       render();
       return;
     }
-    authUser = null; authReady = true;
+    authUser = null; authReady = true; cloudLoadFailed = false;
     resetLocalState();
     render();
   });

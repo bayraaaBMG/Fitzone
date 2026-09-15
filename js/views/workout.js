@@ -15,7 +15,7 @@ function openWorkout(exId, battle){
     duration: c.dur, oppType: battle ? 'ai' : 'target', oppLevel: S.profile ? S.profile.level : 2,
     amount:0, elapsed:0, paused:false, ticker:null, tickAt:0, countT:null, cueT:null, cueIdx:0,
     cam:null, camState:'off', camErr:null, camFacing:'user', pose:null, note:null, noteT:null, wake:null,
-    media:null,
+    media:null, opener: document.activeElement,
   };
   const root = document.createElement('div');
   root.className = 'ws'; root.id = 'ws';
@@ -328,14 +328,14 @@ function wsRenderActive(root){
       ${camOn ? '' : `<div class="ws-demo"><div class="e">${x.e}</div><div class="ws-cue" id="wsCue">${wsCueHTML()}</div></div>`}
       <div class="ws-pill" id="wsPill" role="status" aria-live="polite"></div>
       <div class="ws-flash"></div>
-      <div class="ws-camctl">${camOn
+      <div class="ws-camctl">${manualReps ? `<button class="ws-chipbtn" id="wsMinus" aria-label="${t('ws_minus_label')}">−1</button>` : ''}${camOn
         ? `<button class="ws-chipbtn" id="wsCamOff">${t('ws_cam_off')}</button>`
         : `<button class="ws-chipbtn" id="wsCam">${t('ws_cam_btn')}</button>`}</div>
     </div>
     <div class="ws-sub" id="wsSub"></div>
     <div class="ws-ctl ${manualReps?'':'two'}">
       <button class="ws-btn g" id="wsPause">${WS.paused ? '▶ '+t('ws_resume') : '❚❚ '+t('ws_pause')}</button>
-      ${manualReps ? `<button class="ws-btn p big" id="wsPlus">+1</button>` : ''}
+      ${manualReps ? `<button class="ws-btn p big" id="wsPlus" aria-label="${t('ws_plus_label')}">+1</button>` : ''}
       <button class="ws-btn ${manualReps?'g':'p'}" id="wsFin">■ ${t('ws_finish')}</button>
     </div>
   </div>`;
@@ -347,6 +347,8 @@ function wsRenderActive(root){
   root.querySelector('#wsFin').onclick = wsFinish;
   const plus = root.querySelector('#wsPlus');
   if(plus) plus.onclick = ()=>{ if(WS.paused) return; WS.amount++; wsRepFeedback(); wsUpdateHud(); };
+  const minus = root.querySelector('#wsMinus'); // undo a mistaken tap
+  if(minus) minus.onclick = ()=>{ if(WS.paused || WS.amount<=0) return; WS.amount--; wsUpdateHud(); };
   const camBtn = root.querySelector('#wsCam');
   if(camBtn) camBtn.onclick = async ()=>{ await wsStartCamera(); if(WS && WS.cam){ WS.cam.reset(); if(!WS.paused) WS.cam.resume(); wsRender(); } };
   const off = root.querySelector('#wsCamOff');
@@ -481,8 +483,9 @@ function wsTeardown(){
   if(WS.wake) WS.wake.release().catch(()=>{});
   const root = wsRoot(); if(root) root.remove();
   document.documentElement.classList.remove('ws-open');
-  const hadHist = WS.hist;
+  const hadHist = WS.hist, opener = WS.opener;
   WS = null;
+  if(opener && opener.isConnected && opener!==document.body) try{ opener.focus({preventScroll:true}); }catch(e){}
   if(hadHist){ wsIgnorePop = true; try{ history.back(); }catch(e){ wsIgnorePop = false; } }
 }
 

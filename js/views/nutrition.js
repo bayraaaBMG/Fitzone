@@ -109,7 +109,7 @@ function drawDiary(){
       </div>
       ${items.length? items.map((it,i)=>{
         const thumb = it.photo ? `<img class="foodthumb" data-photo="${esc(it.photo)}" src="${esc(it.photo)}" alt="">` : `<div class="e">🍽</div>`;
-        return `<div class="foodrow">${thumb}<div style="flex:1"><b>${esc(it.n)}</b><div class="xs mut">${it.kcal} ${t('unit_kcal')} · ${t('abbr_p')}${it.protein||0} ${t('abbr_c')}${it.carb||0} ${t('abbr_f')}${it.fat||0}</div></div><button class="x" data-slot="${slot}" data-i="${i}">✕</button></div>`;
+        return `<div class="foodrow">${thumb}<div style="flex:1"><b>${esc(it.n)}</b><div class="xs mut">${it.kcal} ${t('unit_kcal')} · ${t('abbr_p')}${it.protein||0} ${t('abbr_c')}${it.carb||0} ${t('abbr_f')}${it.fat||0}</div></div><button class="x" data-slot="${slot}" data-i="${i}" aria-label="${t('a11y_remove')}">✕</button></div>`;
       }).join('')
        : `<p class="xs mut" style="margin:10px 0 0">${t('no_entries')}</p>`}
     </div>`;
@@ -163,7 +163,7 @@ function openAddFood(slot){
     const f=e.target.files[0];
     const prev=sheet.querySelector('#diaryImgPreview');
     if(!f){ prev.innerHTML=''; return; }
-    prev.innerHTML=`<div class="askpreview"><img src="${URL.createObjectURL(f)}" alt=""><span class="xs">${t('photo_attached')}</span><button id="diaryImgX">✕</button></div>`;
+    prev.innerHTML=`<div class="askpreview"><img src="${URL.createObjectURL(f)}" alt=""><span class="xs">${t('photo_attached')}</span><button id="diaryImgX" aria-label="${t('a11y_remove')}">✕</button></div>`;
     sheet.querySelector('#diaryImgX').onclick=()=>{ e.target.value=''; prev.innerHTML=''; };
   };
 

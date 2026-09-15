@@ -57,7 +57,7 @@ async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded, s
 
   let landmarker;
   try{ landmarker = await loadPoseLandmarker(); }
-  catch(err){ stream.getTracks().forEach(tr=>tr.stop()); const e=new Error(err && err.message); e.code='model'; throw e; }
+  catch(err){ stream.getTracks().forEach(tr=>tr.stop()); video.srcObject = null; const e=new Error(err && err.message); e.code='model'; throw e; }
   if(signal && signal.aborted) throw abortErr();
 
   const coach = COACH[exId];

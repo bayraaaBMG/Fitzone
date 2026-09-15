@@ -73,13 +73,11 @@ function challengeCard(){
       <button class="btn p" id="chall_start">${t('challenge_start_btn')} 🔥</button>
     </div>`;
   }
-  const start=new Date(S.challenge.start);
   const doneSet=new Set(S.challenge.done);
   const td=today();
   let cells='';
   for(let i=0;i<30;i++){
-    const d=new Date(start); d.setDate(start.getDate()+i);
-    const ds=fmt(d);
+    const ds=addDays(S.challenge.start, i);
     const isDone=doneSet.has(ds);
     const cls=[isDone?'done':'', ds===td?'today':'', ds>td?'future':''].filter(Boolean).join(' ');
     cells+=`<div class="cd ${cls}" data-d="${ds}">${isDone?'✓':i+1}</div>`;
@@ -96,20 +94,18 @@ function challengeCard(){
 }
 function calcStreak(){
   if(!S.completed.length) return 0;
-  const set=new Set(S.completed); let s=0; let d=new Date();
+  const set=new Set(S.completed); let s=0; let d=today();
   // allow today or yesterday as anchor
-  if(!set.has(fmt(d))) d.setDate(d.getDate()-1);
-  while(set.has(fmt(d))){ s++; d.setDate(d.getDate()-1); }
+  if(!set.has(d)) d=addDays(d, -1);
+  while(set.has(d)){ s++; d=addDays(d, -1); }
   return s;
 }
-function fmt(d){ return d.toISOString().slice(0,10); }
 function weekStreak(){
   const names=wdNames();
-  const now=new Date(); const day=(now.getDay()+6)%7; // Mon=0
+  const td=today(); const day=weekdayIdx(td); // Mon=0
   let html='<div class="streakrow">';
   for(let i=0;i<7;i++){
-    const d=new Date(now); d.setDate(now.getDate()-(day-i));
-    const on=S.completed.includes(fmt(d));
+    const on=S.completed.includes(addDays(td, i-day));
     const isFuture=i>day;
     html+=`<div class="d"><div class="box ${on?'on':''}">${on?'✓':isFuture?'':'·'}</div><span>${names[i]}</span></div>`;
   }

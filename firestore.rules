@@ -1,8 +1,101 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // One document per account. Access stays owner-only; on top of that,
+    // writes must keep the shape the app actually uses (js/state.js save()).
+    //
+    // Only the fields a write actually changes are validated (diff against
+    // the stored doc), so an older document with a legacy field can still
+    // be saved, but no write can add an unknown top-level field or put a
+    // wrong type / oversized value into a known one. Firestore rules can't
+    // loop over lists or maps, so nested checks cover the newest workout
+    // result and its exercise stats (the entries each workout save adds);
+    // the app also sanitizes everything it reads (js/auth.js).
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(appFields())
+        && validFields(request.resource.data, request.resource.data.keys().toSet());
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(appFields())
+        && validFields(request.resource.data, request.resource.data.diff(resource.data).affectedKeys());
+    }
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function appFields() {
+      return ['profile', 'plan', 'weights', 'completed', 'completedLog', 'challenge', 'pantry',
+              'foodLog', 'waterLog', 'theme', 'lang', 'exStats', 'workoutResults', 'updatedAt'];
+    }
+
+    // --- per-field checks (applied only to fields in `ch`) ---
+    function validFields(d, ch) {
+      return (!ch.hasAny(['profile']) || validProfile(d.profile))
+        && (!ch.hasAny(['plan']) || d.plan == null || (d.plan is list && d.plan.size() <= 14))
+        && (!ch.hasAny(['weights']) || (d.weights is list && d.weights.size() <= 5000))
+        && (!ch.hasAny(['completed']) || (d.completed is list && d.completed.size() <= 5000))
+        && (!ch.hasAny(['completedLog']) || (d.completedLog is map && d.completedLog.size() <= 5000))
+        && (!ch.hasAny(['challenge']) || validChallenge(d.challenge))
+        && (!ch.hasAny(['pantry']) || (d.pantry is list && d.pantry.size() <= 300))
+        && (!ch.hasAny(['foodLog']) || (d.foodLog is map && d.foodLog.size() <= 5000))
+        && (!ch.hasAny(['waterLog']) || (d.waterLog is map && d.waterLog.size() <= 5000))
+        && (!ch.hasAny(['theme']) || d.theme in ['dark', 'light', 'system'])
+        && (!ch.hasAny(['lang']) || d.lang in ['mn', 'en'])
+        && (!ch.hasAny(['exStats']) || validExStats(d.exStats, d))
+        && (!ch.hasAny(['workoutResults']) || validResults(d.workoutResults))
+        && (!ch.hasAny(['updatedAt']) || d.updatedAt is number);
+    }
+
+    function optStr(m, k, max) { return !(k in m) || m[k] == null || (m[k] is string && m[k].size() <= max); }
+    function optNum(m, k) { return !(k in m) || m[k] == null || m[k] is number; }
+
+    function validProfile(p) {
+      return p == null || (p is map && p.size() <= 30
+        && optStr(p, 'name', 200) && optStr(p, 'sex', 10) && optStr(p, 'goal', 30)
+        && optStr(p, 'place', 30) && optStr(p, 'joinedAt', 10)
+        && optNum(p, 'age') && optNum(p, 'height') && optNum(p, 'weight')
+        && optNum(p, 'days') && optNum(p, 'minutes') && optNum(p, 'level')
+        && (!('equip' in p) || (p.equip is list && p.equip.size() <= 50))
+        // 200×200 canvas JPEG is ~10–40 KB; only image data URLs, never other schemes
+        && (!('photo' in p) || p.photo == null || (p.photo is string && p.photo.size() <= 300000
+              && p.photo.matches('data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+'))));
+    }
+
+    function validChallenge(c) {
+      return c == null || (c is map && c.start is string && c.start.size() == 10
+        && (!('done' in c) || (c.done is list && c.done.size() <= 60)));
+    }
+
+    function validResult(r) {
+      return r is map && r.size() <= 20
+        && r.exerciseId is string && r.exerciseId.size() <= 40
+        && r.mode in ['reps', 'time']
+        && r.reps is number && r.heldSec is number && r.duration is number
+        && r.score is number && r.completedAt is number
+        && optStr(r, 'id', 80) && optStr(r, 'userId', 128)
+        && (!('opponent' in r) || r.opponent is map);
+    }
+    function validResults(l) {
+      return l is list && l.size() <= 50 && (l.size() == 0 || validResult(l[0]));
+    }
+
+    // (`last` duplicates the newest workout result, which validResults already checks)
+    function validStat(s) {
+      return s is map && s.size() <= 20
+        && s.sessions is number && s.streak is number
+        && (s.lastDay == null || (s.lastDay is string && s.lastDay.size() == 10))
+        && (!('last' in s) || s.last == null || s.last is map);
+    }
+    // the exercise of the newest result is the entry a workout save just changed.
+    // Kept cheap on purpose: rules stop at 1000 evaluated expressions per request.
+    function validExStats(m, d) {
+      return m is map && m.size() <= 100 && newestStatOk(m, d.get('workoutResults', []));
+    }
+    function newestStatOk(m, l) {
+      let key = (l is list && l.size() > 0 && l[0] is map) ? l[0].get('exerciseId', null) : null;
+      return !(key is string) || !(key in m) || validStat(m[key]);
     }
   }
 }

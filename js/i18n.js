@@ -104,6 +104,8 @@ const I18N = {
     autherr_generic:'Алдаа гарлаа. Дахин оролдоно уу.',
     toast_offline_mode:'Офлайн горим — сүүлд хадгалсан өгөгдөл харагдаж байна',
     toast_load_error:'Дата ачаалахад алдаа гарлаа. Холболтоо шалгаарай.',
+    cloud_load_failed:'Таны өгөгдлийг ачаалж чадсангүй. Интернэт холболтоо шалгаад дахин оролдоно уу.', cloud_retry:'Дахин оролдох',
+    a11y_remove:'Устгах', ws_plus_label:'Нэг давталт нэмэх', ws_minus_label:'Нэг давталт хасах',
 
     /* onboarding extras */
     onb_stat_exercises:'Дасгал', onb_stat_days:'Өдөр/долоо хоног', onb_stat_minutes:'Минут',
@@ -352,6 +354,8 @@ const I18N = {
     autherr_generic:'Something went wrong. Please try again.',
     toast_offline_mode:'Offline mode — showing your last synced data',
     toast_load_error:'Couldn’t load your data. Check your connection.',
+    cloud_load_failed:'Couldn’t load your data. Check your internet connection and try again.', cloud_retry:'Try again',
+    a11y_remove:'Remove', ws_plus_label:'Add one rep', ws_minus_label:'Remove one rep',
 
     /* onboarding extras */
     onb_stat_exercises:'Exercises', onb_stat_days:'Days/week', onb_stat_minutes:'Minutes',

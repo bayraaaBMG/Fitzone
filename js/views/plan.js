@@ -3,7 +3,7 @@ function wdNames(){ return [t('wd_mon'),t('wd_tue'),t('wd_wed'),t('wd_thu'),t('w
 function renderPlan(){
   const p=S.profile;
   const sched=weekSchedule(p.days);
-  const todayIdx=(new Date().getDay()+6)%7; // Mon=0
+  const todayIdx=weekdayIdx(today()); // Mon=0
   const WD_NAMES=wdNames();
   app.innerHTML = `
     ${topBar()}

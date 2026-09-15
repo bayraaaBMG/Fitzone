@@ -18,7 +18,7 @@ function renderHome(){
   const nut = nutrition(p, 1.45);
 
   const sched = weekSchedule(p.days);
-  const todayIdx = (new Date().getDay()+6)%7; // Mon=0
+  const todayIdx = weekdayIdx(today()); // Mon=0
   const todayPlanIdx = sched[todayIdx];
   const todayDay = todayPlanIdx>=0 ? S.plan[todayPlanIdx] : null;
 
@@ -129,7 +129,7 @@ function renderHome(){
     const f=e.target.files[0];
     const prev=document.getElementById('askPreview');
     if(!f){ prev.innerHTML=''; return; }
-    prev.innerHTML=`<div class="askpreview"><img src="${URL.createObjectURL(f)}" alt=""><span class="xs">${t('photo_attached')}</span><button id="askImgX">✕</button></div>`;
+    prev.innerHTML=`<div class="askpreview"><img src="${URL.createObjectURL(f)}" alt=""><span class="xs">${t('photo_attached')}</span><button id="askImgX" aria-label="${t('a11y_remove')}">✕</button></div>`;
     document.getElementById('askImgX').onclick=()=>{ e.target.value=''; prev.innerHTML=''; };
   };
 }
