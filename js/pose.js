@@ -6,6 +6,25 @@
 const POSE_CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1';
 const POSE_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
 const POSE_LINKS = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
+
+/* The optional AI V2 layer (js/ai/*) is kept out of the startup bundle: it is
+   fetched the first time a camera session starts. A user who never opens the
+   camera never downloads it, and AI V2 stays off by default even then. */
+const AI_V2_SCRIPTS = ['js/ai/ml-features.js', 'js/ai/ml-runtime.js', 'js/ai/ai-v2.js'];
+let _aiV2ScriptsP = null;
+function loadAiV2Scripts(){
+  if(typeof createAiV2Controller==='function') return Promise.resolve(true);
+  if(!_aiV2ScriptsP){
+    _aiV2ScriptsP = Promise.all(AI_V2_SCRIPTS.map(src => new Promise(resolve=>{
+      const el = document.createElement('script');
+      el.src = src; el.async = false;            // keep them in source order
+      el.onload = ()=>resolve(true); el.onerror = ()=>resolve(false);
+      document.head.appendChild(el);
+    }))).then(loaded => loaded.every(Boolean) && typeof createAiV2Controller==='function')
+      .catch(()=> false);
+  }
+  return _aiV2ScriptsP;
+}
 let _poseLandmarkerP = null;
 
 function loadPoseLandmarker(){
@@ -63,13 +82,17 @@ async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded, s
   const coach = COACH[exId];
   const makeCounter = () => coach && coach.pose ? createPoseCounter(coach.pose, {exId}) : null;
   let counter = makeCounter();
-  // Optional AI V2 form coach (js/ai/ai-v2.js): off by default and inert until a
-  // model is published. start() is deliberately not awaited — counting begins now
-  // and AI V2 joins later if it can. It may only coach or veto, never count.
-  const ai = (counter && typeof createAiV2Controller==='function') ? createAiV2Controller(exId) : null;
-  if(ai) ai.start().catch(()=>{});
   const ctx = canvas.getContext('2d');
   let raf = 0, stopped = false, paused = false, lastRun = 0, lastVideoTime = -1;
+
+  // Optional AI V2 form coach: loaded and started in the background so counting
+  // starts immediately either way. It may only coach or veto, never count.
+  let ai = null;
+  if(counter) loadAiV2Scripts().then(ready=>{
+    if(!ready || stopped) return;
+    const controller = createAiV2Controller(exId);
+    return controller.start().then(()=>{ if(stopped) controller.stop(); else ai = controller; });
+  }).catch(()=>{});
   // track ended from outside (permission revoked, camera taken by another app, unplugged).
   // stop() does not fire 'ended', so this only reports external loss.
   const reportEnded = () => { if(!stopped && onEnded) onEnded(); };
