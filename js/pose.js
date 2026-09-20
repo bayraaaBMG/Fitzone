@@ -63,6 +63,11 @@ async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded, s
   const coach = COACH[exId];
   const makeCounter = () => coach && coach.pose ? createPoseCounter(coach.pose, {exId}) : null;
   let counter = makeCounter();
+  // Optional AI V2 form coach (js/ai/ai-v2.js): off by default and inert until a
+  // model is published. start() is deliberately not awaited — counting begins now
+  // and AI V2 joins later if it can. It may only coach or veto, never count.
+  const ai = (counter && typeof createAiV2Controller==='function') ? createAiV2Controller(exId) : null;
+  if(ai) ai.start().catch(()=>{});
   const ctx = canvas.getContext('2d');
   let raf = 0, stopped = false, paused = false, lastRun = 0, lastVideoTime = -1;
   // track ended from outside (permission revoked, camera taken by another app, unplugged).
@@ -109,6 +114,13 @@ async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded, s
       if(counter && paused) counter.state.lastTs = null; // don't bank paused time as hold time
     }
     out.tracked = !!counter;
+    if(ai){
+      try{
+        ai.observe(lm, ts, aspect);
+        if(counter && !paused) out = ai.review(out, ts, counter);
+        out.ai = ai.status;
+      }catch(e){ /* the rule engine keeps counting whatever AI V2 does */ }
+    }
     draw(lm, out.status);
     onFrame && onFrame(out);
   }
@@ -116,12 +128,13 @@ async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded, s
 
   return {
     get counter(){ return counter; },
-    reset(){ counter = makeCounter(); },
+    reset(){ counter = makeCounter(); if(ai) ai.reset(); },
     pause(){ paused = true; },
     resume(){ paused = false; if(counter) counter.state.lastTs = null; },
     stop(){
       if(stopped) return;
       stopped = true; cancelAnimationFrame(raf);
+      if(ai) ai.stop();
       stream.getTracks().forEach(tr=>tr.stop());
       video.srcObject = null;
       ctx.clearRect(0,0,canvas.width,canvas.height);

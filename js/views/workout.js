@@ -148,6 +148,15 @@ function wsUpdatePill(){
   el.innerHTML = info ? `<span class="${info.cls}">${esc(info.text)}</span>` : '';
 }
 
+/* ---------- AI V2 (optional, see js/ai/ai-v2.js) ---------- */
+// shown only while a model is actually running, and never as an accuracy claim
+function wsAiBadgeHTML(){
+  return (WS && WS.pose && WS.pose.ai==='ready') ? `<span class="ws-ai">${t('ws_ai_badge')}</span>` : '';
+}
+function wsAiHintHTML(){
+  return (typeof aiV2Supported==='function' && WS && aiV2Supported(WS.exId)) ? `<p class="ws-note">${t('ws_ai_hint')}</p>` : '';
+}
+
 /* ---------- feedback ---------- */
 function wsRepFeedback(){
   const f = wsRoot() && wsRoot().querySelector('.ws-flash');
@@ -185,7 +194,7 @@ function wsRenderIntro(root){
   const showDur = WS.mode==='reps' || WS.oppType==='target';
   const camNote = WS.camState==='loading' ? `<p class="ws-note">${t('ws_cam_loading')}</p>`
     : WS.camState==='error' ? `<p class="ws-note err">${t('cam_err_'+WS.camErr)}</p>`
-    : WS.camState==='on' ? `<p class="ws-note ok">${c.pose ? t('ws_cam_on_auto') : t('ws_cam_on_manual')}</p>`
+    : WS.camState==='on' ? `<p class="ws-note ok">${c.pose ? t('ws_cam_on_auto') : t('ws_cam_on_manual')}</p>${wsAiHintHTML()}`
     : `<p class="ws-note">${c.pose ? t('ws_cam_note_auto') : t('ws_cam_note_manual')}</p>`;
   const best = WS.mode==='time' ? stats.bestTime : stats.bestReps;
 
@@ -328,7 +337,7 @@ function wsRenderActive(root){
       ${camOn ? '' : `<div class="ws-demo"><div class="e">${x.e}</div><div class="ws-cue" id="wsCue">${wsCueHTML()}</div></div>`}
       <div class="ws-pill" id="wsPill" role="status" aria-live="polite"></div>
       <div class="ws-flash"></div>
-      <div class="ws-camctl">${manualReps ? `<button class="ws-chipbtn" id="wsMinus" aria-label="${t('ws_minus_label')}">−1</button>` : ''}${camOn
+      <div class="ws-camctl">${camOn
         ? `<button class="ws-chipbtn" id="wsCamOff">${t('ws_cam_off')}</button>`
         : `<button class="ws-chipbtn" id="wsCam">${t('ws_cam_btn')}</button>`}</div>
     </div>
@@ -347,8 +356,6 @@ function wsRenderActive(root){
   root.querySelector('#wsFin').onclick = wsFinish;
   const plus = root.querySelector('#wsPlus');
   if(plus) plus.onclick = ()=>{ if(WS.paused) return; WS.amount++; wsRepFeedback(); wsUpdateHud(); };
-  const minus = root.querySelector('#wsMinus'); // undo a mistaken tap
-  if(minus) minus.onclick = ()=>{ if(WS.paused || WS.amount<=0) return; WS.amount--; wsUpdateHud(); };
   const camBtn = root.querySelector('#wsCam');
   if(camBtn) camBtn.onclick = async ()=>{ await wsStartCamera(); if(WS && WS.cam){ WS.cam.reset(); if(!WS.paused) WS.cam.resume(); wsRender(); } };
   const off = root.querySelector('#wsCamOff');
@@ -372,8 +379,8 @@ function wsUpdateHud(){
       : WS.note ? `<b>${esc(WS.note)}</b>`
       : `${t('ws_target')}: <b>${target} ${wsUnit()}</b>`;
     const right = wsAutoCount() ? `📷 ${t('ws_auto_count')}`
-      : (WS.mode==='reps' ? `<button class="ws-chipbtn" id="wsUndo" style="padding:6px 12px">${t('ws_undo')}</button>` : `⏱ ${t('ws_holding')}`);
-    sub.innerHTML = `<span>${left}</span>${right}`;
+      : (WS.mode==='reps' ? `<button class="ws-chipbtn" id="wsUndo" style="padding:6px 12px" aria-label="${t('ws_minus_label')}">−1</button>` : `⏱ ${t('ws_holding')}`);
+    sub.innerHTML = `<span>${left}</span>${wsAiBadgeHTML()}${right}`;
     const undo = sub.querySelector('#wsUndo');
     if(undo) undo.onclick = ()=>{ if(WS.amount>0){ WS.amount--; wsUpdateHud(); } };
   }

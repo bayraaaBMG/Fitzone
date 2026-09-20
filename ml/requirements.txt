@@ -1,0 +1,16 @@
+# AI V2 training-time dependencies. None of this is shipped to the browser:
+# the app loads only a converted model file plus one lazy runtime from a CDN.
+numpy>=1.26
+torch>=2.2                # training + ONNX export (CPU build is enough for this model size)
+pytest>=8.0
+
+# Pose extraction from recorded video (only needed to build a dataset)
+mediapipe>=0.10.14
+opencv-python>=4.9
+
+# Export path. onnx/onnxruntime validate the exported graph and feed the parity
+# gate; the tensorflow stack is optional and only used to try the TF.js route.
+onnx>=1.16
+onnxruntime>=1.18
+# optional, install manually when converting:
+# onnx-tf>=1.10 ; tensorflow>=2.16 ; tensorflowjs>=4.17

@@ -1,0 +1,8 @@
+ml/data/raw/
+ml/data/processed/
+ml/models/*/
+!ml/models/README.md
+__pycache__/
+*.pyc
+.pytest_cache/
+firestore-debug.log
