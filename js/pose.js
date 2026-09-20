@@ -80,7 +80,9 @@ async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded, s
   if(signal && signal.aborted) throw abortErr();
 
   const coach = COACH[exId];
-  const makeCounter = () => coach && coach.pose ? createPoseCounter(coach.pose, {exId}) : null;
+  // the rep engine only assembles its debug payload when ?debug=1 is on
+  const counterOpts = {exId, config: (typeof FZ_DEBUG!=='undefined' && FZ_DEBUG) ? {debug:true} : {}};
+  const makeCounter = () => coach && coach.pose ? createPoseCounter(coach.pose, counterOpts) : null;
   let counter = makeCounter();
   const ctx = canvas.getContext('2d');
   let raf = 0, stopped = false, paused = false, lastRun = 0, lastVideoTime = -1;

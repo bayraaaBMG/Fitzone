@@ -130,7 +130,26 @@ function wsOnPose(out){
     }
   }
   wsUpdatePill();
+  wsUpdateDebug();
   if(WS.step==='active') wsUpdateHud();
+}
+/* developer-only (?debug=1): why the engine did or did not count (STEP 13/14).
+   Never rendered for normal users — the element does not exist without the flag. */
+function wsUpdateDebug(){
+  const el = wsRoot() && wsRoot().querySelector('#wsDbg');
+  if(!el) return;
+  const d = WS.pose && WS.pose.debug;
+  if(!d){ el.textContent = WS.pose ? `status ${WS.pose.status}` : ''; return; }
+  el.textContent = [
+    `state    ${d.phase}`,
+    `reason   ${d.reason}`,
+    `metric   ${d.metric}  (raw ${d.raw})`,
+    `dir      ${d.dirSign > 0 ? 'up' : d.dirSign < 0 ? 'down' : '-'} x${d.dirRun}`,
+    `range    ${d.range==null ? '-' : d.range}`,
+    `streaks  start ${d.startStreak} peak ${d.peakStreak} cool ${d.coolStreak}`,
+    `depth    ${d.depthOk ? 'reached' : 'not reached'}   calib ${d.calibrated ? 'yes' : 'no'}`,
+    `reps     ${d.reps}   warn ${d.warn || '-'}`,
+  ].join('\n');
 }
 function wsPillInfo(){
   if(WS.camState!=='on' || !WS.pose) return null;
@@ -337,6 +356,7 @@ function wsRenderActive(root){
       ${camOn ? '' : `<div class="ws-demo"><div class="e">${x.e}</div><div class="ws-cue" id="wsCue">${wsCueHTML()}</div></div>`}
       <div class="ws-pill" id="wsPill" role="status" aria-live="polite"></div>
       <div class="ws-flash"></div>
+      ${(typeof FZ_DEBUG!=='undefined' && FZ_DEBUG) ? '<pre class="ws-dbg" id="wsDbg" aria-hidden="true"></pre>' : ''}
       <div class="ws-camctl">${camOn
         ? `<button class="ws-chipbtn" id="wsCamOff">${t('ws_cam_off')}</button>`
         : `<button class="ws-chipbtn" id="wsCam">${t('ws_cam_btn')}</button>`}</div>

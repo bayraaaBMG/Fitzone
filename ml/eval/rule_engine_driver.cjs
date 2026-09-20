@@ -8,7 +8,9 @@
    session replaying predictions computed offline by the trained model.
 
    stdin: {"exercise":"squat","aspect":1.78,"frames":[{"lm":[{x,y,z,visibility}...]|null,"ts":0}],
-           "predictions":[null|{phase:{label,confidence},...}]}
+           "predictions":[null|{phase:{label,confidence},...}], "engine":"current"|"baseline"}
+   engine "baseline" loads ml/eval/baseline/pose-rules-v1.js (the engine before
+   the counting fixes) so before/after can be measured on identical input.
    stdout: {"rules":{"reps":N,"frames":[...],"events":{...}},
             "ai":{"reps":N,"frames":[...],"vetoes":N}|null} */
 const fs = require('fs');
@@ -17,7 +19,10 @@ const vm = require('vm');
 
 const ROOT = path.resolve(__dirname, '../../js');
 const F = require(path.join(ROOT, 'ai/ml-features.js'));
-const POSE = require(path.join(ROOT, 'pose-rules.js'));
+const payloadRaw = fs.readFileSync(0, 'utf8');
+const POSE = require(JSON.parse(payloadRaw).engine === 'baseline'
+  ? path.resolve(__dirname, 'baseline/pose-rules-v1.js')
+  : path.join(ROOT, 'pose-rules.js'));
 
 // browser globals the AI layer expects (it is a classic script, not a module)
 global.ML_FEATURE_SIZE = F.ML_FEATURE_SIZE;
@@ -31,14 +36,15 @@ vm.createContext(coachCtx);
 vm.runInContext(fs.readFileSync(path.join(ROOT, 'coach-data.js'), 'utf8'), coachCtx);
 const COACH = vm.runInContext('COACH', coachCtx);
 
-const payload = JSON.parse(fs.readFileSync(0, 'utf8'));
+const payload = JSON.parse(payloadRaw);
 const coach = COACH[payload.exercise];
 if(!coach || !coach.pose){ console.error(`no camera rule for ${payload.exercise}`); process.exit(2); }
 
 function countWith(useAi){
-  const counter = POSE.createPoseCounter(coach.pose, {exId: payload.exercise});
+  const counter = POSE.createPoseCounter(coach.pose, {exId: payload.exercise, config:{debug:true}});
   const repFrames = [];
   const events = {};
+  const reasons = {};   // why frames did not count (STEP 14)
   let vetoes = 0, index = 0;
 
   let controller = null;
@@ -62,13 +68,15 @@ function countWith(useAi){
       out = controller.review(out, frame.ts, counter);
     }
     if(out.event) events[out.event] = (events[out.event] || 0) + 1;
+    const why = out.debug ? out.debug.reason : out.reason;
+    if(why) reasons[why] = (reasons[why] || 0) + 1;
     if(out.aiVeto) vetoes++;
     if(out.event === 'rep') repFrames.push(i);
   };
 
   if(!controller){
     for(let i=0;i<payload.frames.length;i++) step(i);
-    return {reps: counter.state.reps, frames: repFrames, events, vetoes};
+    return {reps: counter.state.reps, frames: repFrames, events, reasons, vetoes};
   }
   // the controller's inference is async; drain the microtask queue between frames
   // so a prediction lands before the next frame, exactly as it would in a browser
@@ -77,7 +85,7 @@ function countWith(useAi){
       step(i);
       await new Promise(resolve=>setImmediate(resolve));
     }
-    return {reps: counter.state.reps, frames: repFrames, events, vetoes};
+    return {reps: counter.state.reps, frames: repFrames, events, reasons, vetoes};
   });
 }
 

@@ -106,6 +106,8 @@ const I18N = {
     toast_load_error:'Дата ачаалахад алдаа гарлаа. Холболтоо шалгаарай.',
     cloud_load_failed:'Таны өгөгдлийг ачаалж чадсангүй. Интернэт холболтоо шалгаад дахин оролдоно уу.', cloud_retry:'Дахин оролдох',
     ws_ai_badge:'🤖 AI хэлбэрийн зөвлөгч', ws_ai_incomplete:'Давталтаа бүрэн гүйцэтгээрэй',
+    pose_body_in_frame:'Бүх биеэ камерт багтаана уу', pose_side_view:'Камераа хажуу талаас нь байрлуулна уу',
+    pose_face_camera:'Камер руугаа харан зогсоно уу',
     ws_ai_hint:'AI-н хэлбэрийн зөвлөгөө бол тооцоолол — камерын өнцөг, гэрэлтүүлэг, биеийн харагдац нөлөөлнө.',
     a11y_remove:'Устгах', ws_plus_label:'Нэг давталт нэмэх', ws_minus_label:'Нэг давталт хасах',
 
@@ -358,6 +360,8 @@ const I18N = {
     toast_load_error:'Couldn’t load your data. Check your connection.',
     cloud_load_failed:'Couldn’t load your data. Check your internet connection and try again.', cloud_retry:'Try again',
     ws_ai_badge:'🤖 AI Form Coach', ws_ai_incomplete:'Complete the full repetition',
+    pose_body_in_frame:'Fit your whole body into the camera', pose_side_view:'Place the camera at your side',
+    pose_face_camera:'Stand facing the camera',
     ws_ai_hint:'AI form guidance is an estimate and may be affected by camera angle, lighting and visibility.',
     a11y_remove:'Remove', ws_plus_label:'Add one rep', ws_minus_label:'Remove one rep',
 

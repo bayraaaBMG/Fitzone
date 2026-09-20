@@ -83,7 +83,7 @@ def frame_predictions(model, clip: dict, length: int, exercise: str):
     return out
 
 
-def run_driver(exercise: str, clip: dict, predictions, sequence_length: int):
+def run_driver(exercise: str, clip: dict, predictions, sequence_length: int, engine: str = "current"):
     landmarks = clip.get("landmarks")
     if landmarks is None:
         raise SystemExit(
@@ -97,7 +97,7 @@ def run_driver(exercise: str, clip: dict, predictions, sequence_length: int):
             {"x": float(p[0]), "y": float(p[1]), "z": float(p[2]), "visibility": float(p[3])} for p in lm]
         frames.append({"lm": points, "ts": i * 1000.0 / fps})
     payload = {"exercise": exercise, "aspect": float(clip.get("aspect", 1.0)), "frames": frames,
-               "predictions": predictions or [], "sequenceLength": sequence_length}
+               "predictions": predictions or [], "sequenceLength": sequence_length, "engine": engine}
     proc = subprocess.run([shutil.which("node") or "node", str(DRIVER)],
                           input=json.dumps(payload), capture_output=True, text=True, timeout=600)
     if proc.returncode != 0:

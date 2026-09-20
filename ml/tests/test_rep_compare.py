@@ -86,6 +86,46 @@ def test_confident_valid_predictions_leave_the_count_alone():
 
 
 @needs_node
+def test_both_engines_can_be_replayed_on_the_same_clip():
+    """before/after on identical input (ml/eval/baseline/pose-rules-v1.js)."""
+    clip = synthetic_clip("p1", reps=4, frames_per_rep=30)
+    current = run_driver("squat", clip, None, sequence_length=45, engine="current")
+    baseline = run_driver("squat", clip, None, sequence_length=45, engine="baseline")
+    assert current["rules"]["reps"] >= 3 and baseline["rules"]["reps"] >= 3
+    # clean synthetic reps: both engines agree; the differences show up on the
+    # adversarial cases, which is what the stress harness is for
+    assert abs(current["rules"]["reps"] - baseline["rules"]["reps"]) <= 1
+
+
+@needs_node
+def test_new_engine_rejects_a_knee_bend_that_never_descends():
+    """the "sit back" false positive this task was opened for."""
+    import numpy as np
+    from ..preprocessing.normalize import L_SH, L_HIP, L_KN, L_AN, L_EL, L_WR
+
+    def frame(d):
+        lm = np.zeros((33, 4), np.float32)
+        lm[:, 3] = 0.05
+        for idx, (x, y) in ((L_SH, (0.48, 0.10)), (L_HIP, (0.5, 0.35)), (L_KN, (0.5 + d, 0.55)),
+                            (L_AN, (0.5, 0.75)), (L_EL, (0.44, 0.22)), (L_WR, (0.42, 0.32))):
+            lm[idx] = (x, y, 0.0, 0.9)
+        return lm
+
+    seq = []
+    for _ in range(5):
+        seq += [frame(0.01)] * 5
+        seq += [frame(0.01 + 0.29 * i / 7) for i in range(8)]
+        seq += [frame(0.30)] * 3
+        seq += [frame(0.30 - 0.29 * i / 7) for i in range(8)]
+    clip = synthetic_clip("p1", reps=1, frames_per_rep=30)
+    clip = {**clip, "landmarks": np.stack(seq), "valid": np.ones(len(seq), bool)}
+    current = run_driver("squat", clip, None, sequence_length=45, engine="current")
+    baseline = run_driver("squat", clip, None, sequence_length=45, engine="baseline")
+    assert current["rules"]["reps"] == 0, current["rules"]
+    assert baseline["rules"]["reps"] > 0, "baseline was expected to miscount this"
+
+
+@needs_node
 def test_clip_without_landmarks_is_refused_not_guessed():
     clip = synthetic_clip("p1", reps=2, frames_per_rep=30)
     del clip["landmarks"]
