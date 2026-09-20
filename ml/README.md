@@ -168,11 +168,44 @@ the browser never requests anything and the rule engine runs alone.
 
 ```bash
 pip install -r requirements.txt          # torch, numpy; mediapipe only for extraction
-python -m ml.training.train --exercise squat --data ml/data/processed/squat
-python -m ml.training.evaluate --exercise squat --checkpoint ml/models/squat-v1/model.pt
-python -m ml.export.export_model --checkpoint ml/models/squat-v1/model.pt --out models/squat-v1
-pytest ml/tests -q
+pytest ml/tests -q                       # works without a dataset
 ```
+
+### From a real dataset to a published model
+
+Each step measures something the next one needs; nothing may be skipped, and
+the export refuses to publish without a passing gate.
+
+```bash
+# 1. extract (per clip; local, consented video only)
+python -m ml.preprocessing.extract_poses --exercise squat     --video ml/data/raw/squat/correct/s01_squat_correct_01.mp4     --annotations ml/data/annotations/squat.jsonl --out ml/data/processed/squat
+
+# 2. what the dataset actually contains, and whether the split is sound
+python -m ml.tools.dataset_report --exercise squat --data ml/data/processed/squat     --out ml/models/squat-v1/dataset_report.json
+
+# 3. train (per-person split, fixed seed, class weights, early stopping)
+python -m ml.training.train --exercise squat --data ml/data/processed/squat     --dataset-version squat-2026-10
+
+# 4. evaluate on held-out people
+python -m ml.training.evaluate --exercise squat --data ml/data/processed/squat     --checkpoint ml/models/squat-v1/model.pt
+
+# 5. the baseline that matters: human vs rule engine vs AI-assisted rep counts
+python -m ml.eval.rep_compare --exercise squat --data ml/data/processed/squat     --checkpoint ml/models/squat-v1/model.pt --subjects s21 s22 s23     --out ml/models/squat-v1/rep_report.json
+
+# 6. export: writes the model + parity.json, but NO metadata.json yet
+python -m ml.export.export_model --checkpoint ml/models/squat-v1/model.pt --out models/squat-v1
+
+# 7. the gate decides (thresholds are chosen by a person after reading step 5)
+python -m ml.training.quality_gate --exercise squat     --metrics ml/models/squat-v1/metrics.json     --rep-report ml/models/squat-v1/rep_report.json     --dataset-report ml/models/squat-v1/dataset_report.json     --parity models/squat-v1/parity.json     --min-form-f1 ... --min-mistake-f1 ... --min-coach-confidence ...     --out ml/models/squat-v1/gate.json
+
+# 8. only now can it be published, and only if the gate passed
+python -m ml.export.export_model --checkpoint ml/models/squat-v1/model.pt     --out models/squat-v1 --gate ml/models/squat-v1/gate.json
+
+# 9. add it to models/index.json — the app ignores a model that is not listed
+```
+
+Without `metadata.json` the browser cannot load a model at all, so a model that
+fails the gate is inert even if its files are on the server.
 
 Tests run without a dataset and without torch installed (model tests skip
 themselves); the feature, sequence and parity tests always run.

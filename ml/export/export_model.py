@@ -163,6 +163,9 @@ def main(argv=None) -> int:
     ap.add_argument("--dataset-version", default=None)
     ap.add_argument("--force-runtime", choices=["onnx", "tfjs"], default=None,
                     help="skip the measured choice (only for debugging a conversion)")
+    ap.add_argument("--gate", default=None,
+                    help="gate.json from ml.training.quality_gate; without a passing gate the model "
+                         "files and parity report are written but no metadata.json, so nothing loads")
     args = ap.parse_args(argv)
 
     from ..training.model import load_checkpoint
@@ -198,6 +201,23 @@ def main(argv=None) -> int:
         shutil.rmtree(out_dir / "tfjs", ignore_errors=True)
         files = ["model.onnx"]
 
+    parity_report = {
+        "onnxMaxAbsDiff": onnx_diff, "tfjsMaxAbsDiff": tfjs_diff, "tolerance": PARITY_TOLERANCE,
+        "runtime": runtime, "note": note,
+        "outputsFinite": bool(np.isfinite(reference).all()),
+        "browserRuntimeChecked": False,
+        "browserRuntimeNote": "set by the browser test once it has loaded this model",
+    }
+    (out_dir / "parity.json").write_text(json.dumps(parity_report, indent=2), encoding="utf-8")
+    print(f"wrote {out_dir/'parity.json'} (feed it to ml.training.quality_gate)")
+
+    gate = json.loads(Path(args.gate).read_text(encoding="utf-8")) if args.gate and Path(args.gate).exists() else None
+    if not (gate and gate.get("passed")):
+        print("\nQuality gate not passed (or not supplied): metadata.json was NOT written, so the app "
+              "cannot load this model. Run ml.eval.rep_compare, ml.tools.dataset_report and "
+              "ml.training.quality_gate, then re-run this command with --gate.")
+        return 1
+
     metrics_path = ckpt_path.with_name("metrics.json")
     metrics = json.loads(metrics_path.read_text(encoding="utf-8")) if metrics_path.exists() else None
     if metrics is None:
@@ -218,9 +238,10 @@ def main(argv=None) -> int:
                     "mistake": list(MISTAKES[exercise]), "rep_valid": list(REP_VALID)},
         "trainedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "datasetVersion": args.dataset_version or ckpt.get("dataset_version", "unversioned"),
-        "parity": {"backend": runtime, "onnxMaxAbsDiff": onnx_diff,
-                   "tfjsMaxAbsDiff": tfjs_diff, "tolerance": PARITY_TOLERANCE, "note": note},
+        "parity": parity_report,
         "metrics": metrics,
+        "gate": {"passed": True, "conditions": [c["condition"] for c in gate.get("conditions", []) if c.get("pass")]},
+        "testSubjects": ((metrics or {}).get("_meta", {}) or {}).get("subjects", []),
         "limitations": ["single person in frame", "side or 3/4 view",
                         "trained on the dataset named above only"],
     }

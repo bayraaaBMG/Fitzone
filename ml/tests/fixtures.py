@@ -12,26 +12,45 @@ import numpy as np
 from ..preprocessing.normalize import (
     L_SH, R_SH, L_EL, R_EL, L_WR, R_WR, L_HIP, R_HIP, L_KN, R_KN, L_AN, R_AN,
 )
+from ..preprocessing.normalize import as_array
 from ..preprocessing.pose_features import FEATURE_SIZE, clip_features
 from ..training.config import MISTAKES, PHASES
 
 
+SEG = {"torso": 0.28, "upper_arm": 0.14, "forearm": 0.13, "thigh": 0.20, "shin": 0.20}
+
+
+def _step(point, degrees: float, length: float):
+    """Move `length` from `point` in a direction where 0 deg = up, 90 deg = right."""
+    rad = np.radians(degrees)
+    return (point[0] + np.sin(rad) * length, point[1] - np.cos(rad) * length)
+
+
 def skeleton(knee_deg: float = 175.0, x: float = 0.5, y: float = 0.5, scale: float = 1.0,
-             vis: float = 0.9, missing=(), off_frame: bool = False) -> list[dict]:
-    """A standing figure whose knees bend by `knee_deg`."""
+             vis: float = 0.9, missing=(), off_frame: bool = False, lean_deg: float = 5.0) -> list[dict]:
+    """A standing figure built from exact segment directions, so the knee angle
+    really is `knee_deg` — the rule engine is thresholded on that angle, so an
+    approximation here would test nothing."""
     lm = [{"x": 0.5, "y": 0.5, "z": 0.0, "visibility": 0.05} for _ in range(33)]
     shift = 0.9 if off_frame else 0.0
+    bend = (180.0 - float(knee_deg)) / 2.0
+    hip = (x, y)
+    shoulder = _step(hip, lean_deg, SEG["torso"] * scale)
+    elbow = _step(shoulder, 180.0, SEG["upper_arm"] * scale)
+    wrist = _step(elbow, 180.0, SEG["forearm"] * scale)
+    knee = _step(hip, 180.0 - bend, SEG["thigh"] * scale)
+    ankle = _step(knee, 180.0 + bend, SEG["shin"] * scale)
 
-    def put(i, dx, dy):
-        lm[i] = {"x": x + dx * scale + shift, "y": y + dy * scale, "z": 0.01 * dx * scale, "visibility": vis}
+    def put(i, point, dx):
+        lm[i] = {"x": point[0] + dx * scale + shift, "y": point[1],
+                 "z": 0.01 * dx * scale, "visibility": vis}
 
-    put(L_SH, -0.02, -0.25); put(R_SH, 0.02, -0.25)
-    put(L_EL, -0.06, -0.10); put(R_EL, 0.06, -0.10)
-    put(L_WR, -0.08, 0.02); put(R_WR, 0.08, 0.02)
-    put(L_HIP, -0.03, 0.0); put(R_HIP, 0.03, 0.0)
-    k = (180.0 - knee_deg) / 180.0 * 0.12
-    put(L_KN, -0.03 + k, 0.16); put(R_KN, 0.03 + k, 0.16)
-    put(L_AN, -0.03, 0.32); put(R_AN, 0.03, 0.32)
+    put(L_SH, shoulder, -0.02); put(R_SH, shoulder, 0.02)
+    put(L_EL, elbow, -0.02); put(R_EL, elbow, 0.02)
+    put(L_WR, wrist, -0.02); put(R_WR, wrist, 0.02)
+    put(L_HIP, hip, -0.03); put(R_HIP, hip, 0.03)
+    put(L_KN, knee, -0.03); put(R_KN, knee, 0.03)
+    put(L_AN, ankle, -0.03); put(R_AN, ankle, 0.03)
     for i in missing:
         lm[i] = {"x": 0.5, "y": 0.5, "z": 0.0, "visibility": 0.05}
     return lm
@@ -77,6 +96,8 @@ def synthetic_clip(subject: str, exercise: str = "squat", reps: int = 4, mistake
         mistake_idx[start:end + 1] = classes.index(mistake)
     return {
         "features": features.astype(np.float32),
+        "landmarks": np.stack([as_array(f) for f in frames]).astype(np.float32),
+        "aspect": np.array(1.0, np.float32),
         "valid": np.ones(n, dtype=bool),
         "phase": phase, "form": form, "mistake": mistake_idx, "rep_valid": rep_valid,
         "subject_id": np.array(subject), "exercise": np.array(exercise), "fps": np.array(30.0, np.float32),

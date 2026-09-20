@@ -75,7 +75,7 @@ def extract(video_path: str | Path, annotation: dict, exercise: str, model_path:
     aspect = float(width) / float(height or 1)
 
     extractor = FeatureExtractor()
-    feats, valid = [], []
+    feats, valid, raw = [], [], []
     with mp.solutions.pose.Pose(model_complexity=1, min_detection_confidence=0.5,
                                 min_tracking_confidence=0.5, static_image_mode=False) as pose:
         index = 0
@@ -87,6 +87,10 @@ def extract(video_path: str | Path, annotation: dict, exercise: str, model_path:
             landmarks = result.pose_landmarks.landmark if result.pose_landmarks else None
             vec, is_valid = extractor.push(landmarks, aspect, index * 1000.0 / fps)
             feats.append(vec); valid.append(is_valid)
+            # keep the landmarks themselves: ml/eval/rep_compare.py replays the
+            # shipping rule engine over them to compare rep counts
+            raw.append(np.array([[p.x, p.y, p.z, getattr(p, "visibility", 1.0)] for p in landmarks],
+                                dtype=np.float32) if landmarks else np.zeros((33, 4), np.float32))
             index += 1
     cap.release()
 
@@ -94,6 +98,8 @@ def extract(video_path: str | Path, annotation: dict, exercise: str, model_path:
     phase, form, mistake, rep_valid = frame_labels(annotation, len(features), exercise)
     return {
         "features": features,
+        "landmarks": np.stack(raw).astype(np.float32) if raw else np.zeros((0, 33, 4), np.float32),
+        "aspect": np.array(aspect, dtype=np.float32),
         "valid": np.array(valid, dtype=bool),
         "phase": phase, "form": form, "mistake": mistake, "rep_valid": rep_valid,
         "subject_id": np.array(annotation["subject_id"]),
