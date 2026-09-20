@@ -23,6 +23,11 @@ const ML_LOAD_TIMEOUT_MS = 20000;
 const ML_INFER_TIMEOUT_MS = 4000;
 const ML_MAX_INFER_ERRORS = 3;
 
+/* the CDN import is behind a seam so tests can drive both runtime branches
+   with stub libraries; production always uses the real dynamic import */
+let _mlRuntimeImport = kind => import(ML_RUNTIME_CDN[kind]);
+function mlSetRuntimeImport(fn){ _mlRuntimeImport = fn || (kind => import(ML_RUNTIME_CDN[kind])); _mlRuntimeP = {}; }
+
 let _mlIndexP = null;      // single-flight manifest fetch
 let _mlRuntimeP = {};      // runtime module per kind
 const _mlSessions = {};    // exId -> Promise<session|null>, including cached failures
@@ -60,7 +65,7 @@ function mlValidMetadata(meta){
 
 function mlRuntime(kind){
   if(!_mlRuntimeP[kind]){
-    _mlRuntimeP[kind] = mlWithTimeout(import(ML_RUNTIME_CDN[kind]), ML_LOAD_TIMEOUT_MS, kind+' runtime')
+    _mlRuntimeP[kind] = mlWithTimeout(Promise.resolve().then(()=>_mlRuntimeImport(kind)), ML_LOAD_TIMEOUT_MS, kind+' runtime')
       .then(m => m && (m.default || m))
       .catch(err => { _mlRuntimeP[kind] = null; throw err; }); // allow one retry in a later session
   }
@@ -167,5 +172,5 @@ function mlResetRuntimeCache(){ _mlIndexP = null; _mlRuntimeP = {}; for(const k 
 
 if(typeof module!=='undefined') module.exports = {
   ML_MODEL_BASE, ML_MODEL_INDEX, ML_RUNTIME_CDN, mlValidMetadata, mlSoftmax, mlReadOutputs,
-  mlLoadModel, mlResetRuntimeCache, mlWithTimeout,
+  mlLoadModel, mlResetRuntimeCache, mlWithTimeout, mlSetRuntimeImport,
 };

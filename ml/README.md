@@ -56,14 +56,32 @@ recorded exercise video (local, never committed)
 |---|---|---|
 | **MediaPipe Pose** | The only landmark detector, in training and in the browser | Already shipping and working; re-learning landmarks from raw pixels would need orders of magnitude more data and a far bigger model. Also keeps training features identical to inference features. |
 | **PyTorch** | Trains the temporal classifier (`training/`) | Sequence models, class weighting, per-person splits and reproducible seeds are straightforward; training happens offline on a workstation, never in production. |
-| **TensorFlow.js** | Default **browser runtime** when the converted graph passes the numeric parity gate | Mature WebGL backend on mobile browsers, and a `tfjs` GraphModel loads from a plain static file without extra WASM assets. |
-| **ONNX Runtime Web** | Browser runtime when TF.js conversion fails the parity gate | A GRU/LSTM export can convert badly; forcing it would silently change predictions. ORT Web runs the exported ONNX graph directly. |
+| **TensorFlow.js** | Browser runtime when the converted graph passes the numeric parity gate | Mature WebGL backend on mobile browsers, and a `tfjs` GraphModel loads from a plain static file without extra WASM assets. |
+| **ONNX Runtime Web** | Browser runtime when TF.js conversion fails the gate, or when the converters are unavailable | A GRU export can convert badly; forcing it would silently change predictions. ORT Web runs the exported ONNX graph directly. |
 
 `export/export_model.py` decides which of the two is used **by measurement**,
 not by preference: it compares converted-model outputs against PyTorch on
 fixture inputs and records the winner in `metadata.json`. The browser reads
 that field and lazily loads only the matching runtime. If neither passes,
 nothing is published and AI V2 stays off.
+
+**Measured so far** (2026-09-20, on synthetic fixtures — no real model exists):
+
+- PyTorch → ONNX → ONNX Runtime: max |diff| **1.8e-07** against PyTorch, well
+  inside the 1e-04 tolerance. This is the path a first model would ship on.
+- PyTorch → ONNX → TensorFlow.js: **not measured.** The converter chain
+  (`tensorflow` + `onnx2tf` + `tensorflowjs`) could not be installed in the
+  development environment used here, so `try_tfjs()` reported the tools as
+  missing and the export fell back to ONNX, exactly as designed. Nothing was
+  published, and no TF.js claim is made.
+- The browser side of *both* runtimes is covered by tests with stub runtimes
+  (model discovery, tensor shape `[1, T, F]`, output parsing, tensor disposal,
+  refusals, timeouts, dead-session fallback), so whichever the gate picks, the
+  loading and inference glue is already exercised.
+
+When a dataset exists, run the export on a machine where those converters
+install; if TF.js passes the gate it becomes the shipped runtime with no code
+change, because the browser follows `metadata.runtime`.
 
 ## Feature specification v1 (`featureVersion: 1`)
 
