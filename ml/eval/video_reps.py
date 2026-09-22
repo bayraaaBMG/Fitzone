@@ -37,43 +37,21 @@ DRIVER = Path(__file__).with_name("rule_engine_driver.cjs")
 
 
 def landmarks_from_video(video: str | Path):
-    """(frames, fps, aspect) — frames are lists of 33 dicts, or None when no person."""
+    """(frames, fps, aspect) via the same model + API the browser uses."""
     try:
-        import cv2
-        import mediapipe as mp
+        from ..preprocessing.mp_pose import video_landmarks
+        return video_landmarks(video)
     except ImportError as exc:  # pragma: no cover - depends on the local machine
-        raise SystemExit(
-            f"mediapipe/opencv are needed to read video ({exc}).\n"
-            "pip install mediapipe opencv-python") from exc
-
-    cap = cv2.VideoCapture(str(video))
-    if not cap.isOpened():
-        raise SystemExit(f"cannot open {video}")
-    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
-    width = cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 640
-    height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 480
-    frames = []
-    with mp.solutions.pose.Pose(model_complexity=1, min_detection_confidence=0.5,
-                                min_tracking_confidence=0.5, static_image_mode=False) as pose:
-        while True:
-            ok, frame = cap.read()
-            if not ok:
-                break
-            res = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-            if res.pose_landmarks:
-                frames.append([{"x": p.x, "y": p.y, "z": p.z,
-                                "visibility": getattr(p, "visibility", 1.0)}
-                               for p in res.pose_landmarks.landmark])
-            else:
-                frames.append(None)
-    cap.release()
-    return frames, float(fps), float(width) / float(height or 1)
+        raise SystemExit(f"mediapipe/opencv are needed to read video ({exc}). "
+                         "pip install mediapipe opencv-python") from exc
 
 
 def count_reps(exercise: str, frames, fps: float, aspect: float, engine: str, sequence_length: int):
+    from ..preprocessing.mp_pose import app_rate_indices
+    keep = app_rate_indices(len(frames), fps)   # the frames the app's pose loop would process
     payload = {"exercise": exercise, "aspect": aspect, "engine": engine, "predictions": [],
                "sequenceLength": sequence_length,
-               "frames": [{"lm": lm, "ts": i * 1000.0 / fps} for i, lm in enumerate(frames)]}
+               "frames": [{"lm": frames[i], "ts": i * 1000.0 / fps} for i in keep]}
     proc = subprocess.run([shutil.which("node") or "node", str(DRIVER)],
                           input=json.dumps(payload), capture_output=True, text=True, timeout=1800)
     if proc.returncode != 0:

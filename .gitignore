@@ -6,3 +6,10 @@ __pycache__/
 *.pyc
 .pytest_cache/
 firestore-debug.log
+
+# real-video benchmark: local only (videos, landmark cache, model file, reports)
+ml/eval/benchmark/videos/
+ml/eval/benchmark/cache/
+ml/eval/benchmark/models/
+ml/eval/benchmark/reports/
+ml/eval/benchmark/annotations.jsonl

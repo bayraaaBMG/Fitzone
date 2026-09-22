@@ -40,12 +40,23 @@ const payload = JSON.parse(payloadRaw);
 const coach = COACH[payload.exercise];
 if(!coach || !coach.pose){ console.error(`no camera rule for ${payload.exercise}`); process.exit(2); }
 
-function countWith(useAi){
+/* visibility of the joints this rule needs (best side per pair), for the trace */
+const RULE = POSE.POSE_RULES[coach.pose] || {};
+const PAIRS = {sh:[11,12], el:[13,14], wr:[15,16], hip:[23,24], kn:[25,26], an:[27,28]};
+const NEEDED = (RULE.required || RULE.keys || []).map(k => PAIRS[k]).filter(Boolean);
+function neededVisibility(lm){
+  if(!lm || !NEEDED.length) return null;
+  const v = NEEDED.map(([a,b]) => Math.max((lm[a]||{}).visibility||0, (lm[b]||{}).visibility||0));
+  return +(v.reduce((x,y)=>x+y,0)/v.length).toFixed(2);
+}
+
+function countWith(useAi, withTrace){
   const counter = POSE.createPoseCounter(coach.pose, {exId: payload.exercise, config:{debug:true}});
   const repFrames = [];
   const events = {};
   const reasons = {};   // why frames did not count (STEP 14)
-  let vetoes = 0, index = 0;
+  const trace = [];     // state transitions, for evidence-based tuning
+  let vetoes = 0, index = 0, lastKey = '';
 
   let controller = null;
   if(useAi){
@@ -72,11 +83,22 @@ function countWith(useAi){
     if(why) reasons[why] = (reasons[why] || 0) + 1;
     if(out.aiVeto) vetoes++;
     if(out.event === 'rep') repFrames.push(i);
+    if(withTrace && trace.length < 600){
+      const d = out.debug || {};
+      const key = `${d.phase}|${d.reason}|${out.event||''}`;
+      if(key !== lastKey || out.event){
+        trace.push({f:i, t:+(frame.ts/1000).toFixed(2), phase:d.phase, reason:d.reason, event:out.event||null,
+          metric:d.metric, raw:d.raw, range:d.range, dir:d.dirSign, dirRun:d.dirRun,
+          depthOk:d.depthOk, calibrated:d.calibrated, vis:neededVisibility(frame.lm), warn:out.warnKey||null});
+        lastKey = key;
+      }
+    }
   };
 
   if(!controller){
     for(let i=0;i<payload.frames.length;i++) step(i);
-    return {reps: counter.state.reps, frames: repFrames, events, reasons, vetoes};
+    return {reps: counter.state.reps, frames: repFrames, events, reasons, vetoes,
+            formScore: counter.formScore, trace: withTrace ? trace : undefined};
   }
   // the controller's inference is async; drain the microtask queue between frames
   // so a prediction lands before the next frame, exactly as it would in a browser
@@ -85,12 +107,13 @@ function countWith(useAi){
       step(i);
       await new Promise(resolve=>setImmediate(resolve));
     }
-    return {reps: counter.state.reps, frames: repFrames, events, reasons, vetoes};
+    return {reps: counter.state.reps, frames: repFrames, events, reasons, vetoes, formScore: counter.formScore};
   });
 }
 
 (async()=>{
-  const rules = countWith(false);
-  const ai = payload.predictions && payload.predictions.length ? await countWith(true) : null;
-  console.log(JSON.stringify({rules, ai}));
+  const rules = countWith(false, !!payload.trace);
+  const ai = payload.predictions && payload.predictions.length ? await countWith(true, false) : null;
+  console.log(JSON.stringify({rules, ai, rule:{id: coach.pose, view: RULE.view || null,
+    required: RULE.required || RULE.keys || []}}));
 })().catch(e=>{ console.error(e && e.message); process.exit(2); });

@@ -62,37 +62,25 @@ def frame_labels(annotation: dict, n_frames: int, exercise: str):
 
 
 def extract(video_path: str | Path, annotation: dict, exercise: str, model_path: str | None = None):
-    """Returns the arrays for one clip. Requires mediapipe + opencv locally."""
-    import cv2  # noqa: PLC0415 — optional, extraction-only dependency
-    import mediapipe as mp  # noqa: PLC0415
+    """Returns the arrays for one clip. Requires mediapipe + opencv locally.
 
-    cap = cv2.VideoCapture(str(video_path))
-    if not cap.isOpened():
-        raise FileNotFoundError(f"cannot open {video_path}")
-    fps = cap.get(cv2.CAP_PROP_FPS) or float(annotation.get("fps", 30))
-    width = cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 640
-    height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 480
-    aspect = float(width) / float(height or 1)
+    Uses ml/preprocessing/mp_pose.py — the same PoseLandmarker model and API the
+    browser runs — so training features come from the landmarks users produce.
+    """
+    from .mp_pose import video_landmarks
+
+    frames, fps, aspect = video_landmarks(video_path)
+    fps = fps or float(annotation.get("fps", 30))
 
     extractor = FeatureExtractor()
     feats, valid, raw = [], [], []
-    with mp.solutions.pose.Pose(model_complexity=1, min_detection_confidence=0.5,
-                                min_tracking_confidence=0.5, static_image_mode=False) as pose:
-        index = 0
-        while True:
-            ok, frame = cap.read()
-            if not ok:
-                break
-            result = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-            landmarks = result.pose_landmarks.landmark if result.pose_landmarks else None
-            vec, is_valid = extractor.push(landmarks, aspect, index * 1000.0 / fps)
-            feats.append(vec); valid.append(is_valid)
-            # keep the landmarks themselves: ml/eval/rep_compare.py replays the
-            # shipping rule engine over them to compare rep counts
-            raw.append(np.array([[p.x, p.y, p.z, getattr(p, "visibility", 1.0)] for p in landmarks],
-                                dtype=np.float32) if landmarks else np.zeros((33, 4), np.float32))
-            index += 1
-    cap.release()
+    for index, landmarks in enumerate(frames):
+        vec, is_valid = extractor.push(landmarks, aspect, index * 1000.0 / fps)
+        feats.append(vec); valid.append(is_valid)
+        # keep the landmarks themselves: ml/eval/rep_compare.py replays the
+        # shipping rule engine over them to compare rep counts
+        raw.append(np.array([[p["x"], p["y"], p["z"], p["visibility"]] for p in landmarks], dtype=np.float32)
+                   if landmarks else np.zeros((33, 4), np.float32))
 
     features = np.stack(feats).astype(np.float32) if feats else np.zeros((0, FEATURE_SIZE), np.float32)
     phase, form, mistake, rep_valid = frame_labels(annotation, len(features), exercise)
