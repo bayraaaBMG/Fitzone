@@ -5,6 +5,7 @@ const app = document.getElementById('app');
 const navEl = document.getElementById('nav');
 
 function render(){
+  app.classList.remove('auth-wide'); // only the sign-in screen uses the wide two-column layout
   if(!authReady){ renderAuthLoading(); navEl.classList.add('hidden'); return; }
   if(!authUser){ renderAuthGate(); navEl.classList.add('hidden'); return; }
   if(cloudLoadFailed){ renderCloudError(); navEl.classList.add('hidden'); return; }

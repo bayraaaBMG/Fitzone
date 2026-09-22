@@ -11,6 +11,10 @@
   // hardcoded 'dark' default only if this device has never cached one) so
   // this call can't override what was already painted and cause a flash.
   try{ const cached = localStorage.getItem('mf_theme'); if(cached) S.theme = cached; }catch(e){}
+  // the public pages and the app share the visitor's language choice (mf_lang)
+  try{ const l = localStorage.getItem('mf_lang'); if(l==='en' || l==='mn') S.lang = l; }catch(e){}
+  // /register opens the sign-up form, /login (and /app when signed out) the log-in form
+  if(/^\/register\/?$/.test(location.pathname)) authMode = 'signup';
   applyTheme(S.theme);
   applyLangLabels();
   if('serviceWorker' in navigator){
@@ -49,11 +53,17 @@
     authDraft = {email:'', pass:'', pass2:''};
     if(user){
       authUser = user; authReady = true; authErr='';
+      // a hint for the public pages ("Open app" instead of "Start free") — not a security check
+      try{ localStorage.setItem('mf_signed_in', '1'); }catch(e){}
       await loadCloudState(user.uid);
+      // signed in from /login or /register: the address becomes the app's
+      if(/^\/(login|register)\/?$/.test(location.pathname)){ try{ history.replaceState(history.state, '', '/app' + location.search + location.hash); }catch(e){} }
       render();
       return;
     }
     authUser = null; authReady = true; cloudLoadFailed = false;
+    try{ localStorage.removeItem('mf_signed_in'); }catch(e){}
+    if(/^\/app\/?$/.test(location.pathname)){ try{ history.replaceState(history.state, '', (authMode==='signup' ? '/register' : '/login') + location.search + location.hash); }catch(e){} }
     resetLocalState();
     render();
   });

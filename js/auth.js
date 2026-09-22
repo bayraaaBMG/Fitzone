@@ -80,6 +80,7 @@ function applyStateData(d){
   S.waterLog = Object.fromEntries(Object.entries(asObj(d.waterLog)).map(([k,v])=>[k, asNum(v)]));
   S.theme = ['dark','light','system'].includes(d.theme) ? d.theme : 'dark';
   S.lang = ['mn','en'].includes(d.lang) ? d.lang : 'mn';
+  try{ localStorage.setItem('mf_lang', S.lang); }catch(e){}
   S.exStats = Object.fromEntries(Object.entries(asObj(d.exStats)).filter(([,v])=>v && typeof v==='object'));
   S.workoutResults = asArr(d.workoutResults).filter(r=>r && typeof r==='object');
   S.tab = 'home';
@@ -213,6 +214,11 @@ function authErrMsg(code){
     'auth/user-disabled': t('autherr_user_disabled'),
     'auth/internal-error': t('autherr_retry'),
     'auth/timeout': t('autherr_timeout'),
+    'auth/user-token-expired': t('autherr_session_expired'),
+    'auth/id-token-expired': t('autherr_session_expired'),
+    'auth/requires-recent-login': t('autherr_session_expired'),
+    'auth/missing-password': t('err_fill_email_pass'),
+    'auth/missing-email': t('err_fill_email_pass'),
   };
   return map[code] || t('autherr_generic');
 }

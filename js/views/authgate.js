@@ -3,6 +3,8 @@ let authMode='login'; // 'login' | 'signup'
 let authBusy=false;
 let authErr='';
 let authDraft={email:'', pass:'', pass2:''};
+let authErrField=null; // 'email' | 'pass' | 'pass2' — the field an error is about (aria-invalid)
+const AUTH_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 function renderAuthLoading(){
   app.innerHTML = `<div class="view center" style="padding-top:120px">
@@ -37,9 +39,25 @@ function renderAuthGate(){
     document.getElementById('au_retry').onclick=()=>location.reload();
     return;
   }
+  app.classList.add('auth-wide');
+  const errAttrs = f => authErr ? ` aria-describedby="au_err"${authErrField===f ? ' aria-invalid="true"' : ''}` : '';
+  const pw = (id, label, placeholder, autocomplete, value) => `
+      <div class="field"><label for="${id}">${label}</label>
+        <div class="pw-wrap"><input class="txin" id="${id}" type="password" placeholder="${placeholder}" autocomplete="${autocomplete}" value="${esc(value)}"${errAttrs(id==='au_pass'?'pass':'pass2')}>
+          <button type="button" class="pw-eye" data-for="${id}" aria-pressed="false" aria-label="${t('auth_show_pass')}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>`;
   app.innerHTML = `
-    <div class="top"><div class="logo"><img src="icons/logo-mark.svg" alt="MongolFit">Mongol<b>Fit</b></div></div>
-    <div class="view">
+    <header class="top auth-top"><a class="logo" href="/" aria-label="MongolFit"><img src="icons/logo-mark.svg" alt="">Mongol<b>Fit</b></a></header>
+    <div class="auth-page">
+    <aside class="auth-side" aria-label="${t('auth_side_label')}">
+      <a class="logo auth-brand" href="/"><img src="icons/logo-mark.svg" alt="">Mongol<b>Fit</b></a>
+      <p class="eyebrow">${t('onb_intro_eyebrow')}</p>
+      <h2 class="auth-side-title">${t('auth_side_title')}</h2>
+      <ul class="auth-points">
+        <li>${t('auth_side_p1')}</li><li>${t('auth_side_p2')}</li><li>${t('auth_side_p3')}</li>
+      </ul>
+      <img class="auth-shot" src="assets/screens/home.webp" width="600" height="1298" loading="lazy" decoding="async" alt="${t('auth_side_shot_alt')}">
+    </aside>
+    <main class="view auth-main">
       <div class="hero">
         <div class="eyebrow">${t('onb_intro_eyebrow')}</div>
         <h1>${authMode==='login' ? t('auth_login_title') : t('auth_signup_title')}</h1>
@@ -51,19 +69,35 @@ function renderAuthGate(){
       </button>
       ${isInAppBrowser() ? `<p class="xs" role="note" style="color:var(--warn);margin:8px 0 0">${t('auth_inapp_hint')}</p>` : ''}
       <p class="xs mut center" style="margin:14px 0">${t('auth_or_email')}</p>
-      <div class="field"><label for="au_email">${t('auth_email')}</label><input class="txin" id="au_email" type="email" placeholder="tanii@mail.com" autocomplete="email" value="${esc(authDraft.email)}"></div>
-      <div class="field"><label for="au_pass">${t('auth_pass')}</label><input class="txin" id="au_pass" type="password" placeholder="${t('auth_pass_placeholder')}" autocomplete="${authMode==='login'?'current-password':'new-password'}" value="${esc(authDraft.pass)}"></div>
-      ${authMode==='signup' ? `<div class="field"><label for="au_pass2">${t('auth_pass2')}</label><input class="txin" id="au_pass2" type="password" placeholder="${t('auth_pass2_placeholder')}" value="${esc(authDraft.pass2)}"></div>` : ''}
-      ${authErr ? `<p class="sm" role="alert" style="color:var(--coral);margin:0 0 14px">${esc(authErr)}</p>` : ''}
+      <div class="field"><label for="au_email">${t('auth_email')}</label><input class="txin" id="au_email" type="email" inputmode="email" placeholder="tanii@mail.com" autocomplete="email" autocapitalize="off" spellcheck="false" value="${esc(authDraft.email)}"${errAttrs('email')}></div>
+      ${pw('au_pass', t('auth_pass'), t('auth_pass_placeholder'), authMode==='login'?'current-password':'new-password', authDraft.pass)}
+      ${authMode==='signup' ? pw('au_pass2', t('auth_pass2'), t('auth_pass2_placeholder'), 'new-password', authDraft.pass2) : ''}
+      ${authErr ? `<p class="sm" id="au_err" role="alert" style="color:var(--coral);margin:0 0 14px">${esc(authErr)}</p>` : ''}
       ${(authErr && FZ_DEBUG && authDiagLog.length) ? `<details style="margin:-8px 0 14px">
         <summary class="xs mut" style="cursor:pointer">Debug info</summary>
         <pre class="xs mut" style="white-space:pre-wrap;word-break:break-all;margin:6px 0 0">${esc(authDiagLog.join('\n'))}</pre>
       </details>` : ''}
       <button class="btn p" id="au_submit" ${authBusy?'disabled':''}>${authBusy ? t('auth_wait') : (authMode==='login' ? t('auth_login_btn') : t('auth_signup_btn'))}</button>
       <button class="btn g" id="au_switch" style="margin-top:10px">${authMode==='login' ? t('auth_switch_to_signup') : t('auth_switch_to_login')}</button>
-      ${authMode==='login' ? `<button class="chip" id="au_forgot" style="margin-top:14px">${t('auth_forgot')}</button>` : ''}
+      ${authMode==='login' ? `<button class="chip" id="au_forgot" style="margin-top:14px; min-height:44px">${t('auth_forgot')}</button>` : ''}
       <p class="xs mut center" style="margin-top:20px">${t('auth_privacy')}</p>
+      <p class="xs center auth-links"><a href="/">${t('auth_back_home')}</a> · <a href="/privacy">${t('auth_link_privacy')}</a> · <a href="/terms">${t('auth_link_terms')}</a></p>
+    </main>
     </div>`;
+
+  // show / hide password — same input element, so password managers keep working
+  app.querySelectorAll('.pw-eye').forEach(btn=>btn.onclick=()=>{
+    const input = document.getElementById(btn.dataset.for);
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.setAttribute('aria-pressed', String(show));
+    btn.setAttribute('aria-label', show ? t('auth_hide_pass') : t('auth_show_pass'));
+    btn.classList.toggle('on', show);
+  });
+  if(authErr && authErrField){
+    const el = document.getElementById({email:'au_email', pass:'au_pass', pass2:'au_pass2'}[authErrField]);
+    if(el) try{ el.focus({preventScroll:false}); }catch(e){}
+  }
 
   const captureDraft=()=>{
     authDraft = {
@@ -75,14 +109,17 @@ function renderAuthGate(){
 
   document.getElementById('au_switch').onclick=()=>{
     captureDraft(); authDraft.pass=''; authDraft.pass2='';
-    authMode = authMode==='login' ? 'signup' : 'login'; authErr=''; renderAuthGate();
+    authMode = authMode==='login' ? 'signup' : 'login'; authErr=''; authErrField=null;
+    try{ history.replaceState(history.state, '', (authMode==='login' ? '/login' : '/register') + location.search); }catch(e){}
+    renderAuthGate();
   };
 
   const forgot=document.getElementById('au_forgot');
   if(forgot) forgot.onclick=async()=>{
     captureDraft();
     const email=authDraft.email.trim();
-    if(!email){ authErr=t('err_email_first'); renderAuthGate(); return; }
+    if(!email){ authErr=t('err_email_first'); authErrField='email'; renderAuthGate(); return; }
+    if(!AUTH_EMAIL_RE.test(email)){ authErr=t('autherr_email_format'); authErrField='email'; renderAuthGate(); return; }
     try{ await resetPassword(email); toast(t('toast_reset_sent')); }
     catch(e){ authErr=authErrMsg(e.code); renderAuthGate(); }
   };
@@ -92,15 +129,21 @@ function renderAuthGate(){
     captureDraft();
     const email=authDraft.email.trim();
     const pass=authDraft.pass;
-    if(!email || !pass){ authErr=t('err_fill_email_pass'); renderAuthGate(); return; }
-    if(authMode==='signup' && pass!==authDraft.pass2){ authErr=t('err_pass_mismatch'); renderAuthGate(); return; }
-    authBusy=true; authErr=''; renderAuthGate();
+    const fail = (msg, field) => { authErr=msg; authErrField=field; renderAuthGate(); };
+    if(!email) return fail(t('err_fill_email_pass'), 'email');
+    if(!AUTH_EMAIL_RE.test(email)) return fail(t('autherr_email_format'), 'email');
+    if(!pass) return fail(t('err_fill_email_pass'), 'pass');
+    if(authMode==='signup' && pass.length < 6) return fail(t('autherr_pass_short'), 'pass');
+    if(authMode==='signup' && pass!==authDraft.pass2) return fail(t('err_pass_mismatch'), 'pass2');
+    authBusy=true; authErr=''; authErrField=null; renderAuthGate();
     try{
       if(authMode==='login') await logIn(email, pass);
       else await signUp(email, pass);
       // амжилттай бол onAuthStateChanged сонсогч цаашдыг нь удирдана
     }catch(e){
-      authBusy=false; authErr=authErrMsg(e.code); renderAuthGate();
+      authBusy=false; authErr=authErrMsg(e.code);
+      authErrField = /email/.test(e.code||'') ? 'email' : /password|credential/.test(e.code||'') ? 'pass' : null;
+      renderAuthGate();
     }
   };
   document.getElementById('au_submit').onclick=submit;

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title data-i18n="pv_meta_title">Нууцлалын бодлого — MongolFit</title>
+<meta name="description" data-i18n-attr="content:pv_meta_desc" content="MongolFit ямар мэдээлэл цуглуулж, хэрхэн хадгалдаг, камерын зөвшөөрөл болон дүрсийг хэрхэн боловсруулдаг тухай.">
+<link rel="canonical" href="https://fitzone-five-jet.vercel.app/privacy">
+<meta name="theme-color" content="#0A0B0D">
+<meta property="og:title" content="Нууцлалын бодлого — MongolFit">
+<meta property="og:image" content="https://fitzone-five-jet.vercel.app/assets/og.jpg">
+<link rel="icon" type="image/svg+xml" href="icons/logo-mark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Inter:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="stylesheet" href="css/public.css">
+</head>
+<body class="doc-page">
+<a class="skip" href="#main" data-i18n="pub_skip">Үндсэн агуулга руу шилжих</a>
+<header class="site-head" id="top">
+  <div class="wrap head-row">
+    <a class="brand" href="/" aria-label="MongolFit — нүүр хуудас" data-i18n-attr="aria-label:pub_brand_home"><img src="icons/logo-mark.svg" alt="" width="28" height="28"><span>Mongol<b>Fit</b></span></a>
+    <div class="head-actions">
+      <button class="lang" type="button" id="langBtn" aria-label="Switch to English" data-i18n-attr="aria-label:pub_lang_switch">EN</button>
+      <a class="btn ghost when-out" href="/login" data-i18n="pub_login">Нэвтрэх</a>
+      <a class="btn primary when-in" href="/app" hidden data-i18n="pub_open_app">Апп нээх</a>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="doc wrap narrow">
+  <h1 data-i18n="pv_title">Нууцлалын бодлого</h1>
+  <p class="doc-date"><span data-i18n="doc_updated">Шинэчилсэн:</span> 2026-09-22</p>
+  <p data-i18n="pv_intro">Энэ хуудас MongolFit апп ямар мэдээлэл ашигладаг, хаана хадгалдаг, камерыг хэрхэн ашигладаг болохыг энгийнээр тайлбарлана. Энд бичсэн зүйл аппын одоогийн ажиллагаатай тохирно.</p>
+
+  <h2 data-i18n="pv_h_account">1. Бүртгэлийн мэдээлэл</h2>
+  <p data-i18n="pv_account">Бүртгүүлэхдээ та имэйл хаяг, нууц үг ашиглана, эсвэл Google-ээр нэвтэрнэ. Нэвтрэлтийг Google-ийн Firebase Authentication үйлчилгээ хариуцна; нууц үгийг MongolFit өөрөө хадгалдаггүй. Google-ээр нэвтрэхэд Google таны имэйл, нэрийг Firebase-д дамжуулна.</p>
+
+  <h2 data-i18n="pv_h_data">2. Таны оруулдаг өгөгдөл</h2>
+  <p data-i18n="pv_data_intro">Аппыг ашиглахад дараах мэдээлэл таны бүртгэлтэй холбогдож Google Firebase (Cloud Firestore) дээр хадгалагдана:</p>
+  <ul>
+    <li data-i18n="pv_data_profile">Профайл: таны оруулсан нэр, нас, хүйс, өндөр, жин, зорилго, түвшин, байршил (гэр/жийм), долоо хоногт хийх өдөр, хугацаа, тоног төхөөрөмж.</li>
+    <li data-i18n="pv_data_photo">Профайлын зураг (заавал биш): хэрэв оруулбал жижигрүүлсэн зураг бүртгэлд хадгалагдана.</li>
+    <li data-i18n="pv_data_workout">Дасгал: төлөвлөгөө, хийсэн өдрүүд, дасгалын үр дүн, рекорд, streak, 30 хоногийн сорилт.</li>
+    <li data-i18n="pv_data_progress">Ахиц: таны оруулсан жингийн бүртгэл.</li>
+    <li data-i18n="pv_data_food">Хооллолт: хоолны тэмдэглэл, илчлэг, уусан ус, гэрт байгаа хүнсний жагсаалт. Хоол нэмэхдээ хавсаргасан зургийг зөвхөн дэлгэц дээр харуулдаг — хадгалахгүй.</li>
+    <li data-i18n="pv_data_prefs">Тохиргоо: хэл, өнгөний горим.</li>
+  </ul>
+  <p data-i18n="pv_data_access">Энэ өгөгдлийг зөвхөн та өөрийн бүртгэлээр уншиж, өөрчилж чадна — өгөгдлийн сангийн дүрэм бусад хэрэглэгчийн хандалтыг хаадаг. MongolFit таны өгөгдлийг зардаггүй, зар сурталчилгаанд ашигладаггүй.</p>
+
+  <h2 data-i18n="pv_h_camera">3. Камер</h2>
+  <ul>
+    <li data-i18n="pv_cam_permission">Камерын зөвшөөрлийг зөвхөн та дасгалын дэлгэц дээр «Camera ашиглах» товчийг дарахад асууна. Хуудас ачаалахад автоматаар асуухгүй.</li>
+    <li data-i18n="pv_cam_device">Камерын дүрсийг таны төхөөрөмж дээр MediaPipe Pose загвараар боловсруулж, биеийн цэгүүдийг тодорхойлно. Видео бичих, хадгалах, серверт илгээх зүйл хийхгүй.</li>
+    <li data-i18n="pv_cam_download">Камерыг анх асаахад дүрс таних загвар (ойролцоогоор 6 MB) Google болон jsDelivr-ээс татагдана. Энэ үед таны зураг, видео илгээгдэхгүй.</li>
+    <li data-i18n="pv_cam_off">Камер дасгалаас гарах, апп арын горимд шилжих эсвэл «унтраах»-ыг дарахад зогсоно.</li>
+  </ul>
+
+  <h2 data-i18n="pv_h_device">4. Таны төхөөрөмж дээр хадгалагдах зүйлс</h2>
+  <ul>
+    <li data-i18n="pv_dev_cache">Интернэтгүй үед ашиглах боломжтой байхаар таны өгөгдлийн хуулбарыг browser-ийн localStorage-д хадгална. Гарах (logout) үед тухайн бүртгэлийн хуулбарыг устгана.</li>
+    <li data-i18n="pv_dev_prefs">Хэл, өнгөний горим, нэвтэрсэн эсэхийн тэмдэг зэрэг жижиг тохиргоо localStorage-д хадгалагдана.</li>
+    <li data-i18n="pv_dev_session">Нэвтэрсэн төлөвийг Firebase Authentication browser-ийн IndexedDB-д хадгална.</li>
+    <li data-i18n="pv_dev_sw">Service worker аппын файлуудыг (HTML, CSS, JS, зураг) нөөцөлж, хурдан ачаалах, апп хэлбэрээр ажиллахад ашиглана. Энэ нөөцөд таны хувийн мэдээлэл ордоггүй.</li>
+  </ul>
+
+  <h2 data-i18n="pv_h_cookies">5. Cookie</h2>
+  <p data-i18n="pv_cookies">MongolFit өөрөө cookie тавьдаггүй. Google-ээр нэвтрэх цонх болон дасгалын YouTube видеонууд нь Google/YouTube-ийн өөрийн cookie-г тэдний бодлогын дагуу ашиглаж болно.</p>
+
+  <h2 data-i18n="pv_h_third">6. Гуравдагч талын үйлчилгээ</h2>
+  <ul>
+    <li data-i18n="pv_third_firebase">Google Firebase — нэвтрэлт, өгөгдлийн сан.</li>
+    <li data-i18n="pv_third_vercel">Vercel — вэб сайтыг байршуулах (hosting).</li>
+    <li data-i18n="pv_third_fonts">Google Fonts — үсгийн фонт.</li>
+    <li data-i18n="pv_third_youtube">YouTube — дасгалын дэлгэрэнгүй хуудсан дахь видео, жорын видео хайлт.</li>
+    <li data-i18n="pv_third_cdn">jsDelivr болон Google Storage — камерыг асаахад дүрс таних загвар татах.</li>
+  </ul>
+
+  <h2 data-i18n="pv_h_delete">7. Өгөгдлөө устгах</h2>
+  <p data-i18n="pv_delete">Тохиргоо → «Бүх өгөгдлийг арилгаж дахин эхлэх» нь таны профайл, төлөвлөгөө, бүртгэлүүдийг арилгана. Хоолны тэмдэглэл зэргийг тус бүрээр нь устгаж болно. Имэйлээр нэвтрэх бүртгэлийг (Firebase Authentication) өөрөө бүрэн устгах товч одоогоор аппад байхгүй.</p>
+
+  <h2 data-i18n="pv_h_changes">8. Өөрчлөлт</h2>
+  <p data-i18n="pv_changes">Аппын ажиллагаа өөрчлөгдвөл энэ хуудсыг шинэчилж, дээрх огноог өөрчилнө.</p>
+
+  <p class="doc-links"><a href="/terms" data-i18n="pub_terms">Үйлчилгээний нөхцөл</a> · <a href="/" data-i18n="doc_back_home">Нүүр хуудас руу буцах</a></p>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap foot-bottom"><p>© <span id="year">2026</span> MongolFit · <a href="/" data-i18n="pub_foot_home">Нүүр</a> · <a href="/privacy" data-i18n="pub_privacy">Нууцлалын бодлого</a> · <a href="/terms" data-i18n="pub_terms">Үйлчилгээний нөхцөл</a></p></div>
+</footer>
+<script src="js/public.js" defer></script>
+</body>
+</html>

@@ -54,7 +54,7 @@ const I18N = {
     home_gym_workout:'Жийм дасгал', home_gym_workout_p:'Тоног төхөөрөмжтэй, хүчтэй ачаалал',
     home_next_workout:'Дараагийн дасгал', home_all:'Бүгд ›',
     home_doctor:'Эмчийн зөвлөгөө 🩺',
-    home_install_title:'FitZone-г төхөөрөмждөө суулгах', home_install_btn:'Суулгах', home_installed:'Суулгасан ✓',
+    home_install_title:'MongolFit-ийг төхөөрөмждөө суулгах', home_install_btn:'Суулгах', home_installed:'Суулгасан ✓',
 
     plan_title:'Миний хөтөлбөр', plan_regen:'↻ Шинэчлэх', plan_week:'7 ХОНОГИЙН ХУВААРЬ',
 
@@ -74,7 +74,7 @@ const I18N = {
 
     ref_source:'Эх сурвалж', ref_title:'Эх сурвалж', sources_link:'Мэдээллийн эх сурвалж',
     sources_title:'Мэдээллийн эх сурвалж', ref_used_for:'Ашигласан газар',
-    sources_intro:'FitZone доторх дасгал, идэвх, шим тэжээл, аюулгүй байдлын зөвлөмжүүдийг доорх олон улсын эрх бүхий байгууллагуудын мэдээлэлтэй тулгаж бэлдсэн. Эдгээр нь эмнэлгийн зөвлөгөө биш — жагсаалт доторх линкээр эх сурвалж руугаа орж болно.',
+    sources_intro:'MongolFit доторх дасгал, идэвх, шим тэжээл, аюулгүй байдлын зөвлөмжүүдийг доорх олон улсын эрх бүхий байгууллагуудын мэдээлэлтэй тулгаж бэлдсэн. Эдгээр нь эмнэлгийн зөвлөгөө биш — жагсаалт доторх линкээр эх сурвалж руугаа орж болно.',
     sources_footer:'DAREBEE, Strongr Fastr зэрэг апп-уудаас текст/зураг/хөтөлбөр шууд хуулаагүй — зөвхөн жишиг, санаа болгон ашигласан. Асуулт байвал дээрх эх сурвалжуудыг шалгана уу.',
     unit_exercises:'дасгал', unit_days:'өдөр', unit_days_word:'хоног', unit_entries:'бичлэг', unit_kg:'кг',
     abbr_p:'Б', abbr_c:'Н', abbr_f:'Ө',
@@ -100,10 +100,16 @@ const I18N = {
     autherr_cancelled:'Дахин оролдоно уу.',
     autherr_account_exists:'Энэ имэйл өөр аргаар (нууц үгээр) бүртгэлтэй байна. Имэйл/нууц үгээрээ нэвтэрнэ үү.',
     autherr_unauthorized_domain:'Энэ сайтаас Google-ээр нэвтрэх зөвшөөрөгдөөгүй байна.',
-    autherr_popup_unavailable:'Google-ээр нэвтрэх цонх энэ browser дээр нээгдсэнгүй. Popup-ыг зөвшөөрнө үү, эсвэл FitZone-г Safari/Chrome дээр шууд нээж үзнэ үү.',
+    autherr_popup_unavailable:'Google-ээр нэвтрэх цонх энэ browser дээр нээгдсэнгүй. Popup-ыг зөвшөөрнө үү, эсвэл MongolFit-ийг Safari/Chrome дээр шууд нээж үзнэ үү.',
     autherr_generic:'Алдаа гарлаа. Дахин оролдоно уу.',
     toast_offline_mode:'Офлайн горим — сүүлд хадгалсан өгөгдөл харагдаж байна',
     toast_load_error:'Дата ачаалахад алдаа гарлаа. Холболтоо шалгаарай.',
+    auth_show_pass:'Нууц үгийг харуулах', auth_hide_pass:'Нууц үгийг нуух',
+    autherr_email_format:'Имэйл хаяг буруу байна (жишээ нь: ner@mail.com).', autherr_pass_short:'Нууц үг дор хаяж 6 тэмдэгттэй байна.',
+    autherr_session_expired:'Нэвтрэлтийн хугацаа дууссан. Дахин нэвтэрнэ үү.',
+    auth_side_label:'MongolFit-ийн тухай', auth_side_title:'Дасгал, ахиц, хооллолтоо нэг дор',
+    auth_side_p1:'Гэрийн болон жиймийн 29 дасгал, 7 хоногийн төлөвлөгөө', auth_side_p2:'Рекорд, streak, жингийн өөрчлөлт', auth_side_p3:'Хоол, илчлэг, усны тэмдэглэл — үнэ төлбөргүй',
+    auth_side_shot_alt:'MongolFit аппын нүүр дэлгэц', auth_back_home:'Нүүр хуудас', auth_link_privacy:'Нууцлал', auth_link_terms:'Нөхцөл',
     cloud_load_failed:'Таны өгөгдлийг ачаалж чадсангүй. Интернэт холболтоо шалгаад дахин оролдоно уу.', cloud_retry:'Дахин оролдох',
     ws_ai_badge:'🤖 AI хэлбэрийн зөвлөгч', ws_ai_incomplete:'Давталтаа бүрэн гүйцэтгээрэй',
     pose_body_in_frame:'Бүх биеэ камерт багтаана уу', pose_side_view:'Камераа хажуу талаас нь байрлуулна уу',
@@ -182,7 +188,7 @@ const I18N = {
     summary_streak_active:'{0} өдөр дараалан идэвхтэй', summary_streak_none:'одоогоор streak алга',
 
     /* PWA install */
-    already_installed:'Апп болгож суулгасан байна.', already_installed_long:'FitZone таны төхөөрөмж дээр апп болгож суулгасан байна.',
+    already_installed:'Апп болгож суулгасан байна.', already_installed_long:'MongolFit таны төхөөрөмж дээр апп болгож суулгасан байна.',
     install_app:'Апп суулгах', install_card_desc:'Апп мэт хурдан нээгдэж, offline ч ажиллана.',
     ios_install_hint:'Safari дээрх "Хуваалцах" 📤 товч дараад "Add to Home Screen" сонговол апп болгож суулгана.',
     other_browser_install_hint:'Энэ browser дээр browser-ийн цэснээс "Install app" / "Add to Home Screen" сонголтыг ашиглаж суулгаж болно.',
@@ -308,7 +314,7 @@ const I18N = {
     home_gym_workout:'Gym workout', home_gym_workout_p:'Equipment-based, higher load',
     home_next_workout:'Next workout', home_all:'All ›',
     home_doctor:'Ask about aches & pains 🩺',
-    home_install_title:'Install FitZone on your device', home_install_btn:'Install', home_installed:'Installed ✓',
+    home_install_title:'Install MongolFit on your device', home_install_btn:'Install', home_installed:'Installed ✓',
 
     plan_title:'My program', plan_regen:'↻ Regenerate', plan_week:'7-DAY SCHEDULE',
 
@@ -328,7 +334,7 @@ const I18N = {
 
     ref_source:'Source', ref_title:'Source', sources_link:'Information Sources',
     sources_title:'Information Sources', ref_used_for:'Used for',
-    sources_intro:"FitZone's exercise, activity, nutrition, and safety guidance is checked against the international authoritative sources listed below. This is not medical advice — tap a link to open the original source.",
+    sources_intro:"MongolFit's exercise, activity, nutrition, and safety guidance is checked against the international authoritative sources listed below. This is not medical advice — tap a link to open the original source.",
     sources_footer:"No text, images, or workout plans were copied from apps like DAREBEE or Strongr Fastr — they were used only as a benchmark/inspiration. If you have questions, check the sources above.",
     unit_exercises:'exercises', unit_days:'days', unit_days_word:'days', unit_entries:'entries',
     abbr_p:'P', abbr_c:'C', abbr_f:'F',
@@ -354,10 +360,16 @@ const I18N = {
     autherr_cancelled:'Please try again.',
     autherr_account_exists:'This email is already registered with a password. Log in with email/password instead.',
     autherr_unauthorized_domain:'Google sign-in isn’t authorized from this site.',
-    autherr_popup_unavailable:'Google login popup could not open in this browser. Please allow popups, or open FitZone in Safari/Chrome.',
+    autherr_popup_unavailable:'Google login popup could not open in this browser. Please allow popups, or open MongolFit in Safari/Chrome.',
     autherr_generic:'Something went wrong. Please try again.',
     toast_offline_mode:'Offline mode — showing your last synced data',
     toast_load_error:'Couldn’t load your data. Check your connection.',
+    auth_show_pass:'Show password', auth_hide_pass:'Hide password',
+    autherr_email_format:'That email address doesn’t look right (e.g. name@mail.com).', autherr_pass_short:'Password must be at least 6 characters.',
+    autherr_session_expired:'Your session has expired. Please log in again.',
+    auth_side_label:'About MongolFit', auth_side_title:'Workouts, progress and nutrition in one place',
+    auth_side_p1:'29 home and gym exercises, a weekly plan', auth_side_p2:'Records, streak, weight trend', auth_side_p3:'Food, calorie and water log — free',
+    auth_side_shot_alt:'MongolFit home screen', auth_back_home:'Home page', auth_link_privacy:'Privacy', auth_link_terms:'Terms',
     cloud_load_failed:'Couldn’t load your data. Check your internet connection and try again.', cloud_retry:'Try again',
     ws_ai_badge:'🤖 AI Form Coach', ws_ai_incomplete:'Complete the full repetition',
     pose_body_in_frame:'Fit your whole body into the camera', pose_side_view:'Place the camera at your side',
@@ -436,7 +448,7 @@ const I18N = {
     summary_streak_active:'{0}-day streak active', summary_streak_none:'no active streak yet',
 
     /* PWA install */
-    already_installed:'Installed as an app.', already_installed_long:'FitZone is installed as an app on your device.',
+    already_installed:'Installed as an app.', already_installed_long:'MongolFit is installed as an app on your device.',
     install_app:'Install app', install_card_desc:'Opens instantly like an app, and works offline.',
     ios_install_hint:'Tap the Safari "Share" 📤 button, then "Add to Home Screen" to install.',
     other_browser_install_hint:'Use your browser’s menu — look for "Install app" / "Add to Home Screen".',

@@ -71,6 +71,7 @@ function paintSettings(sheet, sdraft){
 
   sheet.querySelector('#langRow').querySelectorAll('.chip').forEach(c=> c.onclick=()=>{
     S.lang = c.dataset.v;
+    try{ localStorage.setItem('mf_lang', S.lang); }catch(e){}
     applyLangLabels();
     save();
     paintSettings(sheet, sdraft);
