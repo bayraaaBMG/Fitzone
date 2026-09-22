@@ -51,6 +51,11 @@ LIGHTING = ("normal", "low", "bright")
 SPEEDS = ("normal", "fast", "slow", "mixed")
 DEVICES = ("iphone", "android", "webcam", "other", "unknown")
 MATCH_TOLERANCE_S = 0.75
+FIRST_TEST_SHOTS = (   # (clip suffix, condition) — ml/eval/benchmark/PROTOCOL.md
+    ("normal", "normal"), ("fast", "fast"), ("slow", "slow"),
+    ("shallow", "shallow"), ("edge", "frame_edge"), ("angle", "off_angle"),
+)
+FAST_CLIP_REP_S = 1.0   # clips with annotated reps shorter than this land in the fast-rep table
 FAST_REP_S = 0.6        # reported, not enforced: see the fast-reps note in benchmark/README.md
 USABLE_SKELETON = 0.5   # share of frames with a detected person for a clip to count as evidence
 
@@ -73,6 +78,25 @@ def clip_conditions(clip: dict) -> list[str]:
     if isinstance(raw, str):
         raw = [raw]
     return [str(c).lower() for c in raw]
+
+
+def rep_ends(clip: dict):
+    """Seconds at which each annotated rep ended, or None when not annotated."""
+    if isinstance(clip.get("reps"), list):
+        return [float(r["end"]) for r in clip["reps"]]
+    stamps = clip.get("rep_timestamps")
+    return [float(t) for t in stamps] if isinstance(stamps, list) else None
+
+
+def rep_durations(clip: dict):
+    """(durations in seconds, source). Real durations need start+end per rep; with only
+    end times the gap between reps is used, which includes any pause at the top."""
+    if isinstance(clip.get("reps"), list):
+        return [round(float(r["end"]) - float(r["start"]), 3) for r in clip["reps"]], "start-end"
+    ends = rep_ends(clip)
+    if ends and len(ends) > 1:
+        return [round(g, 3) for g in np.diff(ends).tolist()], "gap-between-ends"
+    return [], None
 
 
 def video_path(clip: dict, videos_dir: Path) -> Path:
@@ -116,6 +140,32 @@ def validate(clips: list[dict], videos_dir: Path, need_video: bool = True) -> li
                 errors.append(f"{where}: rep_timestamps must be in order")
             elif isinstance(count, int) and len(stamps) != count:
                 errors.append(f"{where}: {len(stamps)} rep_timestamps but human_rep_count is {count}")
+        reps = clip.get("reps")
+        if reps is not None:
+            if stamps is not None:
+                errors.append(f"{where}: give either 'reps' or 'rep_timestamps', not both")
+            elif not isinstance(reps, list):
+                errors.append(f"{where}: reps must be a list of {{start, bottom, end}} in seconds")
+            else:
+                prev_end = -1.0
+                for k, r in enumerate(reps):
+                    ok = isinstance(r, dict) and all(isinstance(r.get(f), (int, float)) and r.get(f) >= 0
+                                                     for f in ("start", "end"))
+                    if ok and r.get("bottom") is not None and not isinstance(r.get("bottom"), (int, float)):
+                        ok = False
+                    if not ok:
+                        errors.append(f"{where}: rep {k + 1} needs numeric start and end (bottom optional)")
+                        break
+                    bottom = r.get("bottom", r["start"])
+                    if not (r["start"] <= bottom <= r["end"]):
+                        errors.append(f"{where}: rep {k + 1} must satisfy start <= bottom <= end")
+                        break
+                    if r["start"] < prev_end:
+                        errors.append(f"{where}: rep {k + 1} starts before the previous rep ended")
+                        break
+                    prev_end = r["end"]
+                if isinstance(count, int) and len(reps) != count:
+                    errors.append(f"{where}: {len(reps)} annotated reps but human_rep_count is {count}")
         if need_video and clip.get("clip_id") and not video_path(clip, videos_dir).exists():
             errors.append(f"{where}: video not found at {video_path(clip, videos_dir)}")
     return errors
@@ -214,14 +264,17 @@ def clip_row(clip: dict, before: dict, after: dict, fps: float, detected_ratio: 
         row[f"{name}_abs_error"] = abs(counted - human)
         row[f"{name}_missed"] = max(0, human - counted)          # count-based
         row[f"{name}_false_positive"] = max(0, counted - human)  # count-based
-    stamps = clip.get("rep_timestamps")
-    if stamps is not None:
+    ends = rep_ends(clip)
+    if ends is not None:
         for name, res in (("before", before), ("after", after)):
-            counted_s = res["rules"]["rep_seconds"]
-            row[f"{name}_matched"] = prf(*match(counted_s, stamps))
-        gaps = np.diff(stamps).tolist() if len(stamps) > 1 else []
-        row["human_rep_intervals_s"] = [round(g, 2) for g in gaps]
-        row["human_fast_reps"] = sum(1 for g in gaps if g < FAST_REP_S)
+            row[f"{name}_matched"] = prf(*match(res["rules"]["rep_seconds"], ends))
+    durations, source = rep_durations(clip)
+    if durations:
+        row["human_rep_durations_s"] = durations
+        row["rep_duration_source"] = source
+        row["median_rep_s"] = round(float(np.median(durations)), 2)
+        row["fastest_rep_s"] = round(float(min(durations)), 2)
+        row["human_fast_reps"] = sum(1 for d in durations if d < FAST_REP_S)
     row["after_reasons"] = after["rules"].get("reasons", {})
     row["after_events"] = after["rules"].get("events", {})
     row["after_form_score"] = after["rules"].get("formScore")
@@ -278,6 +331,21 @@ def regression(rows: list[dict]) -> dict:
         "worst_after": [r["clip_id"] for r in sorted(rows, key=lambda r: (-r["after_abs_error"], -(r["after_abs_error"] - r["before_abs_error"])))
                         if r["after_abs_error"] > 0][:10],
     }
+
+
+def fast_clips(rows: list[dict]) -> list[dict]:
+    """Every clip recorded as fast, or with an annotated rep under FAST_CLIP_REP_S."""
+    out = []
+    for r in rows:
+        tagged = "fast" in r["conditions"] or r["speed"] == "fast"
+        quick = r.get("fastest_rep_s") is not None and r["fastest_rep_s"] < FAST_CLIP_REP_S
+        if tagged or quick:
+            out.append({"clip_id": r["clip_id"], "exercise": r["exercise"],
+                        "median_rep_s": r.get("median_rep_s"), "fastest_rep_s": r.get("fastest_rep_s"),
+                        "duration_source": r.get("rep_duration_source"),
+                        "human": r["human"], "previous": r["before"], "current": r["after"],
+                        "current_minus_previous": r["after"] - r["before"]})
+    return out
 
 
 def camera_guidance(rows: list[dict]) -> list[dict]:
@@ -337,8 +405,15 @@ def markdown(report: dict) -> str:
     for k in ("better", "worse", "equal", "after_overcounts", "after_undercounts", "worst_after"):
         L.append(f"- **{k}** ({len(reg[k])}): {', '.join(reg[k]) or '—'}")
     fast = report["fast_reps"]
-    L.append("\n## Reps faster than 0.6 s\n")
+    L.append("\n## Fast reps\n")
     L.append(fast["note"])
+    if report.get("fast_clips"):
+        L.append("\n| clip | exercise | median rep (s) | fastest rep (s) | source | human | previous | current |")
+        L.append("|---|---|---|---|---|---|---|---|")
+        for f in report["fast_clips"]:
+            L.append(f"| {f['clip_id']} | {f['exercise']} | {f['median_rep_s'] if f['median_rep_s'] is not None else 'not annotated'} | "
+                     f"{f['fastest_rep_s'] if f['fastest_rep_s'] is not None else '—'} | {f['duration_source'] or '—'} | "
+                     f"{f['human']} | {f['previous']} | {f['current']} |")
     cg = [c for c in report["camera_guidance"] if c["mismatch"]]
     L.append("\n## Camera guidance\n")
     L.append(f"{len(cg)} clip(s) filmed away from the recommended view; "
@@ -387,11 +462,11 @@ def run(args) -> int:
             failures.append({"clip_id": row["clip_id"], "human": row["human"], "after": row["after"],
                              "reasons": row["after_reasons"], "trace": after["rules"].get("trace") or []})
 
-    intervals = [g for r in rows for g in r.get("human_rep_intervals_s", [])]
-    fast_note = ("No rep timestamps annotated, so real rep speed is unknown. Annotate `rep_timestamps` "
-                 "before deciding anything about sub-0.6 s reps." if not intervals else
-                 f"{sum(1 for g in intervals if g < FAST_REP_S)} of {len(intervals)} annotated rep intervals "
-                 f"were under {FAST_REP_S} s (min {min(intervals):.2f} s, median {float(np.median(intervals)):.2f} s).")
+    intervals = [d for r in rows for d in r.get("human_rep_durations_s", [])]
+    fast_note = ("No rep timing annotated, so real rep speed is unknown. Annotate `reps` (start/bottom/end) "
+                 "before deciding anything about fast reps." if not intervals else
+                 f"{sum(1 for g in intervals if g < FAST_REP_S)} of {len(intervals)} annotated reps "
+                 f"were under {FAST_REP_S} s (fastest {min(intervals):.2f} s, median {float(np.median(intervals)):.2f} s).")
     report = {
         "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
         "engines": {"before": "ml/eval/baseline/pose-rules-v1.js", "after": "js/pose-rules.js"},
@@ -402,6 +477,7 @@ def run(args) -> int:
         "per_view": group(rows, lambda r: r["camera_view"]),
         "regression": regression(rows),
         "camera_guidance": camera_guidance(rows),
+        "fast_clips": fast_clips(rows),
         "fast_reps": {"threshold_s": FAST_REP_S, "intervals": len(intervals),
                       "below": sum(1 for g in intervals if g < FAST_REP_S), "note": fast_note},
         "clips": rows,
@@ -432,11 +508,28 @@ def main(argv=None) -> int:
             p.add_argument("--out-dir", default=str(BENCH / "reports"))
             p.add_argument("--no-cache", action="store_true")
     sub.add_parser("template")
+    sc = sub.add_parser("scaffold", help="annotation lines for one subject's first-test shot list")
+    sc.add_argument("--subject", required=True, help="opaque id such as s01")
+    sc.add_argument("--device", default=None, choices=DEVICES, help="phone/camera class used for the recording")
+    sc.add_argument("--take", type=int, default=1)
     args = ap.parse_args(argv)
+
+    if args.cmd == "scaffold":
+        # Only what the shot list decides in advance is filled in. Everything that has to be
+        # observed from the video stays null, so `validate` fails until a person fills it.
+        for exercise in PILOTS:
+            for suffix, condition in FIRST_TEST_SHOTS:
+                print(json.dumps({
+                    "clip_id": f"{args.subject}_{exercise}_{suffix}_{args.take:02d}", "subject_id": args.subject,
+                    "exercise": exercise, "human_rep_count": None, "reps": None,
+                    "camera_view": None, "lighting": None, "speed": None,
+                    "conditions": [condition], "device_class": args.device,
+                    "notes": "conditions come from the shot list: correct them if the recording differed"}))
+        return 0
 
     if args.cmd == "template":
         print(json.dumps({"clip_id": None, "subject_id": None, "exercise": None, "human_rep_count": None,
-                          "rep_timestamps": None, "camera_view": None, "lighting": None, "speed": None,
+                          "reps": None, "camera_view": None, "lighting": None, "speed": None,
                           "conditions": [], "device_class": None, "form_label": None, "notes": ""}))
         return 0
     if args.cmd == "validate":

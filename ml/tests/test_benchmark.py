@@ -192,3 +192,55 @@ def test_run_without_annotations_says_not_measured(tmp_path, capsys):
         out_dir = str(tmp_path); no_cache = False
     assert bm.run(Args) == 2
     assert "Not measured" in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------- per-rep start/bottom/end
+def test_per_rep_start_bottom_end_is_validated(tmp_path):
+    good = ann(human_rep_count=2, reps=[{"start": 0.5, "bottom": 1.0, "end": 1.6},
+                                         {"start": 1.8, "bottom": 2.2, "end": 2.9}])
+    assert bm.validate([good], tmp_path, need_video=False) == []
+    for reps, fragment in (
+        ([{"start": 1.0, "bottom": 0.5, "end": 1.6}, {"start": 1.8, "end": 2.9}], "start <= bottom <= end"),
+        ([{"start": 0.5, "end": 1.6}, {"start": 1.2, "end": 2.9}], "starts before the previous rep ended"),
+        ([{"start": 0.5}], "numeric start and end"),
+        ([{"start": 0.5, "end": 1.6}], "annotated reps but human_rep_count"),
+    ):
+        errors = bm.validate([ann(human_rep_count=2, reps=reps)], tmp_path, need_video=False)
+        assert any(fragment in e for e in errors), (fragment, errors)
+    both = ann(human_rep_count=1, reps=[{"start": 0, "end": 1}], rep_timestamps=[1.0])
+    assert any("not both" in e for e in bm.validate([both], tmp_path, need_video=False))
+
+
+def test_rep_durations_prefer_real_start_end():
+    d, src = bm.rep_durations(ann(reps=[{"start": 0.0, "end": 0.7}, {"start": 1.0, "end": 1.55}]))
+    assert d == [0.7, 0.55] and src == "start-end"
+    d, src = bm.rep_durations(ann(rep_timestamps=[1.0, 1.9, 2.6]))
+    assert d == [0.9, 0.7] and src == "gap-between-ends"
+    assert bm.rep_durations(ann()) == ([], None)
+
+
+def test_fast_clip_table_reports_duration_and_all_three_counts():
+    clip = ann(clip_id="s01_squat_fast_01", human_rep_count=3, speed="fast", conditions=["fast"],
+               reps=[{"start": 0.2, "end": 0.95}, {"start": 1.0, "end": 1.8}, {"start": 1.9, "end": 2.7}])
+    r = bm.clip_row(clip, fake_result(3, [0.95, 1.8, 2.7]), fake_result(1, [1.8]), fps=30.0,
+                    detected_ratio=1.0, n_frames=90)
+    table = bm.fast_clips([r, row("slow_one", 5, 5, 5, speed="slow", conditions=["slow"])])
+    assert len(table) == 1
+    f = table[0]
+    assert f["clip_id"] == "s01_squat_fast_01" and (f["human"], f["previous"], f["current"]) == (3, 3, 1)
+    assert f["fastest_rep_s"] == 0.75 and f["duration_source"] == "start-end"
+    assert f["current_minus_previous"] == -2
+
+
+def test_scaffold_leaves_every_observed_value_empty(capsys, tmp_path):
+    assert bm.main(["scaffold", "--subject", "s07", "--device", "iphone"]) == 0
+    lines = [json.loads(line) for line in capsys.readouterr().out.strip().splitlines()]
+    assert len(lines) == 18                                   # 3 exercises x 6 shots
+    assert {l["exercise"] for l in lines} == set(bm.PILOTS)
+    assert {c for l in lines for c in l["conditions"]} == {"normal", "fast", "slow", "shallow", "frame_edge", "off_angle"}
+    for l in lines:
+        assert l["human_rep_count"] is None and l["camera_view"] is None and l["lighting"] is None and l["speed"] is None
+        assert l["device_class"] == "iphone" and l["subject_id"] == "s07"
+    # nothing observed yet → validation must refuse the scaffold as-is
+    errors = bm.validate(lines, tmp_path, need_video=False)
+    assert any("human_rep_count" in e for e in errors) and any("camera_view" in e for e in errors)

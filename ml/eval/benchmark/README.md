@@ -1,5 +1,8 @@
 # Real-video rep benchmark
 
+**Starting out? Follow [PROTOCOL.md](PROTOCOL.md)** — the one-page shot list
+and annotation steps for the first 3–5-person test.
+
 Compares, on your own recordings:
 
 | column | what it is |
@@ -10,7 +13,7 @@ Compares, on your own recordings:
 
 Both engines are the real browser code, replayed over the same landmarks,
 extracted with the **same MediaPipe model file the app downloads** and sampled
-at the **app's rate (one frame per 80 ms, ~12.5 fps)** — so the numbers
+at the **app's rate (~12 processed frames per second — the same 80 ms loop as `js/pose.js`)** — so the numbers
 describe what users actually get.
 
 Nothing here leaves the machine. Videos, the landmark cache, the model file and
@@ -47,11 +50,13 @@ device claim can be made.
 ## 2. Annotate
 
 One JSON object per line in `ml/eval/benchmark/annotations.jsonl`.
-`python -m ml.eval.benchmark template` prints an empty line to copy.
+`python -m ml.eval.benchmark scaffold --subject s01 --device android` prints the
+18 planned lines of the first-test shot list with every observed value empty;
+`python -m ml.eval.benchmark template` prints a single empty line.
 
 ```json
 {"clip_id": "s01_squat_normal_01", "subject_id": "s01", "exercise": "squat",
- "human_rep_count": 20, "rep_timestamps": null,
+ "human_rep_count": 20, "reps": null,
  "camera_view": "side", "lighting": "normal", "speed": "normal",
  "conditions": ["normal"], "device_class": "android", "form_label": null, "notes": ""}
 ```
@@ -64,7 +69,8 @@ The values above are an **example of the format**, not data.
 | `subject_id` | yes | opaque id such as `s01` — no names, nothing identifying |
 | `exercise` | yes | `squat` · `pushup` · `lunge` |
 | `human_rep_count` | yes | reps a careful person **credits as complete**. A deliberately shallow clip is usually `0` |
-| `rep_timestamps` | no | seconds at the **end** of each counted rep (back at the top). Enables precision / recall / F1 and the rep-speed check. Must have exactly `human_rep_count` entries |
+| `reps` | no | per counted rep `{"start", "bottom", "end"}` in seconds (bottom optional). Gives real rep durations, precision / recall / F1 and the fast-rep table. Must have exactly `human_rep_count` entries |
+| `rep_timestamps` | no | simpler alternative to `reps`: only the **end** of each rep. Durations are then the gap between reps (pauses included). Use one or the other |
 | `camera_view` | yes | `side` · `45` · `front` · `back` · `other` |
 | `lighting` | yes | `normal` · `low` · `bright` |
 | `speed` | yes | `normal` · `fast` · `slow` · `mixed` |
@@ -103,12 +109,12 @@ Output: a table in the terminal and `reports/report-<time>.{md,json}` with
   signed error, better / worse / equal
 - overall, per exercise, per condition, per device, per camera view:
   MAE, mean signed error (+ = overcounts), missed, false positives
-- precision / recall / F1 when `rep_timestamps` exist (0.75 s matching window)
+- precision / recall / F1 when `reps` or `rep_timestamps` exist (0.75 s matching window)
 - regression lists: where After is better, worse, over-counts, under-counts,
   and the worst clips
 - camera guidance: recommended vs actual view, how much of the clip the app
   refused as a wrong angle, and whether it **silently miscounted** instead
-- rep speed: how many annotated reps were faster than 0.6 s
+- fast reps: rep duration, human, previous and current for every fast clip
 - for every clip where After is wrong: the engine trace (state, angle,
   direction, range, visibility of the needed joints, calibration, depth gate,
   and the reason each movement was or was not counted)
@@ -155,6 +161,6 @@ faster than the app actually samples.) These are synthetic numbers: they say
 where to look, not what users experience.
 
 This is **not** loosened by default. Record `fast` squats, annotate
-`rep_timestamps`, run the benchmark and read "Reps faster than 0.6 s" and the
-per-condition table. Only if real users perform valid reps that fast should
+`reps` (start/bottom/end), run the benchmark and read the "Fast reps" table and
+the per-condition table. Only if real users perform valid reps that fast should
 adaptive timing be investigated — not a lower safety threshold.
