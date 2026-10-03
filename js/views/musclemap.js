@@ -121,6 +121,62 @@ function exerciseFigureSVG(exId, opts){
   </div>`;
 }
 
+/* ---------- whole-body recovery + what is worth training ----------
+   The figure coloured by how recovered every muscle is, the muscles that still
+   need time, and the exercises whose muscles are rested. Both are derived from
+   the training history already stored. */
+function bodyRecoveryHTML(){
+  if(typeof recoveryOverview !== 'function') return '';
+  const o = recoveryOverview();
+  const colour = {ok:'var(--ok)', mid:'var(--warn)', low:'var(--coral)'};
+  const byMuscle = {};
+  o.rows.forEach(r => byMuscle[r.muscle] = r);
+  const fill = m => {
+    const r = byMuscle[m];
+    return r ? colour[recoveryBand(r.pct)] : 'none';
+  };
+  const tired = o.rows.filter(r => r.pct < 100).sort((a, b) => a.pct - b.pct).slice(0, 4);
+  const alt = o.rows.map(r => `${MUSCLE_NAMES[r.muscle]} ${r.pct}%`).join(', ');
+  const body = tired.length
+    ? `<ul class="mlist">${tired.map(r => `<li class="mrow ${recoveryBand(r.pct)}">
+        <span class="mn">${MUSCLE_NAMES[r.muscle]}</span>
+        <span class="mrole">${r.hoursLeft ? t('rec_hours_short', r.hoursLeft) : t('rec_recovered')}</span>
+        <span class="mbar"><i style="width:${r.pct}%"></i></span>
+        <b class="mpct">${r.pct}%</b></li>`).join('')}</ul>`
+    : `<p class="sm mut" style="margin:0">${t('rec_all_ready')}</p>`;
+  return `<div class="card">
+    <div class="recgrid">
+      ${muscleMapSVG({fill, title: t('rec_map_alt', alt)})}
+      <div style="min-width:0">
+        <div class="statbig" style="grid-template-columns:1fr 1fr; margin:0 0 10px">
+          <div class="s acc"><b>${o.avg}%</b><span>${t('rec_body_avg')}</span></div>
+          <div class="s"><b>${o.ready}/${o.total}</b><span>${t('rec_body_ready')}</span></div>
+        </div>
+        ${body}
+      </div>
+    </div>
+    <p class="xs mut recnote">${t('rec_estimate')}</p>
+  </div>`;
+}
+
+function suggestionsHTML(){
+  if(typeof suggestExercises !== 'function') return '';
+  const picks = suggestExercises();
+  if(!picks.length) return `<div class="card"><p class="sm mut" style="margin:0">${t('sug_none')}</p></div>`;
+  return `<div class="card suglist">
+    <p class="xs mut" style="margin:0 0 10px">${t('sug_intro')}</p>
+    ${picks.map(p => {
+      const x = ex(p.id);
+      if(!x) return '';
+      return `<button class="exrow sugrow" data-sug="${p.id}">
+        <div class="thumb">${typeof exerciseFigureSVG === 'function' ? exerciseFigureSVG(p.id) : x.e}</div>
+        <div class="info"><b>${esc(x.n)}</b><span>${p.muscles.map(m => MUSCLE_NAMES[m]).join(' · ')}</span></div>
+        <div class="sr ${recoveryBand(p.worstPrimary)}">${p.worstPrimary}%<small>${t('rec_recovered')}</small></div>
+      </button>`;
+    }).join('')}
+  </div>`;
+}
+
 /* ---------- demonstration animation ----------
    Two photographed frames — the start and the end of the movement — swapped on
    a loop, which reads as the movement without shipping video. The frames are

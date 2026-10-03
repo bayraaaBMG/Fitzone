@@ -72,6 +72,12 @@ function renderHome(){
         <button class="tile" id="goGymWO"><div class="ic">🏋️</div><h3>${t('home_gym_workout')}</h3><p>${t('home_gym_workout_p')}</p></button>
       </div>
 
+      <div class="secttl"><h2>${t('rec_body_title')}</h2><a data-tab="progress" class="goTab">${t('home_all')}</a></div>
+      ${typeof bodyRecoveryHTML==='function' ? bodyRecoveryHTML() : ''}
+
+      <div class="secttl"><h2>${t('sug_title')}</h2></div>
+      ${typeof suggestionsHTML==='function' ? suggestionsHTML() : ''}
+
       <div class="secttl"><h2>${t('home_next_workout')}</h2><a data-tab="plan" class="goTab">${t('home_all')}</a></div>
       <div class="card">
         <div class="dayhead" style="margin:0 0 12px;background:transparent;border:none;padding:0">
@@ -109,6 +115,7 @@ function renderHome(){
   document.getElementById('goGymWO').onclick=()=>{ libF.loc='gym'; S.tab='library'; render(); };
   app.querySelectorAll('.goTab').forEach(a=>a.onclick=()=>{S.tab=a.dataset.tab;render();});
 
+  app.querySelectorAll('.sugrow[data-sug]').forEach(b => b.onclick = () => openExercise(b.dataset.sug));
   document.getElementById('addWater').onclick=()=>{
     const d=today();
     S.waterLog[d]=(S.waterLog[d]||0)+250;

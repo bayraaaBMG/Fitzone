@@ -303,6 +303,20 @@ hr.sep{border:none; border-top:1px solid var(--line); margin:20px 0}
   *, *::before, *::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
 }
 
+/* ---------- suggestions ---------- */
+.suglist .sugrow{display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:var(--card2);
+  border:1px solid var(--line); border-radius:14px; padding:10px; margin-bottom:8px; cursor:pointer}
+.suglist .sugrow:last-child{margin-bottom:0}
+.suglist .sugrow:hover{border-color:var(--line2)}
+.suglist .sugrow .thumb{width:46px; height:46px; flex:none; border-radius:11px; background:var(--card); border:1px solid var(--line); overflow:hidden}
+.suglist .sugrow .info{flex:1; min-width:0}
+.suglist .sugrow .info b{display:block; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.suglist .sugrow .info span{display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.suglist .sugrow .info span{font-size:11.5px; color:var(--mut)}
+.suglist .sugrow .sr{flex:none; font-family:'Archivo'; font-weight:800; font-size:15px; text-align:right; color:var(--ok)}
+.suglist .sugrow .sr small{display:block; font-family:'Inter'; font-weight:500; font-size:9.5px; color:var(--mut2); text-transform:uppercase}
+.suglist .sugrow .sr.mid{color:var(--warn)} .suglist .sugrow .sr.low{color:var(--coral)}
+
 /* ---------- demonstration frames ---------- */
 .exdemo{position:relative; width:100%; aspect-ratio:3/2; border-radius:12px; overflow:hidden; background:var(--card2)}
 .exdemo .demo-frame{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .25s linear}
@@ -326,10 +340,16 @@ hr.sep{border:none; border-top:1px solid var(--line); margin:20px 0}
 /* ---------- muscle map + recovery ---------- */
 .block.recovery{--mmap-body:var(--card2); --mmap-line:var(--line2)}
 .recgrid{display:grid; grid-template-columns:132px minmax(0,1fr); gap:14px; align-items:center}
-@media (max-width:360px){ .recgrid{grid-template-columns:104px minmax(0,1fr); gap:10px} }
+@media (max-width:360px){
+  /* at this width the two columns cannot both fit: stack them */
+  .recgrid{grid-template-columns:minmax(0,1fr); gap:12px; justify-items:center}
+  .recgrid .mmap-wrap{max-width:200px}
+  .recgrid > div{width:100%}
+  .recgrid .statbig{grid-template-columns:1fr 1fr}
+}
 .mmap-wrap{display:flex; gap:4px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 4px}
 .mmap{width:50%; height:auto; display:block}
-.mlist{list-style:none; margin:0; padding:0; display:grid; gap:9px; min-width:0}
+.mlist{list-style:none; margin:0; padding:0; display:grid; gap:9px; min-width:0; width:100%}
 .mrow{display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"name pct" "role role" "bar bar"; gap:2px 8px; align-items:center}
 .mrow .mn{grid-area:name; font-size:13.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .mrow .mrole{grid-area:role; font-size:10.5px; color:var(--mut2); text-transform:uppercase; letter-spacing:.05em}
