@@ -79,7 +79,7 @@ function renderHome(){
           <div class="meta"><b>${planDayTitle(next)}</b><span>${next.ex.length} ${t('unit_exercises')} · ~${planEstMin(next)} ${t('unit_min')}</span></div>
         </div>
         ${next.ex.slice(0,3).map(e=>{const x=ex(e.id);return `
-          <div class="exrow"><div class="thumb">${x.e}</div>
+          <div class="exrow"><div class="thumb">${typeof exerciseFigureSVG==='function' ? exerciseFigureSVG(x.id) : x.e}</div>
             <div class="info"><b>${x.n}</b><span>${M_NAMES[x.m]||''}</span></div>
             <div class="sr">${e.sets}×${e.reps}<small>set · reps</small></div></div>`;}).join('')}
         ${next.ex.length>3?`<p class="xs mut center" style="margin:10px 0 0">+${next.ex.length-3} ${t('unit_exercises')}</p>`:''}

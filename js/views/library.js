@@ -53,7 +53,7 @@ function drawLib(){
   const sch = repScheme(goal, lvl);
   el.innerHTML = list.map(x=>`
     <button class="excard" data-ex="${x.id}">
-      <div class="thumb">${x.e}</div>
+      <div class="thumb">${typeof exerciseFigureSVG==='function' ? exerciseFigureSVG(x.id) : x.e}</div>
       <div class="info">
         <b>${x.n}</b>
         <div class="tags">

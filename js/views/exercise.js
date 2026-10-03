@@ -1,6 +1,8 @@
 /* ---------- EXERCISE DETAIL ---------- */
 function videoEmbed(x){
-  if(!x.video) return `<div class="novideo"><div class="e">🎬</div>${t('video_coming_soon')}</div>`;
+  // no video yet: the exercise still gets a picture — its own muscle figure
+  if(!x.video) return `<div class="novideo figure">${typeof exerciseFigureSVG==='function' ? exerciseFigureSVG(x.id, {size:'hero'}) : ''}
+    <span class="xs mut">${t('video_coming_soon')}</span></div>`;
   if(/^https?:\/\//.test(x.video) || /\.(mp4|webm|mov)(\?.*)?$/i.test(x.video)){
     return `<div class="vidwrap"><video controls preload="none" poster="${x.poster||''}"><source src="${x.video}" type="video/mp4"></video></div>`;
   }

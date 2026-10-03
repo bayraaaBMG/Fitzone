@@ -8,29 +8,51 @@
    Regions are deliberately schematic: enough to read at 150px wide on a
    phone, not an anatomy chart. */
 
+/* Geometry, on a 100 x 170 grid. The body is assembled from simple rounded
+   parts so the muscle regions line up with it; `rr` builds a rounded-rect
+   path. Both views share the silhouette — it is symmetric front to back. */
+function rr(x, y, w, h, r){
+  return `M${x+r} ${y} h${w-2*r} a${r} ${r} 0 0 1 ${r} ${r} v${h-2*r} a${r} ${r} 0 0 1 ${-r} ${r} h${-(w-2*r)} a${r} ${r} 0 0 1 ${-r} ${-r} v${-(h-2*r)} a${r} ${r} 0 0 1 ${r} ${-r} z`;
+}
+
+const MUSCLE_BODY_PARTS = [
+  rr(46, 19, 8, 8, 3),                                   // neck
+  'M34 26 h32 q5 0 5 5 l-3 33 q-1 6 -6 6 h-24 q-5 0 -6 -6 l-3 -33 q0 -5 5 -5 z',  // torso
+  rr(37, 68, 26, 18, 6),                                 // hips
+  rr(23, 28, 10, 31, 5), rr(67, 28, 10, 31, 5),          // upper arms
+  rr(22, 57, 9, 27, 4), rr(69, 57, 9, 27, 4),            // forearms
+  rr(24, 83, 7, 8, 3),   rr(69, 83, 7, 8, 3),            // hands
+  rr(37, 84, 12, 40, 6), rr(51, 84, 12, 40, 6),          // thighs
+  rr(38, 122, 10, 33, 5), rr(52, 122, 10, 33, 5),        // calves
+  rr(36, 153, 12, 7, 3), rr(52, 153, 12, 7, 3),          // feet
+];
+const MUSCLE_BODY_HEAD = {cx:50, cy:12, r:8};
+
 const MUSCLE_SHAPES = {
   front: {
-    chest:     ['M31 40 q9 -5 18 0 l-1 11 q-8 5 -17 0 z', 'M69 40 q-9 -5 -18 0 l1 11 q8 5 17 0 z'],
-    shoulders: ['M24 36 q-7 2 -8 12 q6 3 11 -1 z', 'M76 36 q7 2 8 12 q-6 3 -11 -1 z'],
-    biceps:    ['M19 50 q-4 7 -3 16 q5 2 8 -2 l1 -14 z', 'M81 50 q4 7 3 16 q-5 2 -8 -2 l-1 -14 z'],
-    abs:       ['M42 56 h16 v26 q-8 4 -16 0 z'],
-    obliques:  ['M36 58 q-3 10 1 22 l5 2 v-26 z', 'M64 58 q3 10 -1 22 l-5 2 v-26 z'],
-    quads:     ['M39 88 q-4 18 -2 34 q7 3 12 -1 l2 -32 z', 'M61 88 q4 18 2 34 q-7 3 -12 -1 l-2 -32 z'],
-    calves:    ['M41 128 q-3 12 0 22 q6 2 9 -2 l-1 -20 z', 'M59 128 q3 12 0 22 q-6 2 -9 -2 l1 -20 z'],
+    shoulders: [rr(24, 28, 9, 12, 4), rr(68, 28, 9, 12, 4)],
+    chest:     [rr(36, 31, 13, 14, 4), rr(51, 31, 13, 14, 4)],
+    biceps:    [rr(24, 42, 9, 16, 4), rr(68, 42, 9, 16, 4)],
+    abs:       [rr(44, 47, 12, 20, 4)],
+    obliques:  [rr(37, 48, 6, 18, 3), rr(57, 48, 6, 18, 3)],
+    quads:     [rr(38, 86, 10, 32, 5), rr(52, 86, 10, 32, 5)],
+    calves:    [rr(39, 124, 8, 25, 4), rr(53, 124, 8, 25, 4)],
   },
   back: {
-    traps:     ['M38 34 q12 -4 24 0 l-4 14 q-8 3 -16 0 z'],
-    lats:      ['M33 50 q-4 16 2 28 l10 -4 v-26 z', 'M67 50 q4 16 -2 28 l-10 -4 v-26 z'],
-    triceps:   ['M19 50 q-4 8 -3 17 q5 2 8 -2 l1 -15 z', 'M81 50 q4 8 3 17 q-5 2 -8 -2 l-1 -15 z'],
-    glutes:    ['M38 82 q-2 12 4 18 q8 2 12 -3 l-1 -15 z', 'M62 82 q2 12 -4 18 q-8 2 -12 -3 l1 -15 z'],
-    hams:      ['M40 103 q-3 14 -1 24 q7 3 11 -1 l1 -23 z', 'M60 103 q3 14 1 24 q-7 3 -11 -1 l-1 -23 z'],
-    calves:    ['M41 132 q-3 11 0 20 q6 2 9 -2 l-1 -18 z', 'M59 132 q3 11 0 20 q-6 2 -9 -2 l1 -18 z'],
+    traps:     [rr(38, 27, 24, 13, 5)],
+    lats:      [rr(35, 41, 12, 24, 4), rr(53, 41, 12, 24, 4)],
+    triceps:   [rr(24, 42, 9, 17, 4), rr(68, 42, 9, 17, 4)],
+    glutes:    [rr(38, 69, 11, 15, 5), rr(51, 69, 11, 15, 5)],
+    hams:      [rr(38, 86, 10, 32, 5), rr(52, 86, 10, 32, 5)],
+    calves:    [rr(39, 124, 8, 25, 4), rr(53, 124, 8, 25, 4)],
   },
 };
 
-/* the plain silhouette both views are drawn on */
-const MUSCLE_BODY_PATH =
-  'M50 8 q7 0 7 8 q0 7 -4 10 q9 2 15 7 q7 5 9 14 l3 20 q1 6 -3 7 q-4 1 -6 -5 l-3 -11 l-1 18 q0 8 2 16 l3 18 q1 9 0 18 l-2 22 q-1 7 -5 7 q-4 0 -4 -7 l-2 -22 l-4 -18 l-4 18 l-2 22 q0 7 -4 7 q-4 0 -5 -7 l-2 -22 q-1 -9 0 -18 l3 -18 q2 -8 2 -16 l-1 -18 l-3 11 q-2 6 -6 5 q-4 -1 -3 -7 l3 -20 q2 -9 9 -14 q6 -5 15 -7 q-4 -3 -4 -10 q0 -8 7 -8 z';
+/* the plain silhouette every view is drawn on */
+function muscleBodySVG(bodyFill, lineFill){
+  return `<circle cx="${MUSCLE_BODY_HEAD.cx}" cy="${MUSCLE_BODY_HEAD.cy}" r="${MUSCLE_BODY_HEAD.r}" fill="${bodyFill}" stroke="${lineFill}" stroke-width="1"/>`
+    + MUSCLE_BODY_PARTS.map(d => `<path d="${d}" fill="${bodyFill}" stroke="${lineFill}" stroke-width="1"/>`).join('');
+}
 
 /* opts: {fill(muscle) -> css color, label(muscle) -> string|null, title} */
 function muscleMapSVG(opts){
@@ -43,11 +65,60 @@ function muscleMapSVG(opts){
       return shapes[m].map(d => `<path d="${d}" fill="${fill}" data-muscle="${m}"/>`).join('');
     }).join('');
     return `<svg class="mmap" viewBox="0 0 100 170" role="presentation" focusable="false" xmlns="http://www.w3.org/2000/svg">
-      <path d="${MUSCLE_BODY_PATH}" fill="var(--mmap-body)" stroke="var(--mmap-line)" stroke-width="1"/>
+      ${muscleBodySVG('var(--mmap-body)', 'var(--mmap-line)')}
       ${parts}
     </svg>`;
   };
   return `<div class="mmap-wrap" role="img" aria-label="${esc(o.title || '')}">${view('front')}${view('back')}</div>`;
+}
+
+/* ---------- per-exercise illustration ----------
+   The same figure as the recovery map, but highlighting what this exercise
+   works: primary muscles solid, assisting muscles faint. Drawn here, so every
+   exercise has a picture with no third-party asset and no licence to honour.
+   Front or back view is chosen by where the primary muscles actually are. */
+
+const MUSCLE_SIDE = {
+  chest:'front', shoulders:'front', biceps:'front', abs:'front', obliques:'front',
+  quads:'front', calves:'front', traps:'back', lats:'back', triceps:'back',
+  glutes:'back', hams:'back',
+};
+
+function exerciseFigureSides(m){
+  const sides = new Set(m.pri.map(x => MUSCLE_SIDE[x]).filter(Boolean));
+  if(!sides.size) sides.add('front');
+  // show the other side too when an assisting muscle lives there and there is room
+  if(sides.size === 1 && m.sec.some(x => MUSCLE_SIDE[x] && !sides.has(MUSCLE_SIDE[x])))
+    sides.add(m.sec.map(x => MUSCLE_SIDE[x]).find(s => s && !sides.has(s)));
+  return [...sides];
+}
+
+/* opts: {size:'thumb'|'hero', showLabel:boolean} */
+function exerciseFigureSVG(exId, opts){
+  const o = opts || {};
+  const m = typeof exMuscles === 'function' ? exMuscles(exId) : null;
+  const x = typeof ex === 'function' ? ex(exId) : null;
+  if(!m) return `<span class="exfig-fallback" aria-hidden="true">${x ? x.e : ''}</span>`;
+  const pri = new Set(m.pri), sec = new Set(m.sec);
+  const fill = mus => pri.has(mus) ? 'var(--fig-pri)' : sec.has(mus) ? 'var(--fig-sec)' : 'none';
+  const sides = exerciseFigureSides(m);
+  const names = [...m.pri, ...m.sec].map(k => MUSCLE_NAMES[k]).join(', ');
+  const label = t('fig_alt', x ? x.n : '', names);
+  const view = side => {
+    const shapes = MUSCLE_SHAPES[side];
+    const parts = Object.keys(shapes).map(mus => {
+      const f = fill(mus);
+      if(f === 'none') return '';
+      return shapes[mus].map(d => `<path d="${d}" fill="${f}" data-muscle="${mus}"/>`).join('');
+    }).join('');
+    return `<svg class="exfig-svg" viewBox="0 0 100 170" role="presentation" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      ${muscleBodySVG('var(--fig-body)', 'var(--fig-line)')}
+      ${parts}
+    </svg>`;
+  };
+  return `<div class="exfig ${o.size === 'hero' ? 'hero' : 'thumb-fig'}" role="img" aria-label="${esc(label)}">
+    ${sides.map(view).join('')}
+  </div>`;
 }
 
 /* the body map coloured by how recovered each muscle is, plus the same
