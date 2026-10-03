@@ -66,12 +66,25 @@ function cleanFoodLog(fl){
   }
   return out;
 }
+/* body measurements: a day key plus any of the cm metrics, each a plain
+   number in a sane range. Anything else in the document is dropped. */
+function cleanMeasures(list){
+  return asArr(list).filter(m=>m && typeof m.d==='string' && m.d.length===10).map(m=>{
+    const out = {d:m.d};
+    for(const k of MEASURE_KEYS){
+      const v = +m[k];
+      if(isFinite(v) && v>=MEASURE_MIN && v<=MEASURE_MAX) out[k] = Math.round(v*10)/10;
+    }
+    return out;
+  }).filter(m=>Object.keys(m).length>1).slice(-1000);
+}
 function applyStateData(d){
   d = asObj(d);
   S.profile = cleanProfile(d.profile);
   const planOk = Array.isArray(d.plan) && d.plan.length && d.plan.every(x=>x && Array.isArray(x.ex));
   S.plan = planOk ? d.plan : (S.profile ? generatePlan(S.profile) : null);
   S.weights = asArr(d.weights).filter(w=>w && typeof w.d==='string' && isFinite(+w.kg)).map(w=>({d:w.d, kg:+w.kg}));
+  S.measures = cleanMeasures(d.measures);
   S.completed = asArr(d.completed).filter(x=>typeof x==='string');
   S.completedLog = asObj(d.completedLog);
   S.challenge = (d.challenge && typeof d.challenge.start==='string') ? {start:d.challenge.start, done:asArr(d.challenge.done).filter(x=>typeof x==='string')} : null;
@@ -88,7 +101,7 @@ function applyStateData(d){
   applyLangLabels();
 }
 function resetLocalState(){
-  S.profile=null; S.plan=null; S.weights=[]; S.completed=[]; S.completedLog={};
+  S.profile=null; S.plan=null; S.weights=[]; S.measures=[]; S.completed=[]; S.completedLog={};
   S.challenge=null; S.pantry=[]; S.foodLog={}; S.waterLog={}; S.tab='home';
   S.exStats={}; S.workoutResults=[];
   // theme/lang are device/browser preferences, not account data — keep as-is on logout

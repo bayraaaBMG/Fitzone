@@ -17,11 +17,16 @@ const Store = (() => {
   };
 })();
 
+/* body measurements, in cm. Order is the order they appear in the UI. */
+const MEASURE_KEYS = ['waist', 'chest', 'hip', 'thigh', 'arm'];
+const MEASURE_MIN = 10, MEASURE_MAX = 300;
+
 /* ---------- app state ---------- */
 let S = {
   profile:null,         // {name,age,sex,height,weight,goal,level,place,days,minutes,equip:[],joinedAt,photo}
   plan:null,            // [{title, focus, ex:[{id,sets,reps,rest}], done:bool}]
   weights:[],           // [{d:'YYYY-MM-DD', kg}]
+  measures:[],          // [{d:'YYYY-MM-DD', waist, chest, hip, thigh, arm}] — cm, every metric optional
   completed:[],         // ['YYYY-MM-DD']
   completedLog:{},      // {'YYYY-MM-DD': {title, focus:[...]}} — richer history alongside `completed`
   challenge:null,       // {start:'YYYY-MM-DD', done:['YYYY-MM-DD']} | null
@@ -50,6 +55,10 @@ async function save(){
     challenge:S.challenge, pantry:S.pantry, foodLog:S.foodLog, waterLog:S.waterLog, theme:S.theme, lang:S.lang,
     exStats:S.exStats, workoutResults:S.workoutResults,
   };
+  // `measures` reached the rules later than the rest: while the list is empty
+  // there is nothing to store, and leaving the key out keeps saving working
+  // against an older deployment of firestore.rules.
+  if(S.measures && S.measures.length) data.measures = S.measures;
   const key = authUser ? 'mf_state_'+authUser.uid : 'mf_state';
   await Store.set(key, data);
   if(authUser && !cloudLoadFailed){ // never overwrite a cloud doc we failed to load

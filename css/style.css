@@ -303,6 +303,21 @@ hr.sep{border:none; border-top:1px solid var(--line); margin:20px 0}
   *, *::before, *::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
 }
 
+/* ---------- progress: measurements, records, consistency ---------- */
+.measgrid{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px}
+@media (max-width:360px){ .measgrid{grid-template-columns:minmax(0,1fr)} }
+.rectable{width:100%; border-collapse:collapse; font-size:14px}
+.rectable th{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--mut); font-weight:700;
+  text-align:left; padding:10px 14px}
+.rectable th:nth-child(n+2), .rectable td:nth-child(n+2){text-align:right}
+.rectable td{padding:11px 14px; border-top:1px solid var(--line)}
+.rectable td b{font-family:'Archivo'; font-weight:800; color:var(--acc-ink)}
+.weekbars{display:flex; align-items:flex-end; gap:6px; height:92px}
+.weekbars .wb{flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:5px; height:100%}
+.weekbars .wb i{display:block; width:100%; border-radius:6px 6px 3px 3px; background:var(--acc); opacity:.85; min-height:4px}
+.weekbars .wb span{font-size:11px; color:var(--mut2)}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+
 /* ---------- sign-in / sign-up page ----------
    Mobile: the form first, a short "what is MongolFit" card under it.
    Desktop (>= 1000px): brand + benefits + product preview on the left, form on

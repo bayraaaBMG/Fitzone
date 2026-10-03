@@ -26,7 +26,7 @@ service cloud.firestore {
     }
 
     function appFields() {
-      return ['profile', 'plan', 'weights', 'completed', 'completedLog', 'challenge', 'pantry',
+      return ['profile', 'plan', 'weights', 'measures', 'completed', 'completedLog', 'challenge', 'pantry',
               'foodLog', 'waterLog', 'theme', 'lang', 'exStats', 'workoutResults', 'updatedAt'];
     }
 
@@ -35,6 +35,7 @@ service cloud.firestore {
       return (!ch.hasAny(['profile']) || validProfile(d.profile))
         && (!ch.hasAny(['plan']) || d.plan == null || (d.plan is list && d.plan.size() <= 14))
         && (!ch.hasAny(['weights']) || (d.weights is list && d.weights.size() <= 5000))
+        && (!ch.hasAny(['measures']) || validMeasures(d.measures))
         && (!ch.hasAny(['completed']) || (d.completed is list && d.completed.size() <= 5000))
         && (!ch.hasAny(['completedLog']) || (d.completedLog is map && d.completedLog.size() <= 5000))
         && (!ch.hasAny(['challenge']) || validChallenge(d.challenge))
@@ -61,6 +62,16 @@ service cloud.firestore {
         // 200×200 canvas JPEG is ~10–40 KB; only image data URLs, never other schemes
         && (!('photo' in p) || p.photo == null || (p.photo is string && p.photo.size() <= 300000
               && p.photo.matches('data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+'))));
+    }
+
+    // body measurements: [{d:'YYYY-MM-DD', waist?, chest?, hip?, thigh?, arm?}] in cm.
+    // Checked like `weights`: the list and its length only. Reaching into the
+    // entries costs expressions per element and blows the 1000-expression
+    // budget on a long list, so entry shape is the client sanitizer's job
+    // (cleanMeasures in js/auth.js). The cap is 1000 — measurements are taken
+    // weekly or monthly, so that is decades of entries.
+    function validMeasures(l) {
+      return l is list && l.size() <= 1000;
     }
 
     function validChallenge(c) {
