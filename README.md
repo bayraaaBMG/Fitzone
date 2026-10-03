@@ -34,6 +34,9 @@ The interface is Mongolian by default, with a full English translation built in.
 
 ### 🏋️ Workout Tracking
 - Exercise library — **60 exercises**, home and gym, three difficulty levels
+- A demonstration for every exercise: 29 have a video, 52 have two-frame
+  demonstration photos from the public-domain free-exercise-db, and the rest
+  fall back to a drawn muscle figure
 - Weekly plan generated from goal, level, available days, session length and equipment
 - Workout sessions
 - Repetition tracking

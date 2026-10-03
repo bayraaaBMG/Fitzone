@@ -1,8 +1,12 @@
 /* ---------- EXERCISE DETAIL ---------- */
 function videoEmbed(x){
-  // no video yet: the exercise still gets a picture — its own muscle figure
-  if(!x.video) return `<div class="novideo figure">${typeof exerciseFigureSVG==='function' ? exerciseFigureSVG(x.id, {size:'hero'}) : ''}
-    <span class="xs mut">${t('video_coming_soon')}</span></div>`;
+  // no video yet: show the demonstration frames, or the drawn muscle figure
+  if(!x.video){
+    const demo = typeof exerciseDemoHTML==='function' ? exerciseDemoHTML(x.id) : '';
+    const isPhoto = /class="exdemo"/.test(demo);
+    return `<div class="novideo figure${isPhoto?' photo':''}">${demo}
+      ${isPhoto ? '' : `<span class="xs mut">${t('video_coming_soon')}</span>`}</div>`;
+  }
   if(/^https?:\/\//.test(x.video) || /\.(mp4|webm|mov)(\?.*)?$/i.test(x.video)){
     return `<div class="vidwrap"><video controls preload="none" poster="${x.poster||''}"><source src="${x.video}" type="video/mp4"></video></div>`;
   }
@@ -42,6 +46,7 @@ function openExercise(id){
       <div class="note">${t('easier')}: <b>${x.easy}</b><br>${t('harder')}: <b>${x.hard}</b></div></div>`;
   sheet.querySelector('#exStart').onclick=()=> openWorkout(x.id, false);
   sheet.querySelector('#exBattle').onclick=()=> openWorkout(x.id, true);
+  if(typeof startExerciseDemos==='function') startExerciseDemos(sheet);
 }
 function exPrLine(id){
   const s=exStatsFor(id), c=COACH[id];

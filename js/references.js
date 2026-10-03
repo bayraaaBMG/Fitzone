@@ -88,6 +88,14 @@ const REFERENCES = {
     used_mn: 'Калорийн дутагдал/илүүдлийн хэмжээ (жин хасах/нэмэх)',
     used_en: 'Calorie deficit/surplus sizing (weight loss/gain)',
   },
+  freeexdb: {
+    org: 'free-exercise-db',
+    url: 'https://github.com/yuhonas/free-exercise-db',
+    title_mn: 'free-exercise-db — нийтийн эзэмшлийн дасгалын сан (Unlicense)',
+    title_en: 'free-exercise-db — public-domain exercise dataset (Unlicense)',
+    used_mn: 'Дасгал хийх дараалал харуулсан зургууд (эхлэл ба төгсгөлийн байрлал)',
+    used_en: 'The demonstration photos showing the start and end of each movement',
+  },
   wger: {
     org: 'wger',
     url: 'https://wger.de',

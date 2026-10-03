@@ -121,6 +121,44 @@ function exerciseFigureSVG(exId, opts){
   </div>`;
 }
 
+/* ---------- demonstration animation ----------
+   Two photographed frames — the start and the end of the movement — swapped on
+   a loop, which reads as the movement without shipping video. The frames are
+   public-domain (free-exercise-db); exercises the dataset does not cover fall
+   back to the drawn muscle figure. Reduced-motion holds the first frame. */
+function exerciseDemoHTML(exId, opts){
+  const o = opts || {};
+  const frames = typeof exPhotoFrames === 'function' ? exPhotoFrames(exId) : 0;
+  const x = typeof ex === 'function' ? ex(exId) : null;
+  if(!frames || !x) return typeof exerciseFigureSVG === 'function' ? exerciseFigureSVG(exId, {size:'hero'}) : '';
+  const alt = t('demo_alt', x.n);
+  const imgs = [];
+  for(let i = 0; i < frames; i++){
+    imgs.push(`<img src="assets/ex/${exId}-${i}.webp" alt="${i === 0 ? esc(alt) : ''}" width="400" height="267"
+      loading="lazy" decoding="async" class="demo-frame${i === 0 ? ' on' : ''}">`);
+  }
+  return `<div class="exdemo" data-ex="${exId}">${imgs.join('')}
+    <span class="demo-tag">${t('demo_tag')}</span></div>`;
+}
+
+/* swaps the frame of every demo on screen; one timer for the whole app */
+let _demoTimer = null, _demoStep = 0;
+function startExerciseDemos(root){
+  stopExerciseDemos();
+  const demos = (root || document).querySelectorAll('.exdemo');
+  if(!demos.length) return;
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  _demoTimer = setInterval(() => {
+    _demoStep++;
+    document.querySelectorAll('.exdemo').forEach(d => {
+      const f = d.querySelectorAll('.demo-frame');
+      if(f.length < 2) return;
+      f.forEach((img, i) => img.classList.toggle('on', i === _demoStep % f.length));
+    });
+  }, 900);
+}
+function stopExerciseDemos(){ if(_demoTimer){ clearInterval(_demoTimer); _demoTimer = null; } }
+
 /* the body map coloured by how recovered each muscle is, plus the same
    information as text — the figure is decoration, the list is the content */
 function recoveryMapHTML(exId){
