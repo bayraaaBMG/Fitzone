@@ -44,6 +44,8 @@ The interface is Mongolian by default, with a full English translation built in.
 - Workout history
 - Streak tracking
 - 30-day challenge
+- Muscle recovery estimate (0–100%) per muscle, with an SVG body map on every
+  exercise, computed from your recent sessions — an estimate, not a measurement
 
 ### 📷 Camera-Assisted Exercise Tracking
 MongolFit uses the device camera and MediaPipe Pose for supported exercises.

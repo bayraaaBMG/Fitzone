@@ -88,6 +88,14 @@ const REFERENCES = {
     used_mn: 'Калорийн дутагдал/илүүдлийн хэмжээ (жин хасах/нэмэх)',
     used_en: 'Calorie deficit/surplus sizing (weight loss/gain)',
   },
+  wger: {
+    org: 'wger',
+    url: 'https://wger.de',
+    title_mn: 'wger — нээлттэй эхийн дасгалын сан (CC-BY-SA)',
+    title_en: 'wger — open-source exercise database (CC-BY-SA)',
+    used_mn: 'Дасгал бүрийн ажиллах булчингийн (үндсэн/туслах) хуваарилалтыг тулгаж шалгасан',
+    used_en: 'Cross-checking the primary/secondary muscle assignment of each exercise',
+  },
 };
 
 const REFERENCE_GROUPS = [

@@ -63,6 +63,13 @@ const I18N = {
     prog_title:'Миний ахиц', prog_cur_weight:'Одоогийн жин', prog_total_change:'Нийт өөрчлөлт (кг)',
     prog_total_workouts:'Нийт дасгал', prog_streak:'Дараалсан өдөр', prog_chart:'Жингийн өөрчлөлт',
     prog_week:'Энэ 7 хоног', prog_challenge:'30 хоногийн эрэлт',
+    rec_title:'Булчин ба нөхөн сэргэлт', rec_primary:'Үндсэн', rec_secondary:'Туслах',
+    rec_ready:'Энэ дасгалын булчингууд бэлэн байна',
+    rec_hours_left:'{0}: бүрэн сэргэхэд ~{1} цаг',
+    rec_estimate:'Сэргэлтийн хувь нь таны сүүлийн дасгалд тулгуурласан тооцоолол. Нойр, хоол, ачааллаас хамаарч өөр байж болно.',
+    rec_map_alt:'Булчингийн зураглал: {0}',
+    rec_section:'Нөхөн сэргэлт', rec_all_ready:'Бүх булчин сэргэсэн байна',
+    rec_recovered:'сэргэсэн',
     prog_measures:'Биеийн хэмжээ', prog_measures_hint:'Сараас сард хэмжээгээ бичиж, жингээс гадуур өөрчлөлтөө хар. Зөвхөн хэмжихийг хүссэн хэсгээ бөглөөд болно.',
     prog_measures_save:'Хэмжээг хадгалах', prog_measures_pick:'Аль хэмжээг харуулахыг сонгох',
     prog_measures_empty:'Хэмжээ бичихэд график энд гарч ирнэ.',
@@ -336,6 +343,13 @@ const I18N = {
     prog_title:'My progress', prog_cur_weight:'Current weight', prog_total_change:'Total change (kg)',
     prog_total_workouts:'Total workouts', prog_streak:'Day streak', prog_chart:'Weight change',
     prog_week:'This week', prog_challenge:'30-day challenge',
+    rec_title:'Muscles and recovery', rec_primary:'Primary', rec_secondary:'Secondary',
+    rec_ready:'The muscles for this exercise are ready',
+    rec_hours_left:'{0}: about {1}h to full recovery',
+    rec_estimate:'Recovery is an estimate based on your recent workouts. Sleep, food and training load change it.',
+    rec_map_alt:'Muscle map: {0}',
+    rec_section:'Recovery', rec_all_ready:'Every muscle is recovered',
+    rec_recovered:'recovered',
     prog_measures:'Body measurements', prog_measures_hint:'Log your measurements from month to month to see changes the scale does not show. Fill in only the ones you want to track.',
     prog_measures_save:'Save measurements', prog_measures_pick:'Choose which measurement to chart',
     prog_measures_empty:'Add a measurement and the chart appears here.',
@@ -798,6 +812,7 @@ function applyLangLabels(){
   const en = lang==='en';
   if(typeof document!=='undefined') document.title = en ? 'MongolFit — Home & Gym Workout Platform' : 'MongolFit — Гэр & Жийм дасгалын платформ';
   if(typeof M_NAMES!=='undefined') Object.assign(M_NAMES, en?M_NAMES_EN:M_NAMES_MN);
+  if(typeof MUSCLE_NAMES!=='undefined') Object.assign(MUSCLE_NAMES, en?MUSCLE_NAMES_EN:MUSCLE_NAMES_MN);
   if(typeof LVL_NAMES!=='undefined') Object.assign(LVL_NAMES, en?LVL_NAMES_EN:LVL_NAMES_MN);
   if(typeof MEAL_NAMES!=='undefined') Object.assign(MEAL_NAMES, en?MEAL_NAMES_EN:MEAL_NAMES_MN);
   if(typeof RECIPE_CATS!=='undefined') Object.assign(RECIPE_CATS, en?RECIPE_CATS_EN:RECIPE_CATS_MN);

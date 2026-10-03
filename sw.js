@@ -1,4 +1,4 @@
-const CACHE = 'mongolfit-v15';
+const CACHE = 'mongolfit-v16';
 // the pose model/runtime (MediaPipe on jsDelivr, model on storage.googleapis.com)
 // is multi-MB and opt-in only — leave it to the browser's HTTP cache, never this SW
 const HEAVY_HOST_RE = /^https:\/\/cdn\.jsdelivr\.net\//;
@@ -13,8 +13,8 @@ const ASSETS = [
   './Fitzone.html', './app', './css/style.css', './css/workout.css',
   './js/firebase-config.js',
   './js/data.js','./js/coach-data.js','./js/foods.js','./js/i18n.js','./js/references.js','./js/dates.js','./js/state.js','./js/planner.js',
-  './js/pose-rules.js','./js/records.js','./js/ai/ml-features.js','./js/ai/ml-runtime.js','./js/ai/ai-v2.js','./js/pose.js','./js/auth.js','./js/core.js',
-  './js/views/authgate.js','./js/views/onboard.js','./js/views/home.js','./js/views/exercise.js','./js/views/workout.js',
+  './js/pose-rules.js','./js/records.js','./js/muscle-data.js','./js/recovery.js','./js/ai/ml-features.js','./js/ai/ml-runtime.js','./js/ai/ai-v2.js','./js/pose.js','./js/auth.js','./js/core.js',
+  './js/views/authgate.js','./js/views/onboard.js','./js/views/home.js','./js/views/musclemap.js','./js/views/exercise.js','./js/views/workout.js',
   './js/views/plan.js','./js/views/library.js','./js/views/progress.js','./js/views/nutrition.js',
   './js/views/settings.js','./js/views/profile.js','./js/app.js','./manifest.json'
 ];

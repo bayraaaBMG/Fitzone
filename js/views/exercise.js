@@ -35,6 +35,7 @@ function openExercise(id){
     <div class="block"><div class="lab">🎯 ${t('target_muscle')}</div><div class="note">${x.tgt}</div></div>
     <div class="block"><div class="lab">📐 ${t('proper_technique')}</div><div class="note">${x.tech}</div></div>
     <div class="block"><div class="lab">⚠ ${t('common_mistakes')}</div><div class="note warn">${x.err}</div></div>
+    ${typeof recoveryMapHTML==='function' ? recoveryMapHTML(id) : ''}
     <div class="block"><div class="lab">🔁 ${t('alt_exercises')}</div>
       <div class="note">${t('easier')}: <b>${x.easy}</b><br>${t('harder')}: <b>${x.hard}</b></div></div>`;
   sheet.querySelector('#exStart').onclick=()=> openWorkout(x.id, false);
