@@ -115,18 +115,32 @@
   const exList = $('#exList');
   let exLoc = 'all', exData = null, exLoading = null;
   const LBL = {
-    mn:{home:'🏠 Гэртээ', gym:'🏋️ Жиймд', lvl:['', 'Анхан', 'Дунд', 'Ахисан'], cam:'📷 Камераар тоолно', man:'✋ Гараар тоолно'},
-    en:{home:'🏠 Home', gym:'🏋️ Gym', lvl:['', 'Beginner', 'Intermediate', 'Advanced'], cam:'📷 Camera counts reps', man:'✋ Manual count'},
+    mn:{home:'Гэртээ', gym:'Жиймд', lvl:['', 'Анхан', 'Дунд', 'Ахисан'], cam:'Камераар тоолно', man:'Гараар тоолно'},
+    en:{home:'Home', gym:'Gym', lvl:['', 'Beginner', 'Intermediate', 'Advanced'], cam:'Camera counts reps', man:'Manual count'},
   };
+  /* the same line-art marks the rest of the page uses */
+  const ICON = {
+    home: '<svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>',
+    gym: '<svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"/></svg>',
+    cam: '<svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h3L9 5h6l1.5 2h3A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.2"/></svg>',
+    man: '<svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11m0 0V4.5a1.5 1.5 0 0 1 3 0V11m0 0V6.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-1a6 6 0 0 1-5-2.7L5 14.4a1.6 1.6 0 0 1 2.6-1.8L9 14.5V11z"/></svg>',
+  };
+  /* a neutral stand-in for the few exercises with no photograph — a figure,
+     never an emoji */
+  const EX_PLACEHOLDER = '<svg class="ex-ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="4.6" r="2.1"/><path d="M12 7v6M12 9.5 8.3 11M12 9.5l3.7 1.5M12 13l-2.6 6M12 13l2.6 6"/></svg>';
   function loadExercises(){
     if(!exLoading){
       // js/data.js + js/coach-data.js are plain data files (no app code, no network)
-      exLoading = loadScript('/js/data.js').then(() => loadScript('/js/coach-data.js')).then(() => {
-        exData = (typeof EX !== 'undefined' ? EX : []).map(x => ({
-          id:x.id, n:x.n, e:x.e, loc:x.loc, lvl:x.lvl,
-          cam: !!(typeof COACH !== 'undefined' && COACH[x.id] && COACH[x.id].pose),
-        }));
-      });
+      exLoading = loadScript('/js/data.js')
+        .then(() => loadScript('/js/coach-data.js'))
+        .then(() => loadScript('/js/ex-photos.js').catch(() => {}))
+        .then(() => {
+          exData = (typeof EX !== 'undefined' ? EX : []).map(x => ({
+            id:x.id, n:x.n, loc:x.loc, lvl:x.lvl,
+            photo: !!(typeof EX_PHOTOS !== 'undefined' && EX_PHOTOS[x.id]),
+            cam: !!(typeof COACH !== 'undefined' && COACH[x.id] && COACH[x.id].pose),
+          }));
+        });
     }
     return exLoading;
   }
@@ -136,10 +150,13 @@
     const L = LBL[lang];
     const items = exData.filter(x => exLoc === 'all' || x.loc === exLoc);
     exList.innerHTML = items.map(x => `
-      <div class="ex-item"><span class="e" aria-hidden="true">${esc(x.e)}</span>
+      <div class="ex-item">
+        <span class="ex-thumb">${x.photo
+          ? `<img src="/assets/ex/${esc(x.id)}-0.webp" alt="" width="400" height="267" loading="lazy" decoding="async">`
+          : EX_PLACEHOLDER}</span>
         <div><b>${esc(x.n)}</b>
-          <div class="ex-meta"><small>${esc(L[x.loc] || x.loc)} · ${esc(L.lvl[x.lvl] || '')}</small>
-            <span class="tag ${x.cam ? 'cam' : 'man'}">${esc(x.cam ? L.cam : L.man)}</span></div></div></div>`).join('');
+          <div class="ex-meta"><small>${x.loc === 'gym' ? ICON.gym : ICON.home} ${esc(L[x.loc] || x.loc)} · ${esc(L.lvl[x.lvl] || '')}</small>
+            <span class="tag ${x.cam ? 'cam' : 'man'}">${x.cam ? ICON.cam : ICON.man} ${esc(x.cam ? L.cam : L.man)}</span></div></div></div>`).join('');
   }
   function showExercises(){
     const btn = $('#exLoad');

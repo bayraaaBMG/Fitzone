@@ -58,8 +58,8 @@ Object.assign(I18N.en, {
   pub_cam_note:'Automatic camera counting can vary with the exercise, camera angle, lighting and how visible your body is. Works best with the camera to your side or at 45°, with your whole body in the picture.',
 
   pub_ex_title:'Exercises', pub_ex_sub:'60 exercises for home and gym. Have a look before you sign up.',
-  pub_ex_filter:'Filter by place', pub_ex_all:'All', pub_ex_home:'🏠 Home', pub_ex_gym:'🏋️ Gym',
-  pub_ex_show:'Show exercises', pub_ex_tag_cam:'📷 Camera counts reps', pub_ex_tag_manual:'✋ Manual count',
+  pub_ex_filter:'Filter by place', pub_ex_all:'All', pub_ex_home:'Home', pub_ex_gym:'Gym',
+  pub_ex_show:'Show exercises', pub_ex_tag_cam:'Camera counts reps', pub_ex_tag_manual:'Manual count',
 
   pub_price_title:'Price', pub_price_tag:'FREE',
   pub_price_lead:'Free to use for now. There is no payment system and no subscription.',

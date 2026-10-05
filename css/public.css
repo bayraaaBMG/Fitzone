@@ -91,6 +91,19 @@ p{margin:0 0 1em}
   .hero-grid{grid-template-columns:minmax(0,1fr)}
 }
 
+/* ---------- line-art icons + exercise thumbnails ---------- */
+.ic-svg{width:30px; height:30px; display:block; color:var(--acc-ink)}
+.card .ic{margin-bottom:12px; line-height:0}
+.chip .ic-svg, .tag .ic-svg, .ex-meta .ic-svg{width:15px; height:15px; display:inline-block; vertical-align:-3px; color:currentColor}
+.chips .chip{display:inline-flex; align-items:center; gap:7px}
+.legend .tag{display:inline-flex; align-items:center; gap:6px}
+.ex-item .ex-thumb{width:54px; height:54px; flex:none; border-radius:12px; overflow:hidden; background:var(--card2);
+  border:1px solid var(--line); display:grid; place-items:center; color:var(--mut2)}
+.ex-item .ex-thumb img{width:100%; height:100%; object-fit:cover; display:block}
+.ex-item .ex-ph{width:26px; height:26px}
+.ex-item .ex-meta .tag{display:inline-flex; align-items:center; gap:5px}
+@media (max-width:360px){ .ex-item .ex-thumb{width:46px; height:46px} }
+
 /* ---------- sections ---------- */
 section{padding-block:clamp(48px, 8vw, 96px)}
 section[id], main[id]{scroll-margin-top:72px}
