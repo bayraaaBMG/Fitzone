@@ -178,39 +178,33 @@ function openAddFood(slot){
   sheet.querySelector('.inner').innerHTML = `
     <div class="grab"></div>
     <h2 class="disp" style="font-size:20px">${MEAL_NAMES[slot]} — ${t('add_food')}</h2>
-    <div class="askrow" style="margin-top:12px">
-      <span class="sm mut" style="flex:1">📷 ${t('attach_meal_photo')}</span>
-      <label class="iconbtn" for="diaryImg">📷</label>
-      <input type="file" id="diaryImg" accept="image/*" hidden>
-    </div>
-    <div id="diaryImgPreview"></div>
-    <input class="txin" id="foodSearch" placeholder="${t('search_recipe_placeholder')}" aria-label="${t('search_recipe_placeholder')}" style="margin-top:12px">
-    <div id="foodResults" style="margin-top:6px"></div>
+    <input class="txin" id="foodSearch" placeholder="${t('food_search_placeholder')}" aria-label="${t('food_search_placeholder')}"
+      autocomplete="off" style="margin-top:12px">
+    <div id="foodResults" style="margin-top:10px"></div>
     <div id="foodAdvice"></div>
     <hr class="sep">
-    <div class="block">
-      <div class="lab">${t('manual_entry')}</div>
-      <input class="txin" id="mfName" placeholder="${t('food_name_placeholder')}" aria-label="${t('food_name_placeholder')}" style="margin-bottom:8px">
+    <details class="foodmore">
+      <summary>${t('manual_entry')}</summary>
+      <div class="askrow" style="margin-top:10px">
+        <span class="sm mut" style="flex:1">${t('attach_meal_photo')}</span>
+        <label class="iconbtn" for="diaryImg" aria-label="${t('attach_meal_photo')}">+</label>
+        <input type="file" id="diaryImg" accept="image/*" hidden>
+      </div>
+      <div id="diaryImgPreview"></div>
+      <input class="txin" id="mfName" placeholder="${t('food_name_placeholder')}" aria-label="${t('food_name_placeholder')}" style="margin:10px 0 8px">
       <div class="grid g2">
-        <input class="txin" id="mfKcal" type="number" placeholder="${t('unit_kcal')}" aria-label="${t('unit_kcal')}">
-        <input class="txin" id="mfProtein" type="number" placeholder="${t('macro_protein')} (${t('unit_g')})">
-        <input class="txin" id="mfCarb" type="number" placeholder="${t('macro_carb')} (${t('unit_g')})">
-        <input class="txin" id="mfFat" type="number" placeholder="${t('macro_fat')} (${t('unit_g')})">
+        <input class="txin" id="mfKcal" type="number" inputmode="numeric" placeholder="${t('unit_kcal')}" aria-label="${t('unit_kcal')}">
+        <input class="txin" id="mfProtein" type="number" inputmode="numeric" placeholder="${t('macro_protein')} (${t('unit_g')})" aria-label="${t('macro_protein')}">
+        <input class="txin" id="mfCarb" type="number" inputmode="numeric" placeholder="${t('macro_carb')} (${t('unit_g')})" aria-label="${t('macro_carb')}">
+        <input class="txin" id="mfFat" type="number" inputmode="numeric" placeholder="${t('macro_fat')} (${t('unit_g')})" aria-label="${t('macro_fat')}">
       </div>
       <button class="btn p" id="mfAdd" style="margin-top:10px;width:100%">${t('add')}</button>
-    </div>`;
+    </details>`;
+
   const results=sheet.querySelector('#foodResults');
   const search=sheet.querySelector('#foodSearch');
   const advice=sheet.querySelector('#foodAdvice');
-  let picked = null;
-  function showAdvice(r, item){
-    advice.innerHTML = foodVerdictHTML(item, {slot}) +
-      `<button class="btn p" id="fadvAdd" style="width:100%;margin-top:10px">${t('fadv_add_anyway', esc(r ? r.n : item.n))}</button>`;
-    wireFoodVerdict(advice);
-    const add = advice.querySelector('#fadvAdd');
-    if(add) add.onclick = ()=> finishAdd(item);
-    advice.scrollIntoView({block:'nearest', behavior:'smooth'});
-  }
+  let chosen = null, portion = 1;
 
   sheet.querySelector('#diaryImg').onchange=e=>{
     const f=e.target.files[0];
@@ -220,26 +214,85 @@ function openAddFood(slot){
     sheet.querySelector('#diaryImgX').onclick=()=>{ e.target.value=''; prev.innerHTML=''; };
   };
 
-  // хавсаргасан зураг зөвхөн энэ дэлгэц дээрх preview-д зориулагдсан —
-  // хаана ч хадгалагдахгүй, зөвхөн нэр/ккал/уураг зэрэг мэдээлэл л хадгалагдана
-  function finishAdd(item){
-    addLogItem(slot, item);
-    closeSheet();
+  // the attached photo is preview only — it is never stored, only the numbers are
+  function finishAdd(item){ addLogItem(slot, item); closeSheet(); }
+
+  const row = (item, meta, attrs) => `
+    <button class="foodpick" ${attrs || ''}>
+      <span class="fp-main"><b>${esc(item.n)}</b><small>${item.kcal} ${t('unit_kcal')} · ${t('macro_protein')} ${item.protein||0}${t('unit_g')}${meta ? ' · ' + meta : ''}</small></span>
+      <span class="fp-go" aria-hidden="true">+</span>
+    </button>`;
+
+  /* what to show before anything is typed: what you actually eat, then what
+     the kitchen can make, then dishes that suit this meal */
+  function drawSuggestions(){
+    const recents = typeof recentFoods === 'function' ? recentFoods(4) : [];
+    const usual = typeof frequentFoods === 'function' ? frequentFoods(3).filter(f => f.count > 1) : [];
+    const picks = typeof pantryPicks === 'function' ? pantryPicks(3) : [];
+    const forSlot = typeof foodSearch === 'function' ? foodSearch('', slot, 6) : [];
+    const block = (title, html) => html ? `<div class="fp-group"><div class="fp-title">${title}</div>${html}</div>` : '';
+    results.innerHTML =
+      block(t('food_recent'), recents.map(r => row(r.item, r.count > 1 ? t('food_times', r.count) : '', `data-recent="${esc(r.item.n)}"`)).join('')) +
+      block(t('food_usual'), usual.map(r => row(r.item, t('food_times', r.count), `data-recent="${esc(r.item.n)}"`)).join('')) +
+      block(t('fadv_pantry_title'), picks.map(p => row(p.recipe, p.missing.length ? t('fadv_pantry_missing', p.missing.map(pantryItemName).join(', ')) : t('fadv_have_all'), `data-id="${p.recipe.id}"`)).join('')) +
+      block(t('food_for_meal', MEAL_NAMES[slot]), forSlot.map(r => row(r, '', `data-id="${r.id}"`)).join(''));
+    wireRows();
   }
 
   function drawResults(){
-    const q=search.value.trim().toLowerCase();
-    const list = q ? RECIPES.filter(r=>r.n.toLowerCase().includes(q)) : RECIPES.filter(r=>r.meal.includes(slot));
-    results.innerHTML = list.slice(0,8).map(r=>`<div class="foodrow" data-id="${r.id}" style="cursor:pointer"><div class="e">${r.e}</div><div style="flex:1"><b>${r.n}</b><div class="xs mut">${r.kcal} ${t('unit_kcal')} · ${t('macro_protein')} ${r.protein}${t('unit_g')}</div></div></div>`).join('') || `<p class="xs mut">${t('no_results')}</p>`;
-    results.querySelectorAll('.foodrow').forEach(row=>row.onclick=()=>{
-      const r=RECIPES.find(x=>x.id===row.dataset.id);
-      // first tap explains how this meal fits the day, second one logs it
-      if(picked !== r.id){ picked = r.id; showAdvice(r, {n:r.n, kcal:r.kcal, protein:r.protein, carb:r.carb, fat:r.fat, recipeId:r.id}); return; }
-      finishAdd({n:r.n, kcal:r.kcal, protein:r.protein, carb:r.carb, fat:r.fat, recipeId:r.id});
+    const q = search.value.trim();
+    if(!q){ drawSuggestions(); return; }
+    const list = foodSearch(q, slot, 8);
+    const recents = (typeof recentFoods === 'function' ? recentFoods(50) : [])
+      .filter(r => r.item.n.toLowerCase().includes(q.toLowerCase())).slice(0, 3);
+    results.innerHTML =
+      (recents.length ? `<div class="fp-group"><div class="fp-title">${t('food_recent')}</div>${recents.map(r => row(r.item, '', `data-recent="${esc(r.item.n)}"`)).join('')}</div>` : '') +
+      (list.length ? `<div class="fp-group">${list.map(r => row(r, '', `data-id="${r.id}"`)).join('')}</div>`
+                   : `<p class="xs mut">${t('no_results')}</p>`);
+    wireRows();
+  }
+
+  function wireRows(){
+    results.querySelectorAll('[data-id]').forEach(b => b.onclick = () => {
+      const r = RECIPES.find(x => x.id === b.dataset.id);
+      if(r) choose({n:r.n, kcal:r.kcal, protein:r.protein, carb:r.carb, fat:r.fat, recipeId:r.id});
+    });
+    results.querySelectorAll('[data-recent]').forEach(b => b.onclick = () => {
+      const all = recentFoods(200).find(r => r.item.n === b.dataset.recent);
+      if(all) choose(all.item);
     });
   }
-  drawResults();
-  search.oninput=drawResults;
+
+  /* one screen: portion, what it does to the day, and the button that logs it */
+  function choose(item){
+    chosen = item; portion = 1;
+    drawChosen();
+    advice.scrollIntoView({block:'nearest', behavior:'smooth'});
+  }
+  function drawChosen(){
+    if(!chosen){ advice.innerHTML = ''; return; }
+    const scaled = scalePortion(chosen, portion);
+    advice.innerHTML = `
+      <div class="fp-chosen">
+        <div class="fp-chosenhead"><b>${esc(chosen.n)}</b>
+          <button class="fp-clear" id="fpClear" aria-label="${t('a11y_remove')}">✕</button></div>
+        <div class="fp-portions" role="group" aria-label="${esc(t('food_portion'))}">
+          ${FOOD_PORTIONS.map(m => `<button class="chip ${m === portion ? 'on' : ''}" data-portion="${m}" aria-pressed="${m === portion}">${m === 1 ? t('food_portion_one') : '×' + m}</button>`).join('')}
+        </div>
+        <div class="fp-macros"><b>${scaled.kcal}</b> ${t('unit_kcal')} · ${t('abbr_p')}${scaled.protein} ${t('abbr_c')}${scaled.carb} ${t('abbr_f')}${scaled.fat}</div>
+      </div>
+      ${foodVerdictHTML(scaled, {slot})}
+      <button class="btn p" id="fadvAdd" style="width:100%;margin-top:10px">${t('fadv_add_anyway', esc(scaled.n))}</button>`;
+    wireFoodVerdict(advice);
+    advice.querySelectorAll('[data-portion]').forEach(b => b.onclick = () => { portion = +b.dataset.portion; drawChosen(); });
+    advice.querySelector('#fpClear').onclick = () => { chosen = null; drawChosen(); };
+    advice.querySelector('#fadvAdd').onclick = () => finishAdd(scalePortion(chosen, portion));
+  }
+
+  drawSuggestions();
+  search.oninput = drawResults;
+  setTimeout(() => { try{ search.focus({preventScroll:true}); }catch(e){} }, 60);
+
   sheet.querySelector('#mfAdd').onclick=()=>{
     const nm=sheet.querySelector('#mfName').value.trim();
     if(!nm){ toast(t('err_enter_food_name')); return; }
@@ -250,14 +303,8 @@ function openAddFood(slot){
       carb:+sheet.querySelector('#mfCarb').value||0,
       fat:+sheet.querySelector('#mfFat').value||0,
     };
-    if(manual.kcal > 0 && picked !== '__manual'){ picked = '__manual'; showAdvice(null, manual); return; }
-    finishAdd({
-      n:nm,
-      kcal:+sheet.querySelector('#mfKcal').value||0,
-      protein:+sheet.querySelector('#mfProtein').value||0,
-      carb:+sheet.querySelector('#mfCarb').value||0,
-      fat:+sheet.querySelector('#mfFat').value||0,
-    });
+    if(manual.kcal > 0 && (!chosen || chosen.n !== manual.n)){ choose(manual); return; }
+    finishAdd(manual);
   };
 }
 

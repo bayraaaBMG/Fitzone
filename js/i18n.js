@@ -120,6 +120,9 @@ const I18N = {
     fadv_day_ok:'{0} ккал үлдсэн — төлөвлөгөөндөө байна',
     fadv_day_ok_fatloss:'{0} ккал үлдсэн — зорилгоо барьж байна',
     fadv_pantry_title:'Гэртээ юу хийж болох вэ?', fadv_pantry_missing:'дутуу: {0}',
+    food_search_placeholder:'Хоол хайх (жишээ: бууз, buuz, шөл)',
+    food_recent:'Сүүлд идсэн', food_usual:'Байнга иддэг', food_for_meal:'{0}-д тохирох',
+    food_times:'{0} удаа', food_portion:'Хэмжээ', food_portion_one:'1 порц',
     fadv_pantry_none:'Гэрийн нөөцөө нэмбэл юу хийж болохыг санал болгоно.',
 
 
@@ -442,6 +445,9 @@ const I18N = {
     fadv_day_ok:'{0} kcal left — on plan',
     fadv_day_ok_fatloss:'{0} kcal left — holding your goal',
     fadv_pantry_title:'What can you cook now?', fadv_pantry_missing:'missing: {0}',
+    food_search_placeholder:'Search food (e.g. buuz, soup)',
+    food_recent:'Recently eaten', food_usual:'You eat this often', food_for_meal:'Good for {0}',
+    food_times:'{0}x', food_portion:'Portion', food_portion_one:'1 serving',
     fadv_pantry_none:'Add what you have at home and we will suggest what to cook.',
 
 

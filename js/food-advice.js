@@ -129,3 +129,74 @@ function pantryPicks(count){
     .sort((a, b) => b.rank - a.rank)
     .slice(0, count || 3);
 }
+
+/* ---------- assisted logging ----------
+   Making the right entry fast to find, rather than guessing what is on the
+   plate. Everything below reads the diary the app already keeps — no new
+   stored field, so the Firestore rules are untouched. */
+
+const FOOD_RECENT_DAYS = 30;
+
+/* what this person actually eats, newest first, deduplicated by name */
+function recentFoods(limit){
+  const slots = ['breakfast','lunch','dinner','snack'];
+  // a real calendar cutoff, not "the last N days that happen to have entries"
+  const cutoff = addDays(today(), -FOOD_RECENT_DAYS);
+  const days = Object.keys(S.foodLog || {}).filter(d => d >= cutoff).sort().reverse();
+  const seen = new Map();
+  for(const d of days){
+    for(const slot of slots){
+      for(const it of ((S.foodLog[d] || {})[slot] || [])){
+        if(!it || !it.n || !(it.kcal > 0)) continue;
+        const key = it.n.trim().toLowerCase();
+        const prev = seen.get(key);
+        if(prev){ prev.count++; continue; }
+        seen.set(key, {count:1, day:d, slot,
+          item:{n:it.n, kcal:it.kcal, protein:it.protein||0, carb:it.carb||0, fat:it.fat||0, recipeId:it.recipeId}});
+      }
+    }
+  }
+  return [...seen.values()].slice(0, limit || 6);
+}
+
+/* the same list ordered by how often it is eaten, for the "usual" row */
+function frequentFoods(limit){
+  return recentFoods(200).slice().sort((a, b) => b.count - a.count || (a.day < b.day ? 1 : -1)).slice(0, limit || 4);
+}
+
+/* latin spelling of the recipe ids, so typing "buuz" finds Бууз */
+function foodSearch(query, slot, limit){
+  if(typeof RECIPES === 'undefined') return [];
+  const q = (query || '').trim().toLowerCase();
+  const goal = (S.profile && S.profile.goal) || 'health';
+  const pantry = new Set(S.pantry || []);
+  return RECIPES
+    .map(r => {
+      const name = r.n.toLowerCase();
+      const id = (r.id || '').toLowerCase();
+      let hit = 0;
+      if(!q) hit = 1;
+      else if(name.startsWith(q) || id.startsWith(q)) hit = 3;
+      else if(name.includes(q) || id.includes(q)) hit = 2;
+      if(!hit) return null;
+      let rank = hit * 10;
+      if(slot && (r.meal || []).includes(slot)) rank += 6;      // right time of day
+      if((r.tags || []).includes('mongol')) rank += 3;           // the food people here actually eat
+      if((r.tags || []).includes(goal)) rank += 3;
+      if((r.needs || []).length && (r.needs || []).every(x => pantry.has(x))) rank += 4;
+      return {recipe:r, rank};
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.rank - a.rank || a.recipe.kcal - b.recipe.kcal)
+    .slice(0, limit || 8)
+    .map(x => x.recipe);
+}
+
+/* portion multipliers offered next to a dish */
+const FOOD_PORTIONS = [0.5, 1, 1.5, 2];
+function scalePortion(item, mult){
+  const m = +mult || 1;
+  const r = v => Math.round((+v || 0) * m);
+  return {...item, kcal:r(item.kcal), protein:r(item.protein), carb:r(item.carb), fat:r(item.fat),
+          n: m === 1 ? item.n : `${item.n} ×${m}`};
+}
