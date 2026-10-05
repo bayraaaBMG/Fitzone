@@ -30,7 +30,7 @@ Object.assign(I18N.en, {
   pub_shot_camera_alt:'The “Check with camera” button on the workout screen',
 
   pub_features_title:'What does MongolFit do?',
-  pub_f1_t:'Workouts', pub_f1_d:'Pick from 60 exercises and train with a weekly plan or whenever you like, tracking as you go.',
+  pub_f1_t:'Workouts', pub_f1_d:'Pick from 103 exercises and train with a weekly plan or whenever you like, tracking as you go.',
   pub_f2_t:'Progress', pub_f2_d:'See your weight trend, a record for each exercise and your streak in one place.',
   pub_f3_t:'Nutrition', pub_f3_d:'Log what you eat each day and keep track of calories, protein, carbs, fat and water.',
   pub_f4_t:'Home / Gym', pub_f4_d:'Filter between no-equipment home exercises and gym exercises.',
@@ -57,13 +57,13 @@ Object.assign(I18N.en, {
   pub_cam_device:'The image is processed on your device — video is not saved and not sent anywhere.',
   pub_cam_note:'Automatic camera counting can vary with the exercise, camera angle, lighting and how visible your body is. Works best with the camera to your side or at 45°, with your whole body in the picture.',
 
-  pub_ex_title:'Exercises', pub_ex_sub:'60 exercises for home and gym. Have a look before you sign up.',
+  pub_ex_title:'Exercises', pub_ex_sub:'103 exercises for home and gym. Have a look before you sign up.',
   pub_ex_filter:'Filter by place', pub_ex_all:'All', pub_ex_home:'Home', pub_ex_gym:'Gym',
   pub_ex_show:'Show exercises', pub_ex_tag_cam:'Camera counts reps', pub_ex_tag_manual:'Manual count',
 
   pub_price_title:'Price', pub_price_tag:'FREE',
   pub_price_lead:'Free to use for now. There is no payment system and no subscription.',
-  pub_price_i1:'60 exercises, weekly plan', pub_price_i2:'Workout tracking, records, streak',
+  pub_price_i1:'103 exercises, weekly plan', pub_price_i2:'Workout tracking, records, streak',
   pub_price_i3:'Weight log, 30-day challenge', pub_price_i4:'Food, calorie and water log',
   pub_price_i5:'Camera rep counting (on 15 exercises)', pub_price_i6:'Mongolian / English, light / dark mode',
 
@@ -79,7 +79,7 @@ Object.assign(I18N.en, {
   pub_q3:'Can I use it at home?', pub_a3:'Yes. There are no-equipment home exercises; choose “Home” when creating your plan.',
   pub_q4:'Can I use it at the gym?', pub_a4:'Yes. There are gym exercises with equipment; choose “Gym” to get a plan for it.',
   pub_q5:'Does it count reps with the camera?', pub_a5:'On 15 exercises the camera can count reps automatically. The count is an estimate and depends on camera angle, lighting and how visible your body is.',
-  pub_q6:'Does the camera feature work on every exercise?', pub_a6:'No. Automatic counting works on 26 of the 60 exercises. On the other 34 the camera shows your form and you count reps yourself.',
+  pub_q6:'Does the camera feature work on every exercise?', pub_a6:'No. Automatic counting works on 36 of the 103 exercises. On the other 67 the camera shows your form and you count reps yourself.',
   pub_q7:'Is my camera video saved?', pub_a7:'No. The image is processed only on your device; nothing is recorded, saved or sent to a server. The camera only turns on when you press the button.',
   pub_q8:'How do I create an account?', pub_a8:'Press “Start free” and sign up with email and password or with Google. Then enter your age, height, weight and goal to get a plan.',
   pub_q9:'Can I install it as an app (PWA)?', pub_a9:'Yes. Choose “Install app” / “Add to Home Screen” from your browser menu. Installing is optional — you can use it directly in the browser.',

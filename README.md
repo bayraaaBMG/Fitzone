@@ -33,7 +33,7 @@ The interface is Mongolian by default, with a full English translation built in.
 ## ✨ Features
 
 ### 🏋️ Workout Tracking
-- Exercise library — **60 exercises**, home and gym, three difficulty levels
+- Exercise library — **103 exercises**, home and gym, three difficulty levels
 - A demonstration for every exercise: 29 have a video, 52 have two-frame
   demonstration photos from the public-domain free-exercise-db, and the rest
   fall back to a drawn muscle figure
@@ -63,7 +63,7 @@ The system:
 - uses exercise-specific rules
 - reduces false duplicate counts with state machines and cooldowns
 
-Automatic counting covers **26 of the 60 exercises**. The remaining **34** use
+Automatic counting covers **36 of the 103 exercises**. The remaining **67** use
 camera form guidance with manual repetition tracking.
 
 The camera is never started on its own: it turns on only when you press the
