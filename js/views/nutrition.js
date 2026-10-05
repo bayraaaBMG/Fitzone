@@ -1,5 +1,12 @@
 /* ---------- NUTRITION ---------- */
-let actLevel=1.45;
+/* The daily-activity answer from onboarding is where this starts. The chips
+   below still override it, and once somebody has chosen one their choice
+   stands for the rest of the session. */
+let actLevel=1.45, actChosen=false;
+function nutActLevel(){
+  const a = S.profile && S.profile.activity;
+  return (typeof ACTIVITY_MULT!=='undefined' && ACTIVITY_MULT[a]) || 1.45;
+}
 let planDays=7;
 let recipeF='all';
 let recipeCat='all';
@@ -17,11 +24,14 @@ function consumedToday(){
 
 function renderNutrition(){
   const p=S.profile;
+  if(!actChosen) actLevel = nutActLevel();
   const n=nutrition(p, actLevel);
   const b=bmi(p.weight, p.height);
   const cat=bmiCategory(b);
   const bpos=Math.min(100,Math.max(0,(b-15)/(40-15)*100));
-  const acts=[[t('act_sedentary'),1.3],[t('act_moderate'),1.45],[t('act_active'),1.65],[t('act_very_active'),1.8]];
+  // the same five levels the onboarding asks about, so the two screens cannot
+  // disagree about what "moderate" multiplies by
+  const acts=[1,2,3,4,5].map(v=>[t('onb_act_'+v), ACTIVITY_MULT[v]]);
   const c=consumedToday();
   app.innerHTML = `
     ${topBar()}
@@ -87,7 +97,7 @@ function renderNutrition(){
       <p class="xs mut center" style="margin-top:16px">${t('nut_footer_note')}</p>
     </div>`;
   topWire();
-  app.querySelectorAll('#acts .chip').forEach(c=>c.onclick=()=>{actLevel=+c.dataset.v; renderNutrition();});
+  app.querySelectorAll('#acts .chip').forEach(c=>c.onclick=()=>{actLevel=+c.dataset.v; actChosen=true; renderNutrition();});
   app.querySelectorAll('#planDaysSel .chip').forEach(c=>c.onclick=()=>{
     planDays=+c.dataset.d;
     app.querySelectorAll('#planDaysSel .chip').forEach(x=>x.classList.toggle('on',x===c));

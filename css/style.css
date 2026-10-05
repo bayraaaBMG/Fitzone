@@ -141,6 +141,25 @@ label.iconbtn{cursor:pointer}
 .askpreview button{margin-left:auto; color:var(--mut); font-size:16px}
 .askresp{margin-top:16px; padding-top:16px; border-top:1px solid var(--line); font-size:14px; line-height:1.55}
 .askresp img{width:100%; max-height:180px; object-fit:cover; border-radius:12px; margin-bottom:12px; border:1px solid var(--line)}
+/* ---------- onboarding: diet cards and the activity scale ---------- */
+.tile.diet.on{border-color:var(--acc-ink); background:var(--tile-acc-g)}
+.actscale{display:grid; gap:8px}
+.actopt{display:flex; align-items:center; gap:13px; width:100%; text-align:left; padding:12px 14px;
+  background:var(--card); border:1px solid var(--line); border-radius:13px; color:var(--txt); transition:.14s}
+.actopt.on{border-color:var(--acc-ink); background:var(--tile-acc-g)}
+.actopt:focus-visible{outline:2px solid var(--acc); outline-offset:2px}
+.acttxt{min-width:0}
+.acttxt b{display:block; font-size:14px; font-weight:700}
+.acttxt .sm{display:block; color:var(--mut); font-size:12px; line-height:1.35}
+.actbars{display:flex; align-items:flex-end; gap:3px; height:26px; flex:none}
+.actbars i{width:5px; border-radius:2px; background:var(--line2); display:block}
+.actbars i:nth-child(1){height:24%}
+.actbars i:nth-child(2){height:42%}
+.actbars i:nth-child(3){height:60%}
+.actbars i:nth-child(4){height:80%}
+.actbars i:nth-child(5){height:100%}
+.actbars i.f{background:var(--acc)}
+
 .seg{display:flex; gap:7px; flex-wrap:wrap}
 .step{height:4px; background:var(--line); border-radius:4px; flex:1}
 .step.on{background:var(--acc)}

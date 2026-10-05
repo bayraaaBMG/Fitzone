@@ -91,6 +91,11 @@ function planEstMin(day){
 function p_minTarget(){ return S.profile?S.profile.minutes:30; }
 
 /* ---------- nutrition (Mifflin-St Jeor) ---------- */
+/* Nobody should be sent below this, whatever the arithmetic says: these are
+   the usual floors for an unsupervised diet, and under them a deficit stops
+   being a deficit and starts being malnutrition. */
+const CAL_FLOOR = {m: 1500, f: 1200};
+
 function nutrition(p, activity){
   const s = p.sex==='m'?5:-161;
   const bmr = 10*p.weight + 6.25*p.height - 5*p.age + s;
@@ -98,6 +103,7 @@ function nutrition(p, activity){
   let cal = tdee, label=t('nut_label_maintain');
   if(p.goal==='fatloss'){ cal = Math.round(tdee*0.8); label=t('nut_label_lose'); }
   else if(p.goal==='muscle'||p.goal==='strength'){ cal = Math.round(tdee*1.1); label=t('nut_label_gain'); }
+  cal = Math.max(cal, CAL_FLOOR[p.sex==='f' ? 'f' : 'm']);
   const protein = Math.round(p.weight*2);            // g
   const fat = Math.round(cal*0.25/9);                // g
   const carb = Math.round((cal - protein*4 - fat*9)/4);

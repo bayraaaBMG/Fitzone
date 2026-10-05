@@ -58,6 +58,11 @@ service cloud.firestore {
         && optStr(p, 'place', 30) && optStr(p, 'joinedAt', 10)
         && optNum(p, 'age') && optNum(p, 'height') && optNum(p, 'weight')
         && optNum(p, 'days') && optNum(p, 'minutes') && optNum(p, 'level')
+        // answers from the onboarding wizard; all optional, so a profile
+        // written by an older client still validates
+        && optNum(p, 'activity') && optNum(p, 'targetWeight') && optNum(p, 'waist') && optNum(p, 'sleep')
+        && optStr(p, 'diet', 30)
+        && (!('health' in p) || (p.health is list && p.health.size() <= 20))
         && (!('equip' in p) || (p.equip is list && p.equip.size() <= 50))
         // 200×200 canvas JPEG is ~10–40 KB; only image data URLs, never other schemes
         && (!('photo' in p) || p.photo == null || (p.photo is string && p.photo.size() <= 300000
