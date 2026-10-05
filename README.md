@@ -2,15 +2,15 @@
 
 ### Гэр & Жийм дасгалын платформ
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-orange)](https://fitzone-five-jet.vercel.app/)
-[![Repository](https://img.shields.io/badge/GitHub-Repository-black)](https://github.com/bayraaaBMG/Fitzone)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-orange)](https://mongolfit.vercel.app/)
+[![Repository](https://img.shields.io/badge/GitHub-Repository-black)](https://github.com/bayraaaBMG/MongolFit)
 
 **MongolFit** is a Mongolian fitness web platform designed for both home and gym workouts.
 
 It helps users discover exercises, track workouts, monitor progress, record nutrition-related information, and use camera-assisted exercise tracking on supported movements.
 
 **Live:**
-https://fitzone-five-jet.vercel.app/
+https://mongolfit.vercel.app/
 
 The interface is Mongolian by default, with a full English translation built in.
 
@@ -154,7 +154,7 @@ index.html          public landing page (no Firebase, camera or ML code)
 privacy.html        privacy policy
 terms.html          terms of service
 404.html            not-found page
-Fitzone.html        the app shell
+MongolFit.html        the app shell
 css/
   style.css         app styles
   public.css        public pages
@@ -191,7 +191,7 @@ sw.js               service worker
 | `/app` | The application |
 | `/privacy`, `/terms` | Policy pages |
 
-Installed PWAs keep `start_url` at `./Fitzone.html`, so existing installs are
+Installed PWAs keep `start_url` at `./MongolFit.html`, so existing installs are
 unaffected by the routing.
 
 ---
@@ -202,7 +202,7 @@ There is no build step. Any static server works for the app shell:
 
 ```bash
 python -m http.server 8000
-# then open http://localhost:8000/Fitzone.html
+# then open http://localhost:8000/MongolFit.html
 ```
 
 The clean routes (`/app`, `/login`, `/privacy`, …) come from the rewrites in
@@ -238,7 +238,7 @@ pytest ml/tests
 - Meal photos are shown on screen only and are never saved.
 - Signing out deletes the local copy of the account data.
 
-Full detail, in plain language: [privacy policy](https://fitzone-five-jet.vercel.app/privacy).
+Full detail, in plain language: [privacy policy](https://mongolfit.vercel.app/privacy).
 
 ---
 
@@ -249,7 +249,7 @@ diagnosis or treatment. Exercise carries physical risk — consult a doctor
 before starting, and stop if you feel pain, dizziness or shortness of breath.
 Repetition counts, calories and camera form feedback are estimates.
 
-See the [terms of service](https://fitzone-five-jet.vercel.app/terms).
+See the [terms of service](https://mongolfit.vercel.app/terms).
 
 ---
 

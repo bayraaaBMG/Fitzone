@@ -165,7 +165,7 @@ function logIn(email, pass){ return firebase.auth().signInWithEmailAndPassword(e
 
    This app is hosted on Vercel, not Firebase Hosting, so authDomain is
    the default fitzone-7f325.firebaseapp.com — a different site from
-   fitzone-five-jet.vercel.app. signInWithRedirect's round trip depends on
+   mongolfit.vercel.app. signInWithRedirect's round trip depends on
    a hidden cross-origin iframe (from authDomain, embedded in this page)
    to read back the "redirect complete" state that Firebase's auth
    handler wrote during the full-page visit to that domain. Chrome 115+ /

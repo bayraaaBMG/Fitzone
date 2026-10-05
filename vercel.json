@@ -5,16 +5,20 @@
       "destination": "https://fitzone-7f325.firebaseapp.com/__/auth/:path*"
     },
     {
+      "source": "/Fitzone.html",
+      "destination": "/MongolFit.html"
+    },
+    {
       "source": "/app",
-      "destination": "/Fitzone.html"
+      "destination": "/MongolFit.html"
     },
     {
       "source": "/login",
-      "destination": "/Fitzone.html"
+      "destination": "/MongolFit.html"
     },
     {
       "source": "/register",
-      "destination": "/Fitzone.html"
+      "destination": "/MongolFit.html"
     },
     {
       "source": "/privacy",
