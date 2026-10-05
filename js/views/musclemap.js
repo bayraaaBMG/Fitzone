@@ -121,6 +121,23 @@ function exerciseFigureSVG(exId, opts){
   </div>`;
 }
 
+/* ---------- the thumbnail every exercise card uses ----------
+   Real demonstration photo when the exercise has one (52 of 60), the drawn
+   muscle figure otherwise. Never an emoji: a card carrying 🤸 reads as a toy.
+   `alt` defaults to empty because every caller prints the name beside it —
+   a screen reader should not hear the name twice. */
+function exerciseThumbHTML(exId, opts){
+  const o = opts || {};
+  const x = typeof ex === 'function' ? ex(exId) : null;
+  if(!x) return '';
+  const frames = typeof exPhotoFrames === 'function' ? exPhotoFrames(exId) : 0;
+  if(frames){
+    return `<img class="exthumb" src="assets/ex/${exId}-0.webp" alt="${o.alt ? esc(o.alt) : ''}"
+      width="400" height="267" loading="lazy" decoding="async">`;
+  }
+  return typeof exerciseFigureSVG === 'function' ? exerciseFigureSVG(exId, o) : '';
+}
+
 /* ---------- whole-body recovery + what is worth training ----------
    The figure coloured by how recovered every muscle is, the muscles that still
    need time, and the exercises whose muscles are rested. Both are derived from
@@ -169,7 +186,7 @@ function suggestionsHTML(){
       const x = ex(p.id);
       if(!x) return '';
       return `<button class="exrow sugrow" data-sug="${p.id}">
-        <div class="thumb">${typeof exerciseFigureSVG === 'function' ? exerciseFigureSVG(p.id) : x.e}</div>
+        <div class="thumb">${exerciseThumbHTML(p.id)}</div>
         <div class="info"><b>${esc(x.n)}</b><span>${p.muscles.map(m => MUSCLE_NAMES[m]).join(' · ')}</span></div>
         <div class="sr ${recoveryBand(p.worstPrimary)}">${p.worstPrimary}%<small>${t('rec_recovered')}</small></div>
       </button>`;

@@ -225,7 +225,7 @@ function recordsCard(){
     <tbody>${rows.map(([id, st])=>{
       const x = ex(id), c = COACH[id] || {};
       const best = c.mode==='time' ? `${st.bestTime||0} ${t('unit_sec')}` : `${st.bestReps||0} ${t('ws_reps_short')}`;
-      return `<tr><td><span aria-hidden="true">${x.e}</span> ${esc(x.n)}</td><td><b>${best}</b></td><td>${st.sessions}</td></tr>`;
+      return `<tr><td class="exname"><span class="thumb xs">${typeof exerciseThumbHTML==='function' ? exerciseThumbHTML(id) : ''}</span>${esc(x.n)}</td><td><b>${best}</b></td><td>${st.sessions}</td></tr>`;
     }).join('')}</tbody></table></div>`;
 }
 

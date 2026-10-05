@@ -107,7 +107,7 @@ function recordsListHTML(){
     const best = time ? s.bestTime : s.bestReps;
     const last = s.last ? (time ? s.last.heldSec : s.last.reps) : 0;
     return `<div class="foodrow" data-ex="${id}" style="cursor:pointer">
-      <div class="e">${x.e}</div>
+      <div class="thumb sm">${typeof exerciseThumbHTML==='function' ? exerciseThumbHTML(x.id) : ''}</div>
       <div style="flex:1;min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.n)}</b>
         <span class="xs mut">${t('ws_last')}: ${last} ${unit} · 🔥 ${s.streak}</span></div>
       <span class="xs" style="flex:none;color:var(--acc-ink);font-weight:700">🏆 ${best} ${unit}</span>

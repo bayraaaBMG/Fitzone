@@ -51,7 +51,7 @@ function openDay(i){
     <p class="mut sm" style="margin:4px 0 16px">${d.ex.length} ${t('unit_exercises')} · ~${planEstMin(d)} ${t('unit_min')} · ${t('rest_between_sets')}</p>
     <div>${d.ex.map((e,k)=>{const x=ex(e.id);return `
       <div class="exrow" data-ex="${x.id}" data-i="${k}" style="cursor:pointer">
-        <div class="thumb">${x.e}</div>
+        <div class="thumb">${typeof exerciseThumbHTML==='function' ? exerciseThumbHTML(x.id) : ''}</div>
         <div class="info"><b>${x.n}</b><span>${M_NAMES[x.m]} · ${t('rest')} ${e.rest}${t('unit_sec')}</span></div>
         <div class="sr">${e.sets}×${e.reps}<small>set·reps</small></div>
         <button class="timerbtn" data-rest="${e.rest}" aria-label="${t('rest_timer')}">⏱</button>

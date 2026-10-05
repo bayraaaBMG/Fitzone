@@ -428,7 +428,9 @@ function wsRenderActive(root){
       <div class="ws-bar ${WS.battle?'':'solo'}"><i id="wsBar" style="width:${WS.battle?50:0}%"></i></div>
     </div>
     <div class="ws-stage" id="wsStage">
-      ${camOn ? '' : `<div class="ws-demo"><div class="e">${x.e}</div><div class="ws-cue" id="wsCue">${wsCueHTML()}</div></div>`}
+      ${camOn ? '' : `<div class="ws-demo">
+        <div class="ws-demoart">${typeof exerciseDemoHTML==='function' ? exerciseDemoHTML(x.id) : ''}</div>
+        <div class="ws-cue" id="wsCue">${wsCueHTML()}</div></div>`}
       <div class="ws-pill" id="wsPill" role="status" aria-live="polite"></div>
       <div class="ws-lost" id="wsLost" role="status" aria-live="assertive" hidden></div>
       ${WS.camTip ? wsSetupTipHTML() : ''}
@@ -447,6 +449,7 @@ function wsRenderActive(root){
     </div>
   </div>`;
   wsAttachMedia(root.querySelector('#wsStage'));
+  if(typeof startExerciseDemos==='function') startExerciseDemos(root);
   wsUpdatePill();
   wsUpdateHud();
   root.querySelector('#wsX').onclick = wsClose;
