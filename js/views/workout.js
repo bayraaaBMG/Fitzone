@@ -160,6 +160,9 @@ function wsRenderLost(){
   if(!el) return;
   el.hidden = !WS.lost;
   el.innerHTML = WS.lost ? `<b>${t('ws_cam_blind')}</b><span>${t('ws_cam_blind_hint')}</span>` : '';
+  // while that banner is up it is the only thing worth reading
+  const pill = root.querySelector('#wsPill');
+  if(pill) pill.hidden = !!WS.lost;
 }
 
 /* placement guidance, shown while the camera warms up and until the set starts
@@ -206,6 +209,8 @@ function wsPillInfo(){
 function wsUpdatePill(){
   const el = wsRoot() && wsRoot().querySelector('#wsPill');
   if(!el) return;
+  if(WS.lost){ el.hidden = true; return; }
+  el.hidden = false;
   const info = wsPillInfo();
   el.innerHTML = info ? `<span class="${info.cls}">${esc(info.text)}</span>` : '';
 }
@@ -432,6 +437,7 @@ function wsRenderActive(root){
         <div class="ws-demoart">${typeof exerciseDemoHTML==='function' ? exerciseDemoHTML(x.id) : ''}</div>
         <div class="ws-cue" id="wsCue">${wsCueHTML()}</div></div>`}
       <div class="ws-pill" id="wsPill" role="status" aria-live="polite"></div>
+      ${camOn ? `<div class="ws-bignum" id="wsBigNum" aria-hidden="true"></div>` : ''}
       <div class="ws-lost" id="wsLost" role="status" aria-live="assertive" hidden></div>
       ${WS.camTip ? wsSetupTipHTML() : ''}
       <div class="ws-flash"></div>
@@ -473,6 +479,13 @@ function wsUpdateHud(){
   const target = wsTarget(), opp = wsOppLive();
   const clock = WS.mode==='reps' ? WS.duration - WS.elapsed : WS.elapsed;
   if(q('#wsMe')) q('#wsMe').textContent = WS.amount;
+  // the same figure, big, over the camera: the header is too small to read
+  // from the floor, which is where this screen is actually used
+  const big = q('#wsBigNum');
+  if(big){
+    big.textContent = WS.amount;
+    big.classList.toggle('auto', wsAutoCount());
+  }
   if(q('#wsOpp')) q('#wsOpp').textContent = opp;
   if(q('#wsClock')){ q('#wsClock').textContent = wsClock(Math.ceil(clock)); q('#wsClock').classList.toggle('low', WS.mode==='reps' && clock<=5); }
   if(q('#wsBar')){

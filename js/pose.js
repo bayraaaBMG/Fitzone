@@ -109,17 +109,28 @@ async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded, s
     }
     ctx.clearRect(0,0,canvas.width,canvas.height);
     if(!lm) return;
-    const col = status==='good' ? '#C9F73B' : status==='warn' ? '#FFB23D' : 'rgba(255,255,255,.55)';
+    const col = status==='good' ? '#C9F73B' : status==='warn' ? '#FFB23D' : 'rgba(255,255,255,.70)';
     const W=canvas.width, H=canvas.height;
-    ctx.lineWidth = Math.max(3, W/160); ctx.strokeStyle = col; ctx.lineCap='round';
-    POSE_LINKS.forEach(([a,b])=>{
-      if((lm[a].visibility||0)<0.3 || (lm[b].visibility||0)<0.3) return;
-      ctx.beginPath(); ctx.moveTo(lm[a].x*W, lm[a].y*H); ctx.lineTo(lm[b].x*W, lm[b].y*H); ctx.stroke();
-    });
-    ctx.fillStyle = '#fff';
+    const bone = Math.max(5, W/90);
+    const seen = i => (lm[i].visibility||0) >= 0.3;
+    // every bone is drawn twice: a dark casing first, then the colour on top,
+    // so the figure reads against a white wall as well as a dark room
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for(const [width, style] of [[bone + 4, 'rgba(0,0,0,.5)'], [bone, col]]){
+      ctx.lineWidth = width; ctx.strokeStyle = style;
+      ctx.beginPath();
+      POSE_LINKS.forEach(([a,b])=>{
+        if(!seen(a) || !seen(b)) return;
+        ctx.moveTo(lm[a].x*W, lm[a].y*H); ctx.lineTo(lm[b].x*W, lm[b].y*H);
+      });
+      ctx.stroke();
+    }
+    const dot = Math.max(5, W/95);
     [11,12,13,14,15,16,23,24,25,26,27,28].forEach(i=>{
-      if((lm[i].visibility||0)<0.3) return;
-      ctx.beginPath(); ctx.arc(lm[i].x*W, lm[i].y*H, Math.max(4, W/110), 0, Math.PI*2); ctx.fill();
+      if(!seen(i)) return;
+      ctx.beginPath(); ctx.arc(lm[i].x*W, lm[i].y*H, dot, 0, Math.PI*2);
+      ctx.fillStyle = '#fff'; ctx.fill();
+      ctx.lineWidth = Math.max(2, W/320); ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.stroke();
     });
   }
 
