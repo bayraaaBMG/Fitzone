@@ -114,7 +114,8 @@ function drawDiary(){
         <button class="chip" data-slot="${slot}" data-add="1">+ ${t('add')}</button>
       </div>
       ${items.length? items.map((it,i)=>{
-        const thumb = it.photo ? `<img class="foodthumb" data-photo="${esc(it.photo)}" src="${esc(it.photo)}" alt="">` : `<div class="e">🍽</div>`;
+        const thumb = it.photo ? `<img class="foodthumb" data-photo="${esc(it.photo)}" src="${esc(it.photo)}" alt="">`
+          : `<div class="thumb sm">${recipeThumbHTML(it.recipeId)}</div>`;
         return `<div class="foodrow">${thumb}<div style="flex:1"><b>${esc(it.n)}</b><div class="xs mut">${it.kcal} ${t('unit_kcal')} · ${t('abbr_p')}${it.protein||0} ${t('abbr_c')}${it.carb||0} ${t('abbr_f')}${it.fat||0}</div></div><button class="x" data-slot="${slot}" data-i="${i}" aria-label="${t('a11y_remove')}">✕</button></div>`;
       }).join('')
        : `<p class="xs mut" style="margin:10px 0 0">${t('no_entries')}</p>`}
@@ -137,6 +138,53 @@ function removeLogItem(slot, idx){
   save();
   renderNutrition();
 }
+/* ---------- the instruction video ----------
+   Click-to-play: the iframe is only created when the viewer asks for it, so
+   opening a recipe makes no request to YouTube and sets no cookie. */
+function recipeVideoHTML(id){
+  const v = typeof foodVideo === 'function' ? foodVideo(id) : null;
+  if(!v) return '';
+  return `<div class="block recipe-video">
+    <div class="lab">▶ ${t('recipe_video')}</div>
+    <button class="rv-play" data-video="${esc(v.v)}" data-title="${esc(v.title)}">
+      <img src="https://i.ytimg.com/vi/${esc(v.v)}/hqdefault.jpg" alt="" width="480" height="360" loading="lazy" decoding="async">
+      <span class="rv-btn" aria-hidden="true">▶</span>
+      <span class="rv-meta"><b>${esc(v.title)}</b><small>${esc(v.by)}</small></span>
+    </button>
+    <p class="xs mut" style="margin:8px 0 0">${t('recipe_video_note')}
+      <a href="https://www.youtube.com/watch?v=${esc(v.v)}" target="_blank" rel="noopener">${t('recipe_video_open')}</a></p>
+  </div>`;
+}
+function wireRecipeVideo(root){
+  root.querySelectorAll('.rv-play[data-video]').forEach(b => b.onclick = () => {
+    const id = b.dataset.video;
+    const wrap = document.createElement('div');
+    wrap.className = 'vidwrap';
+    wrap.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0"
+      title="${b.dataset.title || ''}" allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+      allowfullscreen loading="lazy"></iframe>`;
+    b.replaceWith(wrap);
+  });
+}
+
+/* ---------- recipe thumbnail ----------
+   The dish photo where we have one, otherwise a neutral plate mark. Never an
+   emoji. Photos are decorative: the dish name is always printed beside them. */
+function recipeThumbHTML(id){
+  const src = typeof foodPhoto === 'function' ? foodPhoto(id) : null;
+  if(src) return `<img class="exthumb" src="${src}" alt="" width="400" height="300" loading="lazy" decoding="async">`;
+  return `<svg class="food-ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.5"/></svg>`;
+}
+
+/* credit line for a photo that asks for one */
+function recipePhotoCredit(id){
+  const p = (typeof FOOD_PHOTOS !== 'undefined') && FOOD_PHOTOS[id];
+  if(!p || !p.lic) return '';
+  const who = p.by ? esc(p.by) : t('photo_unknown_author');
+  const link = p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${who}</a>` : who;
+  return `<p class="xs mut photo-credit">${t('photo_credit', link, esc(p.lic))}</p>`;
+}
+
 /* one line under the macro bars: what today still needs */
 function dayAdviceHTML(){
   const a = typeof dayAdvice === 'function' ? dayAdvice() : null;
@@ -394,7 +442,7 @@ function drawRecipeList(){
     const canMake = S.pantry.length && r.needs.length && recipeScore(r,S.pantry)===1;
     return `
     <button class="excard" data-id="${r.id}">
-      <div class="thumb">${r.e}</div>
+      <div class="thumb">${recipeThumbHTML(r.id)}</div>
       <div class="info">
         <b>${r.n}</b>
         <div class="tags">
@@ -417,7 +465,7 @@ function drawMealPlan(){
     <div class="card daycard" style="margin-top:10px">
       <b>${t('day_number', i+1)}</b>
       <div class="daymeals">
-        ${slots.map(slot=>{const r=day[slot]; return `<button class="dmeal" data-id="${r.id}"><span class="e">${r.e}</span><span class="n">${MEAL_NAMES[slot]}: ${r.n}</span><span class="k">${r.kcal} ${t('unit_kcal')}</span></button>`;}).join('')}
+        ${slots.map(slot=>{const r=day[slot]; return `<button class="dmeal" data-id="${r.id}"><span class="thumb sm">${recipeThumbHTML(r.id)}</span><span class="n">${MEAL_NAMES[slot]}: ${r.n}</span><span class="k">${r.kcal} ${t('unit_kcal')}</span></button>`;}).join('')}
       </div>
     </div>`).join('');
   document.querySelectorAll('#mealplan .dmeal').forEach(b=>b.onclick=()=>openRecipe(b.dataset.id));
@@ -429,13 +477,14 @@ function openRecipe(id){
   const sheet=mkSheet();
   sheet.querySelector('.inner').innerHTML = `
     <div class="grab"></div>
-    <div class="bigthumb" style="display:grid;place-items:center;font-size:64px">${r.e}</div>
+    <div class="bigthumb">${recipeThumbHTML(r.id)}</div>
     <h2 class="disp" style="font-size:23px">${r.n}</h2>
     <div style="margin-top:8px">
       <span class="vtag">⏱ ${r.time} ${t('unit_min')}</span><span class="vtag">${LVL_NAMES[r.lvl]}</span>
       ${r.meal.map(m=>`<span class="vtag">${MEAL_NAMES[m]}</span>`).join('')}
       ${(r.tags||[]).map(t=>`<span class="vtag">${RECIPE_CATS[t]}</span>`).join('')}
     </div>
+    ${recipePhotoCredit(r.id)}
     <div class="kv">
       <div class="k"><b>${r.kcal}</b><span>${t('unit_kcal')}</span></div>
       <div class="k"><b>${r.protein}${t('unit_g')}</b><span>${t('macro_protein')}</span></div>
@@ -445,13 +494,14 @@ function openRecipe(id){
     <div class="block"><div class="lab">🛒 ${t('ingredients')}</div><div class="note">${r.ingredients.map(esc).join('<br>')}</div></div>
     <div class="block"><div class="lab">📋 ${t('instructions')}</div><div class="note">${esc(r.steps)}</div></div>
     ${foodVerdictHTML({n:r.n, kcal:r.kcal, protein:r.protein, carb:r.carb, fat:r.fat, recipeId:r.id}, {slot:(r.meal||[])[0]})}
-    <a class="btn g" style="margin-top:14px;width:100%" href="${youtubeSearchUrl(r.n)}" target="_blank" rel="noopener">▶ ${t('find_on_youtube')}</a>
+    ${recipeVideoHTML(r.id)}
     <div class="block"><div class="lab">➕ ${t('add_to_log')}</div>
       <div class="chiprow">
         ${r.meal.map(m=>`<button class="chip" data-slot="${m}">${MEAL_NAMES[m]}</button>`).join('')}
       </div>
     </div>`;
   wireFoodVerdict(sheet);
+  wireRecipeVideo(sheet);
   sheet.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>{
     addLogItem(b.dataset.slot, {n:r.n, kcal:r.kcal, protein:r.protein, carb:r.carb, fat:r.fat, recipeId:r.id});
     closeSheet();

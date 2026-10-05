@@ -104,6 +104,14 @@ const REFERENCES = {
     used_mn: 'Дасгал бүрийн ажиллах булчингийн (үндсэн/туслах) хуваарилалтыг тулгаж шалгасан',
     used_en: 'Cross-checking the primary/secondary muscle assignment of each exercise',
   },
+  foodphotos: {
+    org: 'Openverse / Wikimedia Commons',
+    url: 'https://openverse.org',
+    title_mn: 'Нээлттэй лицэнзтэй хоолны зургууд (CC0 / CC-BY / CC-BY-SA)',
+    title_en: 'Openly licensed food photography (CC0 / CC-BY / CC-BY-SA)',
+    used_mn: 'Жор бүрийн зураг — зохиогч, лицэнзийг тухайн жорын хуудсанд заасан',
+    used_en: 'The photo on each recipe; the author and licence are shown on that recipe',
+  },
 };
 
 const REFERENCE_GROUPS = [
