@@ -79,7 +79,7 @@ Object.assign(I18N.en, {
   pub_q3:'Can I use it at home?', pub_a3:'Yes. There are no-equipment home exercises; choose “Home” when creating your plan.',
   pub_q4:'Can I use it at the gym?', pub_a4:'Yes. There are gym exercises with equipment; choose “Gym” to get a plan for it.',
   pub_q5:'Does it count reps with the camera?', pub_a5:'On 15 exercises the camera can count reps automatically. The count is an estimate and depends on camera angle, lighting and how visible your body is.',
-  pub_q6:'Does the camera feature work on every exercise?', pub_a6:'No. Automatic counting works on 15 of the 60 exercises. On the other 45 you count reps yourself.',
+  pub_q6:'Does the camera feature work on every exercise?', pub_a6:'No. Automatic counting works on 26 of the 60 exercises. On the other 34 the camera shows your form and you count reps yourself.',
   pub_q7:'Is my camera video saved?', pub_a7:'No. The image is processed only on your device; nothing is recorded, saved or sent to a server. The camera only turns on when you press the button.',
   pub_q8:'How do I create an account?', pub_a8:'Press “Start free” and sign up with email and password or with Google. Then enter your age, height, weight and goal to get a plan.',
   pub_q9:'Can I install it as an app (PWA)?', pub_a9:'Yes. Choose “Install app” / “Add to Home Screen” from your browser menu. Installing is optional — you can use it directly in the browser.',

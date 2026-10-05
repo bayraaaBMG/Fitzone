@@ -63,7 +63,7 @@ The system:
 - uses exercise-specific rules
 - reduces false duplicate counts with state machines and cooldowns
 
-Automatic counting covers **15 of the 60 exercises**. The remaining **45** use
+Automatic counting covers **26 of the 60 exercises**. The remaining **34** use
 camera form guidance with manual repetition tracking.
 
 The camera is never started on its own: it turns on only when you press the
