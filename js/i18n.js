@@ -204,7 +204,9 @@ const I18N = {
     home_install_desc:'Апп мэт хурдан нээгдэж, offline ч ажиллана.',
 
     /* exercise detail */
-    video_coming_soon:'Бичлэг удахгүй нэмэгдэнэ', rest:'амралт', unit_sec:'с', kcal_per_min:'Ккал/мин',
+    video_coming_soon:'Бичлэг удахгүй нэмэгдэнэ',
+    clip_label:'{0} дасгалын заавар бичлэг — дуугүй, давтагдана',
+    clip_pause:'Бичлэгийг түр зогсоох', clip_play:'Бичлэгийг тоглуулах', rest:'амралт', unit_sec:'с', kcal_per_min:'Ккал/мин',
     target_muscle:'Ажиллах булчин', proper_technique:'Зөв техник', common_mistakes:'Түгээмэл алдаа',
     alt_exercises:'Орлуулах дасгал', easier:'Хөнгөн', harder:'Хүнд',
 
@@ -533,7 +535,9 @@ const I18N = {
     home_install_desc:'Opens instantly like an app, and works offline.',
 
     /* exercise detail */
-    video_coming_soon:'Video coming soon', rest:'rest', unit_sec:'s', kcal_per_min:'Kcal/min',
+    video_coming_soon:'Video coming soon',
+    clip_label:'{0} form clip — silent, looping',
+    clip_pause:'Pause the clip', clip_play:'Play the clip', rest:'rest', unit_sec:'s', kcal_per_min:'Kcal/min',
     target_muscle:'Target muscle', proper_technique:'Proper technique', common_mistakes:'Common mistakes',
     alt_exercises:'Substitute exercises', easier:'Easier', harder:'Harder',
 

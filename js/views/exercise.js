@@ -1,12 +1,33 @@
 /* ---------- EXERCISE DETAIL ---------- */
+/* what an exercise shows when it has neither a clip nor an embed: the two
+   demonstration frames, or the drawn muscle figure */
+function novideoHTML(x){
+  const demo = typeof exerciseDemoHTML==='function' ? exerciseDemoHTML(x.id) : '';
+  const isPhoto = /class="exdemo"/.test(demo);
+  return `<div class="novideo figure${isPhoto?' photo':''}">${demo}
+    ${isPhoto ? '' : `<span class="xs mut">${t('video_coming_soon')}</span>`}</div>`;
+}
+/* a silent form clip from our own origin, looping on its own */
+function clipHTML(x, clip){
+  const auto = exClipAutoplay();
+  const c = clip.credit;
+  const cred = c
+    ? `<span class="clipcred">${c.url ? `<a href="${c.url}" target="_blank" rel="noopener">${esc(c.by)}</a>` : esc(c.by)}${c.lic ? ' \u00b7 ' + esc(c.lic) : ''}</span>`
+    : '';
+  return `<div class="vidwrap clip" data-clip="${esc(x.id)}">
+    <video ${auto ? 'autoplay ' : ''}loop muted playsinline preload="metadata" disablepictureinpicture
+      poster="${clip.poster}" aria-label="${esc(t('clip_label', x.n))}">
+      ${clip.src.map(s => `<source src="${s.src}" type="${s.type}">`).join('')}
+    </video>
+    <button class="clipbtn" type="button" aria-pressed="${auto ? 'true' : 'false'}"
+      aria-label="${esc(auto ? t('clip_pause') : t('clip_play'))}">${auto ? '\u23f8' : '\u25b6'}</button>
+    ${cred}</div>`;
+}
 function videoEmbed(x){
-  // no video yet: show the demonstration frames, or the drawn muscle figure
-  if(!x.video){
-    const demo = typeof exerciseDemoHTML==='function' ? exerciseDemoHTML(x.id) : '';
-    const isPhoto = /class="exdemo"/.test(demo);
-    return `<div class="novideo figure${isPhoto?' photo':''}">${demo}
-      ${isPhoto ? '' : `<span class="xs mut">${t('video_coming_soon')}</span>`}</div>`;
-  }
+  // our own clip comes first: it loops silently and needs no third party
+  const clip = typeof exClip==='function' ? exClip(x.id) : null;
+  if(clip) return clipHTML(x, clip);
+  if(!x.video) return novideoHTML(x);
   if(/^https?:\/\//.test(x.video) || /\.(mp4|webm|mov)(\?.*)?$/i.test(x.video)){
     return `<div class="vidwrap"><video controls preload="none" poster="${x.poster||''}"><source src="${x.video}" type="video/mp4"></video></div>`;
   }
@@ -47,6 +68,66 @@ function openExercise(id){
   sheet.querySelector('#exStart').onclick=()=> openWorkout(x.id, false);
   sheet.querySelector('#exBattle').onclick=()=> openWorkout(x.id, true);
   if(typeof startExerciseDemos==='function') startExerciseDemos(sheet);
+  wireExerciseClip(sheet, x);
+}
+
+/* ---- clip playback ----
+   Only the open sheet holds a clip, so one observer is enough for all of them. */
+let _clipIO = null;
+function stopExerciseClips(){
+  if(_clipIO){ _clipIO.disconnect(); _clipIO = null; }
+  document.querySelectorAll('.vidwrap.clip video').forEach(v => { try{ v.pause(); }catch(e){} });
+}
+function wireExerciseClip(sheet, x){
+  const wrap = sheet.querySelector('.vidwrap.clip');
+  if(!wrap) return;
+  const v = wrap.querySelector('video'), btn = wrap.querySelector('.clipbtn');
+  let userPaused = !v.autoplay, dead = false;
+
+  // no file there, or one the browser cannot decode: show the illustration
+  // instead of a black box, and stop asking for it for the rest of the session
+  const fail = () => {
+    if(dead) return;
+    dead = true;
+    if(typeof exClipFailed==='function') exClipFailed(wrap.dataset.clip);
+    stopExerciseClips();
+    wrap.insertAdjacentHTML('beforebegin', novideoHTML(x));
+    wrap.remove();
+    if(typeof startExerciseDemos==='function') startExerciseDemos(sheet);
+  };
+  v.addEventListener('error', fail);
+  // the element fires error itself once every candidate is exhausted; counting
+  // the sources as well covers browsers that only report it on the <source>
+  const srcs = v.querySelectorAll('source');
+  let left = srcs.length;
+  srcs.forEach(s => s.addEventListener('error', () => {
+    if(typeof exClipFormatFailed==='function') exClipFormatFailed(s.getAttribute('src'));
+    if(--left <= 0) fail();
+  }));
+
+  const setBtn = playing => {
+    btn.textContent = playing ? '\u23f8' : '\u25b6';
+    btn.setAttribute('aria-pressed', playing ? 'true' : 'false');
+    btn.setAttribute('aria-label', playing ? t('clip_pause') : t('clip_play'));
+  };
+  btn.onclick = () => {
+    if(v.paused){ userPaused = false; v.play().catch(()=>{}); }
+    else { userPaused = true; v.pause(); }
+  };
+  v.addEventListener('play', () => setBtn(true));
+  v.addEventListener('pause', () => setBtn(false));
+  // a browser may refuse autoplay; that must not look like a broken clip
+  if(v.autoplay) v.play().catch(() => { userPaused = true; setBtn(false); });
+
+  // scrolled out of the sheet: stop, so no battery goes on a clip nobody sees
+  if(window.IntersectionObserver){
+    _clipIO = new IntersectionObserver(entries => entries.forEach(en => {
+      if(dead) return;
+      if(en.isIntersecting){ if(!userPaused) v.play().catch(()=>{}); }
+      else if(!v.paused) v.pause();
+    }), {threshold:0.15});
+    _clipIO.observe(v);
+  }
 }
 function exPrLine(id){
   const s=exStatsFor(id), c=COACH[id];

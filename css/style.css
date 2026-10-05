@@ -259,6 +259,15 @@ hr.sep{border:none; border-top:1px solid var(--line); margin:20px 0}
 /* ---------- video embed ---------- */
 .vidwrap{position:relative; width:100%; padding-top:56.25%; border-radius:14px; overflow:hidden; background:#000; margin-bottom:14px}
 .vidwrap iframe, .vidwrap video{position:absolute; inset:0; width:100%; height:100%; border:0; object-fit:cover}
+/* a looping form clip fills the same 16:9 box as an embed */
+.vidwrap.clip video{object-fit:cover; background:#000}
+.clipbtn{position:absolute; right:8px; bottom:8px; width:44px; height:44px; border-radius:50%;
+  border:1px solid rgba(255,255,255,.4); background:rgba(0,0,0,.55); color:#fff; font-size:15px; line-height:1;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px)}
+.clipbtn:focus-visible{outline:2px solid var(--acc); outline-offset:2px}
+.clipcred{position:absolute; left:10px; bottom:12px; max-width:60%; font-size:10px; line-height:1.3;
+  color:rgba(255,255,255,.82); text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.clipcred a{color:inherit}
 .novideo{height:140px; border-radius:14px; background:var(--panel-g); border:1px solid var(--line);
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--mut); font-size:12.5px; margin-bottom:14px; text-align:center; padding:10px}
 .novideo .e{font-size:34px}

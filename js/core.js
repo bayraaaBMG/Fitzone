@@ -43,6 +43,7 @@ function topWire(){
 }
 function mkSheet(){
   if(typeof stopExerciseDemos==='function') stopExerciseDemos();
+  if(typeof stopExerciseClips==='function') stopExerciseClips();
   const opener = document.activeElement;
   closeSheet();
   const s=document.createElement('div'); s.className='sheet'; s.id='sheet';
@@ -61,6 +62,7 @@ document.addEventListener('keydown', e=>{
 function closeSheet(){
   const s=document.getElementById('sheet'); if(!s) return;
   if(typeof stopExerciseDemos==='function') stopExerciseDemos();
+  if(typeof stopExerciseClips==='function') stopExerciseClips();
   const o=s._opener; s.remove();
   // keyboard / screen-reader users get their place back on the control that opened the sheet
   if(o && o.isConnected && o!==document.body) try{ o.focus({preventScroll:true}); }catch(e){}
