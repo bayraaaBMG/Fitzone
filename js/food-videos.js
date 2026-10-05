@@ -1,20 +1,53 @@
 /* ---------- recipe videos ----------
-   Hand-picked instruction videos, each one checked against YouTube's oEmbed
-   endpoint so the id, title and channel here are real. Recipes without an
-   entry simply show no video — a search link is not an instruction video.
-   Embedded through youtube-nocookie, and only after the viewer presses play. */
+   One hand-picked instruction video per recipe. Every id was checked against
+   YouTube's oEmbed endpoint, so the title and channel recorded here are the
+   real ones and no entry points at a removed or private video.
+   Embedded through youtube-nocookie, and only once the viewer presses play. */
 const FOOD_VIDEOS = {
   aaruul:{v:'rMBryjUdZIk', title:'Nargie\'s Mongolian Cuisine: AARUUL (The Most Popular Mongolian Dairy Product)', by:'ARTGER'},
   bantan:{v:'4TAvMGSAq8U', title:'Mongolian Cuisine: Bantan - Hangover Soup (In Mongolian and English)', by:'Chef Rafi\'s Awesome World'},
+  beansoup:{v:'p4DhxESsjRM', title:'COZY 3 Bean Soup to Warm your Soul | Quick & Easy ONE-POT Recipe', by:'Spain on a Fork'},
+  beefbeanstew:{v:'sVX9k-u1s1o', title:'Traditional Beef and Red Beans Stew | Easy Recipe | ZFN', by:'Zim Food Network'},
+  beefpotato:{v:'QeOp1MtsHPo', title:'Beef And Potato Stew Recipe | How To Make Beef Stew On The Stove', by:'Cook! Stacey Cook'},
+  boiledeggveg:{v:'eujXMMC-k8c', title:'Eggs and Vegetables Stir Fry', by:'Homecooking With Chef Walter'},
   boortsog:{v:'5S3IgsvVJBQ', title:'How to Make Boortsog (Mongolian Fried Pastries)', by:'Ayuhan\'s Kitchen'},
   buuz:{v:'pktdRU-MMGM', title:'Дрожгүй мантуун бууз хэрхэн хийх вэ?', by:'Янживын Батзаяа'},
+  cheesecucumber:{v:'RRoFFX5il8A', title:'Cucumber Bites with Cream Cheese', by:'SoDelicious'},
+  cheesenoodle:{v:'Cm7e7VtZCkE', title:'10-Minute Cream Cheese Pasta', by:'The Clever Meal'},
+  chickenfry:{v:'4ThKPp9H__Y', title:'Juicy CHICKEN BREAST with VEGGIES - Easy Frying Pan Recipe!', by:'GEORGY KAVKAZ Life'},
+  chickennoodle:{v:'0K3za6r0VDI', title:'Chicken Stir Fry Noodles', by:'Break the Spice'},
+  chickenriceveg:{v:'Wb0uJ_zkANU', title:'Delicious Chicken & Vegetable Rice - Easy Chicken and Rice Recipe - One Pot Meal', by:'Cooking With Claudia'},
+  chickenvegsoup:{v:'wOjsAUktnhg', title:'Delicious Chicken Vegetable Soup | How to Make Chicken Soup at Home', by:'Hands Touch'},
+  eggcheesebread:{v:'JahzcbpofCA', title:'Fried Egg and Cheese Sandwich | Grilled Cheese and Egg Sandwich', by:'Simply Mamá Cooks'},
+  eggfry:{v:'mvsN3cWA2bA', title:'How To Make Scrambled Eggs (3 Different Ways!) | What\'s For Lunch', by:'Chef Donny'},
+  eggpotatocheese:{v:'QYgS0fB9m08', title:'Easy Potato and Egg Casserole Recipe | Ultimate Comfort Breakfast Bake', by:'My Mama Recipes'},
+  eggwhiteveg:{v:'qkIMwl1Uct4', title:'How to Make an Egg White Omelette With Vegetables', by:'Olayemi Cooking'},
+  fishrice:{v:'oCd9-GSKw70', title:'Baked Fish with Rice - EASY RECIPE', by:'Recipe Plus'},
   friedbansh:{v:'2CvGGm_O8-U', title:'Дүрлэгтэй шарсан банш - goodmom', by:'Goodmaam'},
   friedrice:{v:'_FyY1aThb-E', title:'How to Make Mongolian Beef Fried Rice - The Easiest Fried Rice (recipe)', by:'Omnivore\'s Cookbook'},
+  fruitnuts:{v:'iR0i3qD3-fo', title:'Fruit & Nut Bowl | Very Good Option For Breakfast | Healthy Recipe Quick & Easy Recipe', by:'Goldy\'s Tasteful Kitchen'},
   huushuur:{v:'oKupl0dtPTg', title:'Хуушуур хэрхэн хийх вэ? 2020 жор | khuushuur yummy', by:'2NN Family'},
   khorkhog:{v:'IGJ-0X9vt8Q', title:'KHORKHOG - Real Mongolian Barbeque', by:'Roots of Mongolia'},
+  lamjaa:{v:'CLMfDwX7-1U', title:'Stir-Fried Noodles With Mongolian Beef', by:'Morgane Recipes'},
   milktea:{v:'5MxUhIFxZWk', title:'Mongolian Milk Tea (Suutei Tsai)', by:'Dinner By Dennis'},
+  muesli:{v:'EAey72AkDiM', title:'How To Make Muesli Breakfast Bowl With Fruits & Yogurt Super Quick', by:'All Things life'},
+  muttonpotatosoup:{v:'s-DvK42uulI', title:'How To Make Lamb Stew | Simple Lamb and Potatoes', by:'How To Cook Great'},
+  muttonrice:{v:'ShB-769_5u4', title:'How To Make lamb Pulao Rice | Yakhni Pulao Recipe | Mutton Pilau Rice Recipe | Pulao recip', by:'Life in the UK Fatimah'},
   noodlesoup:{v:'ns69c-iDZiU', title:'Guriltai Shul Recipe with Chef Ranveer Brar', by:'Love Food'},
+  oatmeal:{v:'FuJwXnoU6o0', title:'How to Make Healthy Oatmeal Porridge – 7 Easy Recipes', by:'The Cooking Foodie'},
+  porkfry:{v:'o6Oz2jSWveQ', title:'The Best Mixed Vegetables and Pork Stir fry! It\'s Super Easy, Delicious and Healthy!', by:'Nena Osorio'},
+  porkrice:{v:'aX2GRFpjH-Y', title:'15-Minute Pork Fried Rice (Recipe) 猪肉炒饭', by:'Omnivore\'s Cookbook'},
+  potatoegg:{v:'8dfxKBZr0-4', title:'GARLIC Potatoes with Fried Eggs | BRUTALLY Delicious & Easy Recipe', by:'Spain on a Fork'},
+  proteinsmoothie:{v:'v9F5ZmqN69s', title:'Easy Strawberry Banana HIGH PROTEIN Smoothie Recipe | NINJA Blender and Soup Maker Recipes', by:'A2B Productions'},
+  rawveg:{v:'tw071gkvNxI', title:'How to Make The Best Crudité Platter - A Step By Step Tutorial', by:'תמר ליבוביץ גולן'},
+  salad:{v:'eIdtN7zw9QM', title:'Everyone should know how to make this Green Salad!', by:'The Scran Line Everyday'},
+  steamedfish:{v:'8SFWxsJryYc', title:'Easy Way Steamed Fish with Veggies | Healthy & Delicious Recipes', by:'Nourish with Joy'},
   tsuivan:{v:'TrxWA62uXCM', title:'How to make Mongolian Tsuivan (Цуйван) by Snowy', by:'Michael Powell'},
+  tunasalad:{v:'XpKqpoDMB3k', title:'BEST HEALTHY TUNA SALAD | light, quick & easy', by:'Feelgoodfoodie'},
+  vegfry:{v:'vE8ir4B-WRQ', title:'Super Quick Stir Fry Mixed Vegetables | Easy Vegetables Recipe', by:'Mel’s Cooking Journey'},
+  vegsoup:{v:'1R9l2tWT4aY', title:'QUICK AND EASY VEGETABLE SOUP RECIPE | How To Make Healthy Vegetable Soup in NO TIME!', by:'Vegan Michele'},
+  yogurtfruit:{v:'cJbfMnpxijc', title:'How To Make A Delicious Yoghurt Bowl Breakfast | Mary Berry\'s Quick Cooking | Mary Berry', by:'Mary Berry'},
+  yogurtgranola:{v:'SoKusJyNGuA', title:'How to Make Yogurt Parfait (+ Easy Healthy Homemade Gluten-free Granola Recipe)', by:'Christine\'s Natural Kitchen'},
   zutan:{v:'TlRqt1tTOqo', title:'Мөөгний зутан шөл Home cooking ( Muugnii zutan shul )', by:'enkhbold batjargal'},
 };
 function foodVideo(id){ return FOOD_VIDEOS[id] || null; }
