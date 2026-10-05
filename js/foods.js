@@ -234,6 +234,8 @@ function youtubeSearchUrl(name){ return 'https://www.youtube.com/results?search_
 
 /* ---------- free-text pantry matching ---------- */
 function allPantryItems(){ return PANTRY_GROUPS.flatMap(g=>g.items); }
+/* tag -> the name shown to the user, in the current language */
+function pantryItemName(tag){ const it = allPantryItems().find(i=>i.tag===tag); return it ? it.n : tag; }
 function matchPantryText(text){
   const items = allPantryItems();
   const tokens = text.split(/[,\n]+/).map(t=>t.trim().toLowerCase()).filter(Boolean);

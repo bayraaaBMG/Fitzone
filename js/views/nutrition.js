@@ -46,6 +46,8 @@ function renderNutrition(){
         <p class="xs mut" style="margin:10px 0 0">${refBadge('mifflin_stjeor','issn_protein','amdr_fat')}</p>
       </div>
 
+      ${dayAdviceHTML()}
+
       <div class="secttl"><h2>${t('nut_diary')}</h2></div>
       <div id="diary"></div>
 
@@ -65,6 +67,9 @@ function renderNutrition(){
       <div class="secttl"><h2>${t('nut_pantry')}</h2></div>
       <p class="mut sm" style="margin:0 0 12px">${t('pantry_intro')}</p>
       <div id="pantry"></div>
+
+      <div class="secttl"><h2>${t('fadv_pantry_title')}</h2></div>
+      <div id="pantryPicks"></div>
 
       <div class="secttl"><h2>${t('nut_recipes')}</h2></div>
       <p class="mut sm" style="margin:0 0 10px">${t('recipes_intro')}</p>
@@ -90,6 +95,7 @@ function renderNutrition(){
   });
   drawDiary();
   drawPantry();
+  drawPantryPicks();
   drawRecipeFilter();
   drawRecipeCatFilter();
   drawRecipeList();
@@ -131,6 +137,42 @@ function removeLogItem(slot, idx){
   save();
   renderNutrition();
 }
+/* one line under the macro bars: what today still needs */
+function dayAdviceHTML(){
+  const a = typeof dayAdvice === 'function' ? dayAdvice() : null;
+  if(!a) return '';
+  return `<div class="fadv day ${a.band}" style="margin-top:12px">
+    <div class="fadv-head"><span class="fadv-dot ${a.band}"></span><b>${t(a.key, ...a.args)}</b></div>
+  </div>`;
+}
+
+/* ---------- the verdict block the sheets share ---------- */
+function foodVerdictHTML(item, opts){
+  const o = opts || {};
+  const v = typeof foodVerdict === 'function' ? foodVerdict(item, o) : null;
+  if(!v) return '';
+  const swaps = (o.swaps === false) ? [] : foodSwaps(item, {slot:o.slot, count:3});
+  const swapHTML = (v.band === 'good' || !swaps.length) ? '' : `
+    <div class="fadv-swaps">
+      <div class="lab">${t('fadv_swap_title')}</div>
+      ${swaps.map(s => `<button class="fadv-swap" data-recipe="${s.recipe.id}">
+        <span class="thumb">${typeof exerciseThumbHTML === 'function' ? '' : ''}<span class="fadv-dot ${s.verdict.band}"></span></span>
+        <span class="fadv-swapmain"><b>${esc(s.recipe.n)}</b>
+          <small>${s.recipe.kcal} ${t('unit_kcal')} · ${t('macro_protein')} ${s.recipe.protein}${t('unit_g')}${s.haveAll ? ' · ' + t('fadv_have_all') : ''}</small></span>
+        <span class="fadv-delta ${s.dKcal <= 0 ? 'down' : 'up'}">${s.dKcal > 0 ? '+' : ''}${s.dKcal} ${t('unit_kcal')}</span>
+      </button>`).join('')}
+    </div>`;
+  return `<div class="fadv ${v.band}">
+    <div class="fadv-head"><span class="fadv-dot ${v.band}"></span><b>${t(v.headline)}</b></div>
+    <ul class="fadv-reasons">${v.reasons.map(r => `<li>${t(r.key, ...r.args)}</li>`).join('')}</ul>
+    ${swapHTML}
+    <p class="xs mut" style="margin:8px 0 0">${t('fadv_disclaimer')}</p>
+  </div>`;
+}
+function wireFoodVerdict(root){
+  root.querySelectorAll('.fadv-swap[data-recipe]').forEach(b => b.onclick = () => openRecipe(b.dataset.recipe));
+}
+
 function openAddFood(slot){
   const sheet=mkSheet();
   sheet.querySelector('.inner').innerHTML = `
@@ -144,6 +186,7 @@ function openAddFood(slot){
     <div id="diaryImgPreview"></div>
     <input class="txin" id="foodSearch" placeholder="${t('search_recipe_placeholder')}" aria-label="${t('search_recipe_placeholder')}" style="margin-top:12px">
     <div id="foodResults" style="margin-top:6px"></div>
+    <div id="foodAdvice"></div>
     <hr class="sep">
     <div class="block">
       <div class="lab">${t('manual_entry')}</div>
@@ -158,6 +201,16 @@ function openAddFood(slot){
     </div>`;
   const results=sheet.querySelector('#foodResults');
   const search=sheet.querySelector('#foodSearch');
+  const advice=sheet.querySelector('#foodAdvice');
+  let picked = null;
+  function showAdvice(r, item){
+    advice.innerHTML = foodVerdictHTML(item, {slot}) +
+      `<button class="btn p" id="fadvAdd" style="width:100%;margin-top:10px">${t('fadv_add_anyway', esc(r ? r.n : item.n))}</button>`;
+    wireFoodVerdict(advice);
+    const add = advice.querySelector('#fadvAdd');
+    if(add) add.onclick = ()=> finishAdd(item);
+    advice.scrollIntoView({block:'nearest', behavior:'smooth'});
+  }
 
   sheet.querySelector('#diaryImg').onchange=e=>{
     const f=e.target.files[0];
@@ -180,6 +233,8 @@ function openAddFood(slot){
     results.innerHTML = list.slice(0,8).map(r=>`<div class="foodrow" data-id="${r.id}" style="cursor:pointer"><div class="e">${r.e}</div><div style="flex:1"><b>${r.n}</b><div class="xs mut">${r.kcal} ${t('unit_kcal')} · ${t('macro_protein')} ${r.protein}${t('unit_g')}</div></div></div>`).join('') || `<p class="xs mut">${t('no_results')}</p>`;
     results.querySelectorAll('.foodrow').forEach(row=>row.onclick=()=>{
       const r=RECIPES.find(x=>x.id===row.dataset.id);
+      // first tap explains how this meal fits the day, second one logs it
+      if(picked !== r.id){ picked = r.id; showAdvice(r, {n:r.n, kcal:r.kcal, protein:r.protein, carb:r.carb, fat:r.fat, recipeId:r.id}); return; }
       finishAdd({n:r.n, kcal:r.kcal, protein:r.protein, carb:r.carb, fat:r.fat, recipeId:r.id});
     });
   }
@@ -188,6 +243,14 @@ function openAddFood(slot){
   sheet.querySelector('#mfAdd').onclick=()=>{
     const nm=sheet.querySelector('#mfName').value.trim();
     if(!nm){ toast(t('err_enter_food_name')); return; }
+    const manual = {
+      n:nm,
+      kcal:+sheet.querySelector('#mfKcal').value||0,
+      protein:+sheet.querySelector('#mfProtein').value||0,
+      carb:+sheet.querySelector('#mfCarb').value||0,
+      fat:+sheet.querySelector('#mfFat').value||0,
+    };
+    if(manual.kcal > 0 && picked !== '__manual'){ picked = '__manual'; showAdvice(null, manual); return; }
     finishAdd({
       n:nm,
       kcal:+sheet.querySelector('#mfKcal').value||0,
@@ -231,10 +294,31 @@ function drawPantry(){
     if(unmatched.length) msg += (msg?' | ':'') + `${t('not_recognized_colon')} ${unmatched.join(', ')}`;
     toast(msg || t('nothing_recognized'));
     inp.value='';
-    drawPantry(); drawMealPlan(); drawRecipeList();
+    drawPantry(); drawPantryPicks(); drawMealPlan(); drawRecipeList();
   };
   document.getElementById('pantryTextAdd').onclick=addFromText;
   document.getElementById('pantryText').onkeydown=e=>{ if(e.key==='Enter') addFromText(); };
+}
+
+/* what the kitchen can make right now, best fit for the goal first */
+function drawPantryPicks(){
+  const host = document.getElementById('pantryPicks');
+  if(!host) return;
+  const picks = typeof pantryPicks === 'function' ? pantryPicks(3) : [];
+  if(!picks.length){
+    host.innerHTML = `<div class="card"><p class="sm mut" style="margin:0">${t('fadv_pantry_none')}</p></div>`;
+    return;
+  }
+  host.innerHTML = `<div class="card suglist">
+    ${picks.map(p => `<button class="exrow sugrow" data-recipe="${p.recipe.id}">
+      <div class="thumb" style="display:grid;place-items:center"><span class="fadv-dot ${p.verdict ? p.verdict.band : 'good'}"></span></div>
+      <div class="info"><b>${esc(p.recipe.n)}</b>
+        <span>${p.recipe.kcal} ${t('unit_kcal')} · ${t('macro_protein')} ${p.recipe.protein}${t('unit_g')}${
+          p.missing.length ? ' · ' + t('fadv_pantry_missing', p.missing.map(pantryItemName).join(', ')) : ' · ' + t('fadv_have_all')}</span></div>
+      <div class="sr ${p.verdict ? p.verdict.band : ''}">${p.have}/${(p.recipe.needs||[]).length}<small>${t('ingredients')}</small></div>
+    </button>`).join('')}
+  </div>`;
+  host.querySelectorAll('[data-recipe]').forEach(b => b.onclick = () => openRecipe(b.dataset.recipe));
 }
 
 /* ---------- recipe browser ---------- */
@@ -313,12 +397,14 @@ function openRecipe(id){
     </div>
     <div class="block"><div class="lab">🛒 ${t('ingredients')}</div><div class="note">${r.ingredients.map(esc).join('<br>')}</div></div>
     <div class="block"><div class="lab">📋 ${t('instructions')}</div><div class="note">${esc(r.steps)}</div></div>
+    ${foodVerdictHTML({n:r.n, kcal:r.kcal, protein:r.protein, carb:r.carb, fat:r.fat, recipeId:r.id}, {slot:(r.meal||[])[0]})}
     <a class="btn g" style="margin-top:14px;width:100%" href="${youtubeSearchUrl(r.n)}" target="_blank" rel="noopener">▶ ${t('find_on_youtube')}</a>
     <div class="block"><div class="lab">➕ ${t('add_to_log')}</div>
       <div class="chiprow">
         ${r.meal.map(m=>`<button class="chip" data-slot="${m}">${MEAL_NAMES[m]}</button>`).join('')}
       </div>
     </div>`;
+  wireFoodVerdict(sheet);
   sheet.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>{
     addLogItem(b.dataset.slot, {n:r.n, kcal:r.kcal, protein:r.protein, carb:r.carb, fat:r.fat, recipeId:r.id});
     closeSheet();
