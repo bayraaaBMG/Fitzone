@@ -15,6 +15,7 @@ function openWorkout(exId, battle){
     duration: c.dur, oppType: battle ? 'ai' : 'target', oppLevel: S.profile ? S.profile.level : 2,
     amount:0, elapsed:0, paused:false, ticker:null, tickAt:0, countT:null, cueT:null, cueIdx:0,
     cam:null, camState:'off', camErr:null, camFacing:'user', pose:null, note:null, noteT:null, wake:null,
+    camTip:false, lostSince:0, lost:false,
     media:null, opener: document.activeElement,
   };
   const root = document.createElement('div');
@@ -78,7 +79,9 @@ function wsAttachMedia(host){
 async function wsStartCamera(){
   if(!WS || WS.camState==='loading' || WS.camState==='on') return;
   const sess = WS; // the overlay may be closed/reopened while permission + model load are pending
-  WS.camState = 'loading'; WS.camErr = null; wsRender();
+  WS.camState = 'loading'; WS.camErr = null;
+  WS.camTip = true; WS.lost = false; WS.lostSince = 0;
+  wsRender();
   const m = wsMedia();
   const signal = {aborted:false};
   WS.camSignal = signal;
@@ -121,6 +124,7 @@ async function wsFlipCamera(){
 function wsOnPose(out){
   if(!WS) return;
   WS.pose = out;
+  wsTrackLost(out);
   if(WS.step==='active' && !WS.paused && out.tracked){
     if(WS.mode==='reps'){
       if(out.reps > WS.amount){ WS.amount = out.reps; wsRepFeedback(); }
@@ -133,6 +137,45 @@ function wsOnPose(out){
   wsUpdateDebug();
   if(WS.step==='active') wsUpdateHud();
 }
+/* "The camera cannot see you": counting stops by itself when the body is not
+   visible, so the screen has to say so. A short dip is ignored — only a full
+   second of not seeing the body raises it. */
+const WS_LOST_MS = 1000;
+function wsTrackLost(out){
+  if(!WS || !out || !out.tracked || WS.step !== 'active'){ WS.lostSince = 0; return; }
+  const blind = out.status === 'lowconf';
+  if(!blind){
+    WS.lostSince = 0;
+    if(WS.lost){ WS.lost = false; wsRenderLost(); }
+    return;
+  }
+  const now = Date.now();
+  if(!WS.lostSince) WS.lostSince = now;
+  const lost = now - WS.lostSince >= WS_LOST_MS;
+  if(lost !== WS.lost){ WS.lost = lost; wsRenderLost(); }
+}
+function wsRenderLost(){
+  const root = wsRoot(); if(!root) return;
+  const el = root.querySelector('#wsLost');
+  if(!el) return;
+  el.hidden = !WS.lost;
+  el.innerHTML = WS.lost ? `<b>${t('ws_cam_blind')}</b><span>${t('ws_cam_blind_hint')}</span>` : '';
+}
+
+/* placement guidance, shown while the camera warms up and until the set starts
+   moving. Exercise-aware: a side-on rule needs the phone beside you. */
+function wsSetupTipHTML(){
+  const c = COACH[WS.exId] || {};
+  if(!c.pose) return '';
+  const rule = (typeof POSE_RULES !== 'undefined' && POSE_RULES[c.pose]) || {};
+  const place = rule.view === 'side' ? t('ws_tip_side') : t('ws_tip_front');
+  return `<div class="ws-tip" id="wsTip">
+    <b>${t('ws_tip_title')}</b>
+    <ul><li>${place}</li><li>${t('ws_tip_frame')}</li><li>${t('ws_tip_light')}</li></ul>
+    <button class="ws-chipbtn" id="wsTipOk">${t('ws_tip_ok')}</button>
+  </div>`;
+}
+
 /* developer-only (?debug=1): why the engine did or did not count (STEP 13/14).
    Never rendered for normal users — the element does not exist without the flag. */
 function wsUpdateDebug(){
@@ -181,6 +224,36 @@ function wsRepFeedback(){
   const f = wsRoot() && wsRoot().querySelector('.ws-flash');
   if(f){ f.classList.remove('rep'); void f.offsetWidth; f.classList.add('rep'); }
   if(navigator.vibrate) try{ navigator.vibrate(15); }catch(e){}
+  wsRepBeep();
+}
+
+/* A short click per counted rep. With the phone on the floor the screen is not
+   visible and a vibration is not felt, so sound is the feedback that actually
+   lands. Built with WebAudio — no file to download, no new service. */
+let _wsAudio = null;
+function wsSoundOn(){
+  try{ return localStorage.getItem('mf_repsound') !== '0'; }catch(e){ return true; }
+}
+function wsSetSound(on){
+  try{ localStorage.setItem('mf_repsound', on ? '1' : '0'); }catch(e){}
+}
+function wsRepBeep(){
+  if(!wsSoundOn()) return;
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    if(!_wsAudio) _wsAudio = new AC();
+    if(_wsAudio.state === 'suspended') _wsAudio.resume();
+    const t0 = _wsAudio.currentTime;
+    const osc = _wsAudio.createOscillator(), gain = _wsAudio.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, t0);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(0.25, t0 + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.13);
+    osc.connect(gain).connect(_wsAudio.destination);
+    osc.start(t0); osc.stop(t0 + 0.15);
+  }catch(e){ /* audio is a nicety; never break the set over it */ }
 }
 function wsNote(msg){
   WS.note = msg;
@@ -255,6 +328,7 @@ function wsRenderIntro(root){
       <div class="ws-card"><div class="lab">${t('ws_camera')}</div>
         ${WS.camState==='on' || WS.camState==='loading' ? `<div class="ws-stage" id="wsPreview" style="min-height:220px;margin:0 0 10px">
             <div class="ws-pill" id="wsPill" role="status" aria-live="polite"></div>
+            ${WS.camTip ? wsSetupTipHTML() : ''}
             <div class="ws-camctl"><button class="ws-chipbtn" id="wsFlip">${t('ws_cam_flip')}</button><button class="ws-chipbtn" id="wsCamOff">${t('ws_cam_off')}</button></div>
           </div>` : `<button class="ws-chipbtn" id="wsCam" style="width:100%">${t('ws_cam_btn')}</button>`}
         ${camNote}
@@ -280,6 +354,7 @@ function wsRenderIntro(root){
   root.querySelectorAll('#wsDur .ws-chip').forEach(b=> b.onclick=()=>{ WS.duration = +b.dataset.d; wsRender(); });
   const camBtn = root.querySelector('#wsCam'); if(camBtn) camBtn.onclick = wsStartCamera;
   const off = root.querySelector('#wsCamOff'); if(off) off.onclick = ()=>{ wsStopCamera(); wsRender(); };
+  const tipOk = root.querySelector('#wsTipOk'); if(tipOk) tipOk.onclick = ()=>{ WS.camTip = false; wsRender(); };
   const flip = root.querySelector('#wsFlip'); if(flip) flip.onclick = wsFlipCamera;
 }
 
@@ -355,10 +430,13 @@ function wsRenderActive(root){
     <div class="ws-stage" id="wsStage">
       ${camOn ? '' : `<div class="ws-demo"><div class="e">${x.e}</div><div class="ws-cue" id="wsCue">${wsCueHTML()}</div></div>`}
       <div class="ws-pill" id="wsPill" role="status" aria-live="polite"></div>
+      <div class="ws-lost" id="wsLost" role="status" aria-live="assertive" hidden></div>
+      ${WS.camTip ? wsSetupTipHTML() : ''}
       <div class="ws-flash"></div>
       ${(typeof FZ_DEBUG!=='undefined' && FZ_DEBUG) ? '<pre class="ws-dbg" id="wsDbg" aria-hidden="true"></pre>' : ''}
       <div class="ws-camctl">${camOn
-        ? `<button class="ws-chipbtn" id="wsCamOff">${t('ws_cam_off')}</button>`
+        ? `<button class="ws-chipbtn" id="wsSound" aria-pressed="${wsSoundOn()}">${wsSoundOn() ? '🔊' : '🔇'} ${t('ws_cam_sound')}</button>
+           <button class="ws-chipbtn" id="wsCamOff">${t('ws_cam_off')}</button>`
         : `<button class="ws-chipbtn" id="wsCam">${t('ws_cam_btn')}</button>`}</div>
     </div>
     <div class="ws-sub" id="wsSub"></div>
@@ -372,6 +450,11 @@ function wsRenderActive(root){
   wsUpdatePill();
   wsUpdateHud();
   root.querySelector('#wsX').onclick = wsClose;
+  const snd = root.querySelector('#wsSound');
+  if(snd) snd.onclick = ()=>{ wsSetSound(!wsSoundOn()); wsRender(); };
+  const tipOk = root.querySelector('#wsTipOk');
+  if(tipOk) tipOk.onclick = ()=>{ WS.camTip = false; wsRender(); };
+  wsRenderLost();
   root.querySelector('#wsPause').onclick = wsTogglePause;
   root.querySelector('#wsFin').onclick = wsFinish;
   const plus = root.querySelector('#wsPlus');

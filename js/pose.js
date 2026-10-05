@@ -86,6 +86,8 @@ async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded, s
   let counter = makeCounter();
   const ctx = canvas.getContext('2d');
   let raf = 0, stopped = false, paused = false, lastRun = 0, lastVideoTime = -1;
+  // processed-frame rate over a rolling second — reported, never acted on
+  let fpsCount = 0, fpsSince = 0, fps = 0;
 
   // Optional AI V2 form coach: loaded and started in the background so counting
   // starts immediately either way. It may only coach or veto, never count.
@@ -126,6 +128,9 @@ async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded, s
     raf = requestAnimationFrame(loop);
     if(ts - lastRun < 80 || video.readyState < 2 || video.currentTime===lastVideoTime) return;
     lastRun = ts; lastVideoTime = video.currentTime;
+    fpsCount++;
+    if(!fpsSince) fpsSince = ts;
+    else if(ts - fpsSince >= 1000){ fps = Math.round(fpsCount * 1000 / (ts - fpsSince)); fpsCount = 0; fpsSince = ts; }
     let lm = null;
     try{ const res = landmarker.detectForVideo(video, performance.now()); lm = res && res.landmarks && res.landmarks[0]; }
     catch(e){ lm = null; }
@@ -139,6 +144,7 @@ async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded, s
       if(counter && paused) counter.state.lastTs = null; // don't bank paused time as hold time
     }
     out.tracked = !!counter;
+    out.fps = fps;
     if(ai){
       try{
         ai.observe(lm, ts, aspect);
