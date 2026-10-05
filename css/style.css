@@ -430,12 +430,17 @@ hr.sep{border:none; border-top:1px solid var(--line); margin:20px 0}
 /* ---------- muscle map + recovery ---------- */
 .block.recovery{--mmap-body:var(--card2); --mmap-line:var(--line2)}
 .recgrid{display:grid; grid-template-columns:132px minmax(0,1fr); gap:14px; align-items:center}
+/* the pair of stats shares the narrow right column: minmax(0,1fr) lets a track
+   go below its own min-content, and the smaller type then fits inside it */
+.recgrid .statbig{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.recgrid .statbig .s{padding:11px 9px}
+.recgrid .statbig .s b{font-size:18px}
+.recgrid .statbig .s span{font-size:10px; letter-spacing:.03em}
 @media (max-width:360px){
   /* at this width the two columns cannot both fit: stack them */
   .recgrid{grid-template-columns:minmax(0,1fr); gap:12px; justify-items:center}
   .recgrid .mmap-wrap{max-width:200px}
   .recgrid > div{width:100%}
-  .recgrid .statbig{grid-template-columns:1fr 1fr}
 }
 .mmap-wrap{display:flex; gap:4px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 4px}
 .mmap{width:50%; height:auto; display:block}

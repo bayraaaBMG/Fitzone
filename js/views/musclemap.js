@@ -165,7 +165,7 @@ function bodyRecoveryHTML(){
     <div class="recgrid">
       ${muscleMapSVG({fill, title: t('rec_map_alt', alt)})}
       <div style="min-width:0">
-        <div class="statbig" style="grid-template-columns:1fr 1fr; margin:0 0 10px">
+        <div class="statbig" style="margin:0 0 10px">
           <div class="s acc"><b>${o.avg}%</b><span>${t('rec_body_avg')}</span></div>
           <div class="s"><b>${o.ready}/${o.total}</b><span>${t('rec_body_ready')}</span></div>
         </div>
