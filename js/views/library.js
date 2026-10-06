@@ -5,7 +5,7 @@ function renderLibrary(){
     ${topBar()}
     <div class="view">
       <div class="secttl" style="margin-top:4px"><h2>${t('lib_title')}</h2></div>
-      <p class="mut sm" style="margin:0 0 14px">${t('lib_intro', EX.length)}</p>
+      <p class="mut sm" style="margin:0 0 14px">${t('lib_intro', liveExercises().length)}</p>
       <p class="xs mut" style="margin:0 0 6px">${t('lib_loc')}</p>
       <div class="scrollrow" id="fLoc"></div>
       <p class="xs mut" style="margin:10px 0 6px">${t('lib_lvl')}</p>
@@ -39,7 +39,7 @@ function drawLib(){
   app.querySelectorAll('#fLvl .chip').forEach(c=>c.classList.toggle('on',String(libF.lvl)===c.dataset.v));
   app.querySelectorAll('#fGoal .chip').forEach(c=>c.classList.toggle('on',c.dataset.v===libF.goal));
   app.querySelectorAll('#fM .chip').forEach(c=>c.classList.toggle('on',c.dataset.v===libF.m));
-  const list=EX.filter(x=>
+  const list=liveExercises().filter(x=>
     (libF.loc==='all'||x.loc===libF.loc) &&
     (libF.m==='all'||x.m===libF.m) &&
     (libF.lvl==='all'||x.lvl===libF.lvl) &&

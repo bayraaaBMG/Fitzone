@@ -161,6 +161,8 @@ css/
 js/
   app.js            startup, auth state, routing
   auth.js           Firebase auth + cloud load/sanitize
+  roles.js          owner/admin/moderator roles, the /admin route guard
+  content.js        admin-edited exercises and app config, cleaned on read
   state.js          state and save()
   core.js           render dispatcher, shared UI
   data.js           exercise database
@@ -172,7 +174,7 @@ js/
   records.js        personal records, streaks, statistics
   i18n.js           app translations (MN/EN)
   public.js         landing-page behaviour
-  views/            one file per screen
+  views/            one file per screen (views/admin.js loads only for staff)
   ai/               AI V2 (lazy-loaded, off by default)
 ml/                 Python training + export pipeline
 firestore.rules     security rules
@@ -189,6 +191,7 @@ sw.js               service worker
 | `/` | Public landing page |
 | `/login`, `/register` | Sign in / sign up |
 | `/app` | The application |
+| `/admin` | Admin dashboard (staff only — see below) |
 | `/privacy`, `/terms` | Policy pages |
 
 Installed PWAs keep `start_url` at `./MongolFit.html`, so existing installs are
@@ -227,8 +230,9 @@ pytest ml/tests
 
 ## 🔐 Security & privacy
 
-- Every account's data lives in a single Firestore document, readable and
-  writable **only by its owner**.
+- Every account's data lives in a single Firestore document, writable **only
+  by its owner**. Staff (below) can read it, and can change only its 30-day
+  challenge.
 - Beyond owner-only access, `firestore.rules` validates the shape of every
   write: an allowlist of fields, per-field types, size limits, and an
   image-only pattern for profile photos.
@@ -239,6 +243,36 @@ pytest ml/tests
 - Signing out deletes the local copy of the account data.
 
 Full detail, in plain language: [privacy policy](https://mongolfit.vercel.app/privacy).
+
+### 🛡 Admin panel & roles
+
+`/admin` opens the staff dashboard. Access is decided by `firestore.rules`;
+the client only mirrors it to choose what to show, so editing the page in a
+browser reveals nothing that the database will serve.
+
+| Role | Who | Can |
+|---|---|---|
+| Owner | `bbayraaa20@gmail.com`, signed in with a verified email (fixed in the rules) | everything below, plus grant/revoke roles |
+| Admin | `roles/{uid}.role == 'admin'`, or custom claim `admin: true` | exercise library CRUD, Home announcement, calorie algorithm numbers, audit log |
+| Moderator | `roles/{uid}.role == 'moderator'` | user list, a user's details and battle results, edit/reset/end their 30-day challenge |
+
+Collections added for this:
+
+| Collection | Written by | Read by |
+|---|---|---|
+| `roles/{uid}` | owner | that user, staff |
+| `directory/{uid}` — name, email, goal, last seen | the account itself | that user, staff |
+| `exercises/{id}` — overrides a built-in exercise or adds one; `hidden` removes it from the library and plans | admin | signed-in users |
+| `config/app` — announcement, calorie factors | admin | signed-in users |
+| `adminLog/{id}` — append-only | staff | admin |
+
+Every admin-written text field is checked for markup and length in the
+rules, and cleaned again by `js/content.js` before it reaches the page.
+After changing the rules, deploy them:
+
+```bash
+firebase deploy --only firestore:rules
+```
 
 ---
 

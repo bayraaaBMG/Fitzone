@@ -55,13 +55,22 @@
       authUser = user; authReady = true; authErr='';
       // a hint for the public pages ("Open app" instead of "Start free") — not a security check
       try{ localStorage.setItem('mf_signed_in', '1'); }catch(e){}
-      await loadCloudState(user.uid);
+      // the role and the admin-edited content load alongside the account;
+      // neither one failing may keep the user out of their own data
+      await Promise.all([
+        loadCloudState(user.uid),
+        loadRole(user),
+        loadRemoteContent().catch(()=>{}),
+      ]);
+      if(authUser !== user) return; // signed out or switched while loading
+      if(wantsAdminPath()) S.tab = 'admin'; // renderAdminRoute() turns non-staff away
+      touchDirectory();
       // signed in from /login or /register: the address becomes the app's
       if(/^\/(login|register)\/?$/.test(location.pathname)){ try{ history.replaceState(history.state, '', '/app' + location.search + location.hash); }catch(e){} }
       render();
       return;
     }
-    authUser = null; authReady = true; cloudLoadFailed = false;
+    authUser = null; authRole = null; authReady = true; cloudLoadFailed = false;
     try{ localStorage.removeItem('mf_signed_in'); }catch(e){}
     if(/^\/app\/?$/.test(location.pathname)){ try{ history.replaceState(history.state, '', (authMode==='signup' ? '/register' : '/login') + location.search + location.hash); }catch(e){} }
     resetLocalState();

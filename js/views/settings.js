@@ -11,7 +11,8 @@ function paintSettings(sheet, sdraft){
     <div class="grab"></div>
     <h2 class="disp" style="font-size:22px; margin-bottom:2px">${t('st_title')}</h2>
     <p class="xs mut" style="margin:0 0 14px">${esc(authUser?authUser.email:'')}</p>
-    <button class="btn g" id="st_profile" style="margin-bottom:18px">👤 ${t('st_profile_link')}</button>
+    <button class="btn g" id="st_profile" style="margin-bottom:${hasRole('moderator')?'10':'18'}px">👤 ${t('st_profile_link')}</button>
+    ${hasRole('moderator')?`<button class="btn g" id="st_admin" style="margin-bottom:18px">🛡 ${t('st_admin')}</button>`:''}
     <div class="field"><label for="st_name">${t('onb_name')}</label><input class="txin" id="st_name" value="${esc(sdraft.name||'')}"></div>
     <div class="field"><label>${t('onb_sex')}</label>${chips(sdraft,'sex',[{v:'m',n:t('onb_male'),e:'♂'},{v:'f',n:t('onb_female'),e:'♀'}])}</div>
     <div class="inrow">
@@ -85,6 +86,7 @@ function paintSettings(sheet, sdraft){
   });
 
   sheet.querySelector('#st_sources').onclick=()=>{ openSourcesPage(); };
+  const adm=sheet.querySelector('#st_admin'); if(adm) adm.onclick=openAdmin;
 
   sheet.querySelector('#st_logout').onclick=async()=>{
     closeSheet();

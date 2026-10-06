@@ -63,7 +63,7 @@ async function save(){
   await Store.set(key, data);
   if(authUser && !cloudLoadFailed){ // never overwrite a cloud doc we failed to load
     // local copy above is already written, so a cloud failure never loses data — tell the user once
-    try{ await usersDoc(authUser.uid).set({...data, updatedAt: Date.now()}, {merge:true}); _saveErrShown = false; }
+    try{ await usersDoc(authUser.uid).set({...data, updatedAt: Date.now()}, {merge:true}); _saveErrShown = false; touchDirectory(); }
     catch(e){ if(!_saveErrShown){ _saveErrShown = true; toast(t('toast_save_failed')); } }
   }
 }

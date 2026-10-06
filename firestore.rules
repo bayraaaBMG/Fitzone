@@ -11,14 +11,165 @@ service cloud.firestore {
     // loop over lists or maps, so nested checks cover the newest workout
     // result and its exercise stats (the entries each workout save adds);
     // the app also sanitizes everything it reads (js/auth.js).
+    //
+    // Staff (see "roles" below) can read any account, and a moderator or
+    // admin may change only its 30-day `challenge` — never anything else.
     match /users/{uid} {
-      allow read, delete: if isOwner(uid);
+      allow read: if isOwner(uid) || isStaff();
+      allow delete: if isOwner(uid);
       allow create: if isOwner(uid)
         && request.resource.data.keys().hasOnly(appFields())
         && validFields(request.resource.data, request.resource.data.keys().toSet());
-      allow update: if isOwner(uid)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(appFields())
-        && validFields(request.resource.data, request.resource.data.diff(resource.data).affectedKeys());
+      allow update: if (isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(appFields())
+          && validFields(request.resource.data, request.resource.data.diff(resource.data).affectedKeys()))
+        || (isStaff()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['challenge', 'updatedAt'])
+          && validChallenge(request.resource.data.get('challenge', null)));
+    }
+
+    // ================= roles & admin content =================
+    //
+    // Who is staff is decided here, never by the client:
+    //  * owner     — the account signed in as OWNER_EMAIL with a verified
+    //                email (Google sign-in is always verified). Fixed in
+    //                these rules, so no document or client can grant or
+    //                revoke it. A custom claim {role:'owner'} also counts.
+    //  * admin     — roles/{uid}.role == 'admin', or custom claim admin:true
+    //  * moderator — roles/{uid}.role == 'moderator'
+    // Only the owner can write roles/*. js/roles.js mirrors this to decide
+    // what to show; hiding a button there is a convenience, these rules are
+    // the protection.
+    function signedIn() { return request.auth != null; }
+    function ownerEmail() { return 'bbayraaa20@gmail.com'; }
+    function isOwnerAccount() {
+      return signedIn() && (request.auth.token.get('role', '') == 'owner'
+        || (request.auth.token.get('email', '') == ownerEmail()
+            && request.auth.token.get('email_verified', false) == true));
+    }
+    function storedRole() {
+      return !signedIn() ? '' : roleAt(/databases/$(database)/documents/roles/$(request.auth.uid));
+    }
+    function roleAt(p) { return exists(p) ? get(p).data.get('role', '') : ''; }
+    function isAdmin() {
+      return isOwnerAccount()
+        || (signedIn() && request.auth.token.get('admin', false) == true)
+        || storedRole() == 'admin';
+    }
+    function isStaff() { return isAdmin() || storedRole() == 'moderator'; }
+
+    // plain text that ends up in the page: no markup, bounded length
+    function txt(s, max) { return s is string && s.size() <= max && s.matches('[^<>]*'); }
+    function optTxt(m, k, max) { return !(k in m) || txt(m[k], max); }
+    function numIn(v, lo, hi) { return v is number && v >= lo && v <= hi; }
+    function stamped(d) { return d.updatedBy == request.auth.uid && d.updatedAt is number; }
+
+    match /roles/{uid} {
+      allow read: if isOwner(uid) || isStaff();
+      allow create, update: if isOwnerAccount()
+        && request.resource.data.keys().hasOnly(['role', 'email', 'name', 'grantedBy', 'grantedAt'])
+        && request.resource.data.role in ['admin', 'moderator']
+        && request.resource.data.grantedBy == request.auth.uid
+        && request.resource.data.grantedAt is number
+        && optTxt(request.resource.data, 'email', 200) && optTxt(request.resource.data, 'name', 60);
+      allow delete: if isOwnerAccount();
+    }
+
+    // A small public-to-staff card per account, written by the account
+    // itself (js/roles.js touchDirectory) so the admin user list does not
+    // have to download every full users/{uid} document.
+    match /directory/{uid} {
+      allow read: if isOwner(uid) || isStaff();
+      allow delete: if isOwner(uid) || isAdmin();
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['email', 'name', 'goal', 'level', 'place', 'joinedAt', 'lastSeen'])
+        && request.resource.data.get('email', '') == request.auth.token.get('email', '')
+        && optTxt(request.resource.data, 'name', 60) && optTxt(request.resource.data, 'goal', 30)
+        && optTxt(request.resource.data, 'place', 30) && optTxt(request.resource.data, 'joinedAt', 10)
+        && (!('level' in request.resource.data) || request.resource.data.level in [1, 2, 3])
+        && request.resource.data.lastSeen is number;
+    }
+
+    // Exercise library edits. A document either overrides the built-in
+    // exercise with the same id (js/data.js) or adds a new one; hidden:true
+    // takes it out of the library and the planner. Every signed-in user
+    // reads these, so every text field is checked for markup and the video
+    // is a YouTube id or an https link to a video/GIF file.
+    match /exercises/{id} {
+      allow read: if signedIn();
+      allow delete: if isAdmin();
+      allow create, update: if isAdmin() && validExercise(request.resource.data, id);
+    }
+    function validExercise(d, id) {
+      return id.matches('[a-z0-9_-]{2,40}') && d.id == id
+        && d.keys().hasOnly(['id', 'n', 'e', 'loc', 'm', 'lvl', 'eq', 'kcal', 'video', 'goals',
+                             'tgt', 'tech', 'err', 'easy', 'hard', 'en', 'hidden', 'updatedAt', 'updatedBy'])
+        && d.keys().hasAll(['n', 'loc', 'm', 'lvl', 'eq', 'kcal', 'goals', 'hidden'])
+        && txt(d.n, 80) && optTxt(d, 'e', 16)
+        && d.loc in ['home', 'gym']
+        && d.m in ['chest', 'back', 'legs', 'glutes', 'shoulders', 'arms', 'abs', 'cardio']
+        && d.lvl in [1, 2, 3]
+        && d.eq in ['none', 'dumbbell', 'barbell', 'machine', 'cable']
+        && numIn(d.kcal, 0, 40)
+        && d.goals is list && d.goals.size() <= 5
+        && d.goals.hasOnly(['fatloss', 'muscle', 'tone', 'strength', 'health'])
+        && (!('video' in d) || (d.video is string && (d.video == ''
+              || d.video.matches('[A-Za-z0-9_-]{11}')
+              || d.video.matches('https://[A-Za-z0-9./_~%-]{4,300}[.](mp4|webm|gif)'))))
+        && optTxt(d, 'tgt', 200) && optTxt(d, 'tech', 1200) && optTxt(d, 'err', 600)
+        && optTxt(d, 'easy', 200) && optTxt(d, 'hard', 200)
+        && (!('en' in d) || validExerciseEn(d.en))
+        && d.hidden is bool
+        && stamped(d);
+    }
+    function validExerciseEn(m) {
+      return m is map && m.keys().hasOnly(['n', 'tgt', 'tech', 'err', 'easy', 'hard'])
+        && optTxt(m, 'n', 80) && optTxt(m, 'tgt', 200) && optTxt(m, 'tech', 1200)
+        && optTxt(m, 'err', 600) && optTxt(m, 'easy', 200) && optTxt(m, 'hard', 200);
+    }
+
+    // config/app: the home-screen announcement and the calorie algorithm's
+    // tunable numbers (js/content.js clamps them again on read).
+    match /config/{doc} {
+      allow read: if signedIn();
+      allow delete: if isAdmin();
+      allow create, update: if isAdmin() && doc == 'app' && validConfig(request.resource.data);
+    }
+    function validConfig(d) {
+      return d.keys().hasOnly(['announce', 'calc', 'updatedAt', 'updatedBy'])
+        && (!('announce' in d) || (d.announce is map
+              && d.announce.keys().hasOnly(['on', 'mn', 'en'])
+              && d.announce.get('on', false) is bool
+              && optTxt(d.announce, 'mn', 300) && optTxt(d.announce, 'en', 300)))
+        && (!('calc' in d) || validCalc(d.calc))
+        && stamped(d);
+    }
+    function validCalc(c) {
+      return c is map
+        && c.keys().hasOnly(['activity', 'deficit', 'surplus', 'proteinPerKg', 'fatShare', 'careFloor', 'floorM', 'floorF'])
+        && (!('activity' in c) || (c.activity is map && c.activity.keys().hasOnly(['1', '2', '3', '4', '5'])
+              && numIn(c.activity.get('1', 1.2), 1, 2.5) && numIn(c.activity.get('2', 1.3), 1, 2.5)
+              && numIn(c.activity.get('3', 1.45), 1, 2.5) && numIn(c.activity.get('4', 1.65), 1, 2.5)
+              && numIn(c.activity.get('5', 1.8), 1, 2.5)))
+        && (!('deficit' in c) || numIn(c.deficit, 0.6, 1))
+        && (!('surplus' in c) || numIn(c.surplus, 1, 1.3))
+        && (!('proteinPerKg' in c) || numIn(c.proteinPerKg, 0.8, 3))
+        && (!('fatShare' in c) || numIn(c.fatShare, 0.15, 0.45))
+        && (!('careFloor' in c) || numIn(c.careFloor, 0.8, 1))
+        && (!('floorM' in c) || numIn(c.floorM, 1000, 2500))
+        && (!('floorF' in c) || numIn(c.floorF, 800, 2500));
+    }
+
+    // Append-only record of what staff changed. Nobody can edit or delete it.
+    match /adminLog/{id} {
+      allow read: if isAdmin();
+      allow create: if isStaff()
+        && request.resource.data.keys().hasOnly(['by', 'byEmail', 'action', 'target', 'note', 'at'])
+        && request.resource.data.by == request.auth.uid
+        && txt(request.resource.data.action, 40) && txt(request.resource.data.target, 128)
+        && optTxt(request.resource.data, 'byEmail', 200) && optTxt(request.resource.data, 'note', 300)
+        && request.resource.data.at is number;
+      allow update, delete: if false;
     }
 
     function isOwner(uid) {

@@ -31,6 +31,7 @@ function renderHome(){
   app.innerHTML = `
     ${topBar()}
     <div class="view">
+      ${announceHTML()}
       <div class="hero" style="padding:24px 20px">
         <div class="eyebrow">${t('home_today')}</div>
         <h1 style="font-size:28px">${t('home_welcome')},<br><span class="y">${esc(p.name)}</span></h1>
@@ -110,6 +111,7 @@ function renderHome(){
       <p class="xs mut center" style="margin-top:20px">${t('disclaimer')}</p>
     </div>`;
   topWire();
+  wireAnnounce(app);
   wireInstallCard(app);
   document.getElementById('goHomeWO').onclick=()=>{ libF.loc='home'; S.tab='library'; render(); };
   document.getElementById('goGymWO').onclick=()=>{ libF.loc='gym'; S.tab='library'; render(); };

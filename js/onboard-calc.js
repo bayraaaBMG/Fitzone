@@ -71,7 +71,7 @@ function onboardSummary(p){
     cal = base.tdee;
     softened = 'pregnant';
   } else if(care.length){
-    cal = Math.max(base.cal, Math.round(base.tdee * 0.9));
+    cal = Math.max(base.cal, Math.round(base.tdee * CALC_CFG.careFloor));
     if(cal !== base.cal) softened = 'care';
   }
   const nut = calorieMacros(p, cal, base);
@@ -104,8 +104,8 @@ function bmiCategoryKey(b){
 
 /* macros for a calorie figure that may have been adjusted after the fact */
 function calorieMacros(p, cal, base){
-  const protein = Math.round(p.weight * 2);
-  const fat = Math.round(cal * 0.25 / 9);
+  const protein = Math.round(p.weight * CALC_CFG.proteinPerKg);
+  const fat = Math.round(cal * CALC_CFG.fatShare / 9);
   const carb = Math.max(Math.round((cal - protein * 4 - fat * 9) / 4), 0);
   return {tdee: base.tdee, cal, label: base.label, protein, fat, carb};
 }

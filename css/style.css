@@ -542,3 +542,39 @@ hr.sep{border:none; border-top:1px solid var(--line); margin:20px 0}
   background:transparent; border:0; border-radius:10px; color:var(--mut); cursor:pointer}
 .pw-eye:hover, .pw-eye.on{color:var(--txt)}
 .txin[aria-invalid="true"]{border-color:var(--coral)}
+
+/* ---------- exercise GIF demo ---------- */
+.vidwrap.gif img{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000}
+
+/* ---------- announcement (config/app, js/content.js) ---------- */
+.note.announce{margin:0 0 14px; border-color:var(--acc-ink)}
+.note.announce .lab{color:var(--acc-ink); font-weight:700; margin-bottom:4px}
+
+/* ---------- admin dashboard (js/views/admin.js) ---------- */
+.adm-badge{display:inline-block; font-size:11px; font-weight:700; padding:3px 9px; border-radius:7px; margin-right:6px;
+  background:var(--card2); border:1px solid var(--line2); color:var(--mut); white-space:nowrap}
+.adm-badge.adm-owner{background:var(--acc); border-color:var(--acc); color:#0b0d08}
+.adm-badge.adm-admin{border-color:var(--acc-ink); color:var(--acc-ink)}
+.adm-badge.adm-moderator{border-color:var(--ok); color:var(--ok)}
+.adm-badge.adm-st-custom{border-color:var(--ok); color:var(--ok)}
+.adm-badge.adm-st-edited{border-color:var(--warn); color:var(--warn)}
+.adm-badge.adm-st-hidden{border-color:var(--coral); color:var(--coral)}
+.top .adm-badge{margin-left:auto}
+.adm-tiles{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px}
+.adm-tile b{display:block; font-size:24px; font-weight:900}
+.adm-dim{opacity:.55}
+.adm-btns{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px}
+.adm-check{display:flex; align-items:center; gap:10px; font-size:14px; margin:4px 0 14px; cursor:pointer}
+.adm-check input{width:18px; height:18px; accent-color:var(--acc)}
+.adm-details{margin:4px 0 16px; border:1px solid var(--line); border-radius:12px; padding:12px 14px}
+.adm-details summary{cursor:pointer; font-weight:600; font-size:14px}
+.adm-details[open] summary{margin-bottom:14px}
+.adm textarea.txin, .sheet textarea.txin{resize:vertical; min-height:44px; font:inherit; line-height:1.45}
+.adm-five .field{margin-bottom:8px}
+.adm-five .txin{padding-left:8px; padding-right:4px}
+.adm-staff{display:flex; align-items:center; gap:10px; margin-bottom:10px}
+.adm-staff > div{flex:1}
+.adm-table{width:100%; border-collapse:collapse; font-size:13px}
+.adm-table td{padding:9px 6px; border-bottom:1px solid var(--line); vertical-align:top}
+.adm-table td.ok{color:var(--ok); font-weight:700}
+.adm-table td.bad{color:var(--coral); font-weight:700}

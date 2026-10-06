@@ -28,8 +28,11 @@ function videoEmbed(x){
   const clip = typeof exClip==='function' ? exClip(x.id) : null;
   if(clip) return clipHTML(x, clip);
   if(!x.video) return novideoHTML(x);
+  if(/^https:\/\/.+\.gif(\?.*)?$/i.test(x.video)){
+    return `<div class="vidwrap gif"><img src="${esc(x.video)}" alt="${esc(x.n)}" loading="lazy"></div>`;
+  }
   if(/^https?:\/\//.test(x.video) || /\.(mp4|webm|mov)(\?.*)?$/i.test(x.video)){
-    return `<div class="vidwrap"><video controls preload="none" poster="${x.poster||''}"><source src="${x.video}" type="video/mp4"></video></div>`;
+    return `<div class="vidwrap"><video controls preload="none" poster="${x.poster||''}"><source src="${esc(x.video)}" type="${/\.webm(\?.*)?$/i.test(x.video)?'video/webm':'video/mp4'}"></video></div>`;
   }
   return `<div class="vidwrap"><iframe src="https://www.youtube.com/embed/${x.video}" title="${esc(x.n)}" loading="lazy"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;

@@ -17,6 +17,10 @@
       "destination": "/MongolFit.html"
     },
     {
+      "source": "/admin",
+      "destination": "/MongolFit.html"
+    },
+    {
       "source": "/register",
       "destination": "/MongolFit.html"
     },

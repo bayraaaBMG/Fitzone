@@ -6,6 +6,8 @@ const I18N = {
     nav_home:'Нүүр', nav_plan:'Хөтөлбөр', nav_library:'Дасгал', nav_progress:'Ахиц', nav_nutrition:'Хоол',
     settings:'Тохиргоо', save:'Хадгалах', add:'Нэмэх', cancel:'Цуцлах', edit:'Засах', close:'Хаах',
     back:'Буцах', continue:'Үргэлжлүүлэх', all:'Бүгд', logout:'Гарах',
+    st_admin:'Админ самбар', adm_denied:'Энэ хуудас зөвхөн админд нээлттэй.',
+    announce_label:'Мэдэгдэл', announce_ok:'Ойлголоо',
 
     auth_login_title:'Нэвтэрч <span class="y">үргэлжлүүл</span>', auth_signup_title:'Бүртгэл <span class="y">үүсгэ</span>',
     auth_tagline:'Дансаараа бүх төхөөрөмж дээрээ хөтөлбөр, ахиц, хоолны тэмдэглэлээ хадгалж, хаанаас ч үргэлжлүүл.',
@@ -389,6 +391,8 @@ const I18N = {
     nav_home:'Home', nav_plan:'Plan', nav_library:'Exercises', nav_progress:'Progress', nav_nutrition:'Food',
     settings:'Settings', save:'Save', add:'Add', cancel:'Cancel', edit:'Edit', close:'Close',
     back:'Back', continue:'Continue', all:'All', logout:'Log out',
+    st_admin:'Admin panel', adm_denied:'This page is for admins only.',
+    announce_label:'Announcement', announce_ok:'Got it',
 
     auth_login_title:'Log in and <span class="y">continue</span>', auth_signup_title:'Create your <span class="y">account</span>',
     auth_tagline:'Keep your program, progress, and food log synced across every device.',

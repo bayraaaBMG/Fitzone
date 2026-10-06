@@ -44,7 +44,7 @@ function planDayTitle(d){ return d.titleKey ? t('plantitle_'+d.titleKey) : (d.ti
 function pickEx(muscle, p, used){
   const gymOK = p.place==='gym' || p.place==='both';
   const equip = p.equip||[];
-  let pool = EX.filter(x=>{
+  let pool = liveExercises().filter(x=>{
     if(x.m!==muscle) return false;
     if(x.loc==='gym' && !gymOK) return false;
     if(x.loc==='home' && p.place==='gym') return false; // pure gym → gym moves
@@ -76,7 +76,7 @@ function generatePlan(p){
     });
     // fat loss finisher
     if(p.goal==='fatloss'){
-      const fin = EX.find(x=>x.m==='cardio' && (p.place!=='gym'));
+      const fin = liveExercises().find(x=>x.m==='cardio' && (p.place!=='gym'));
       if(fin && !exs.find(e=>e.id===fin.id)) exs.push({id:fin.id, sets:3, reps:'30–40', rest:30, doneSets:Array(3).fill(false)});
     }
     return {titleKey:d.titleKey, focus:d.focus, ex:exs, done:false};
@@ -95,17 +95,21 @@ function p_minTarget(){ return S.profile?S.profile.minutes:30; }
    the usual floors for an unsupervised diet, and under them a deficit stops
    being a deficit and starts being malnutrition. */
 const CAL_FLOOR = {m: 1500, f: 1200};
+/* the calorie algorithm's tunable numbers. These are the defaults; an admin
+   can change them from the dashboard (config/app.calc, applied by
+   js/content.js), so read them from here rather than writing them inline. */
+const CALC_CFG = {deficit: 0.8, surplus: 1.1, proteinPerKg: 2, fatShare: 0.25, careFloor: 0.9};
 
 function nutrition(p, activity){
   const s = p.sex==='m'?5:-161;
   const bmr = 10*p.weight + 6.25*p.height - 5*p.age + s;
   const tdee = Math.round(bmr*activity);
   let cal = tdee, label=t('nut_label_maintain');
-  if(p.goal==='fatloss'){ cal = Math.round(tdee*0.8); label=t('nut_label_lose'); }
-  else if(p.goal==='muscle'||p.goal==='strength'){ cal = Math.round(tdee*1.1); label=t('nut_label_gain'); }
+  if(p.goal==='fatloss'){ cal = Math.round(tdee*CALC_CFG.deficit); label=t('nut_label_lose'); }
+  else if(p.goal==='muscle'||p.goal==='strength'){ cal = Math.round(tdee*CALC_CFG.surplus); label=t('nut_label_gain'); }
   cal = Math.max(cal, CAL_FLOOR[p.sex==='f' ? 'f' : 'm']);
-  const protein = Math.round(p.weight*2);            // g
-  const fat = Math.round(cal*0.25/9);                // g
+  const protein = Math.round(p.weight*CALC_CFG.proteinPerKg);   // g
+  const fat = Math.round(cal*CALC_CFG.fatShare/9);              // g
   const carb = Math.round((cal - protein*4 - fat*9)/4);
   return {tdee, cal, label, protein, fat, carb:Math.max(carb,0)};
 }

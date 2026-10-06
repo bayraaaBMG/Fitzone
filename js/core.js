@@ -18,6 +18,8 @@ function render(){
   else if(S.tab==='progress') renderProgress();
   else if(S.tab==='nutrition') renderNutrition();
   else if(S.tab==='profile') renderProfile();
+  else if(S.tab==='admin') renderAdminRoute();
+  syncAdminPath();
   window.scrollTo(0,0);
 }
 

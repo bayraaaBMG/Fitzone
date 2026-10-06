@@ -39,7 +39,7 @@ function renderOnboard(){
         <h1>${t('onb_intro_h1')}</h1>
         <p>${t('onb_intro_p')}</p>
         <div class="stats">
-          <div><b>${EX.length}+</b><span>${t('onb_stat_exercises')}</span></div>
+          <div><b>${liveExercises().length}+</b><span>${t('onb_stat_exercises')}</span></div>
           <div><b>2–6</b><span>${t('onb_stat_days')}</span></div>
           <div><b>10–60</b><span>${t('onb_stat_minutes')}</span></div>
         </div>

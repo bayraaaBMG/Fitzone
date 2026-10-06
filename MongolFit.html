@@ -44,6 +44,8 @@
      MongolFit — MVP. Vanilla JS single-page app.
      Cycle: profile → rule-based plan → workout → complete → progress.
      Code is split per page/concern under js/.
+     The staff dashboard (js/views/admin.js) is not listed here: js/roles.js
+     loads it on /admin, and only for an admin or moderator.
      ============================================================ -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
@@ -61,6 +63,7 @@
 <script src="js/state.js"></script>
 <script src="js/planner.js"></script>
 <script src="js/onboard-calc.js"></script>
+<script src="js/content.js"></script>
 <script src="js/pose-rules.js"></script>
 <script src="js/records.js"></script>
 <script src="js/ex-photos.js"></script>
@@ -72,6 +75,7 @@
      starts, so startup costs nothing for anyone who never opens the camera -->
 <script src="js/pose.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/roles.js"></script>
 <script src="js/core.js"></script>
 <script src="js/views/authgate.js"></script>
 <script src="js/views/onboard.js"></script>

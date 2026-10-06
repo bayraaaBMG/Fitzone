@@ -1,4 +1,4 @@
-const CACHE = 'mongolfit-v29';
+const CACHE = 'mongolfit-v30';
 // the pose model/runtime (MediaPipe on jsDelivr, model on storage.googleapis.com)
 // is multi-MB and opt-in only — leave it to the browser's HTTP cache, never this SW
 const HEAVY_HOST_RE = /^https:\/\/cdn\.jsdelivr\.net\//;
@@ -16,8 +16,8 @@ const AUTH_HOST_RE = /^https:\/\/([^/]+\.)?(google\.com|googleapis\.com|googleus
 const ASSETS = [
   './MongolFit.html', './app', './css/style.css', './css/workout.css',
   './js/firebase-config.js',
-  './js/data.js','./js/coach-data.js','./js/foods.js','./js/i18n.js','./js/references.js','./js/food-photos.js','./js/food-videos.js','./js/food-advice.js','./js/dates.js','./js/state.js','./js/planner.js','./js/onboard-calc.js',
-  './js/pose-rules.js','./js/records.js','./js/ex-photos.js','./js/ex-videos.js','./js/muscle-data.js','./js/recovery.js','./js/suggest.js','./js/ai/ml-features.js','./js/ai/ml-runtime.js','./js/ai/ai-v2.js','./js/pose.js','./js/auth.js','./js/core.js',
+  './js/data.js','./js/coach-data.js','./js/foods.js','./js/i18n.js','./js/references.js','./js/food-photos.js','./js/food-videos.js','./js/food-advice.js','./js/dates.js','./js/state.js','./js/planner.js','./js/onboard-calc.js','./js/content.js',
+  './js/pose-rules.js','./js/records.js','./js/ex-photos.js','./js/ex-videos.js','./js/muscle-data.js','./js/recovery.js','./js/suggest.js','./js/ai/ml-features.js','./js/ai/ml-runtime.js','./js/ai/ai-v2.js','./js/pose.js','./js/auth.js','./js/roles.js','./js/core.js',
   './js/views/authgate.js','./js/views/onboard.js','./js/views/home.js','./js/views/musclemap.js','./js/views/exercise.js','./js/views/workout.js',
   './js/views/plan.js','./js/views/library.js','./js/views/progress.js','./js/views/nutrition.js',
   './js/views/settings.js','./js/views/profile.js','./js/app.js','./manifest.json'
