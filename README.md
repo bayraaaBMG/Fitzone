@@ -264,10 +264,16 @@ Collections added for this:
 | `directory/{uid}` — name, email, goal, last seen | the account itself | that user, staff |
 | `exercises/{id}` — overrides a built-in exercise or adds one; `hidden` removes it from the library and plans | admin | signed-in users |
 | `config/app` — announcement, calorie factors | admin | signed-in users |
+| `config/pages` — wording of any app screen, by I18N key (MN/EN) | admin | signed-in users |
+| `config/legal` — privacy policy and terms wording, fetched by the public pages over REST | admin | anyone |
 | `adminLog/{id}` — append-only | staff | admin |
 
-Every admin-written text field is checked for markup and length in the
-rules, and cleaned again by `js/content.js` before it reaches the page.
+Every admin-written exercise and config field is checked for markup and
+length in the rules, and cleaned again by `js/content.js` before it reaches
+the page. Rules cannot loop over a map, so the page and legal text maps are
+bounded only by size there: `js/content.js` strips `< > "` from page text
+before the app renders it, and `js/public.js` writes legal text with
+`textContent` only.
 After changing the rules, deploy them:
 
 ```bash

@@ -62,6 +62,39 @@
     root.lang = 'en';
     if(langBtn){ langBtn.textContent = 'MN'; langBtn.setAttribute('aria-label', 'Монгол хэл рүү шилжих'); }
     renderExercises();
+    applyLegal();
+  }
+
+  /* ---------- admin edits to the privacy policy / terms ----------
+     config/legal in Firestore holds the wording an admin changed in the app's
+     dashboard: {privacy:{mn:{key:text}, en:{…}, updated:'YYYY-MM-DD'}, terms:{…}}.
+     It is publicly readable, so one plain REST request fetches it — no
+     Firebase SDK on these pages. Text goes in with textContent only. When the
+     request fails the static wording stays, which is the shipped version. */
+  const LEGAL_URL = 'https://firestore.googleapis.com/v1/projects/fitzone-7f325/databases/(default)/documents/config/legal';
+  const legalPage = $('[data-i18n^="pv_"]') ? 'privacy' : $('[data-i18n^="tm_"]') ? 'terms' : null;
+  let legal = null;
+  const fromRest = v => !v || typeof v !== 'object' ? null
+    : v.mapValue ? Object.fromEntries(Object.entries(v.mapValue.fields || {}).map(([k, x]) => [k, fromRest(x)]))
+    : typeof v.stringValue === 'string' ? v.stringValue : null;
+  function applyLegal(){
+    if(!legal) return;
+    const words = legal[lang] || {};
+    $$('[data-i18n]').forEach(el => {
+      const v = words[el.dataset.i18n];
+      if(typeof v === 'string' && v.trim()) el.textContent = v;
+    });
+    const date = $('.doc-date');
+    if(legal.updated && date && date.lastChild && date.lastChild.nodeType === 3) date.lastChild.textContent = ' ' + legal.updated;
+  }
+  if(legalPage && window.fetch){
+    fetch(LEGAL_URL).then(r => r.ok ? r.json() : null).then(j => {
+      const all = j && j.fields ? fromRest({mapValue: {fields: j.fields}}) : null;
+      const page = all && all[legalPage];
+      if(!page || typeof page !== 'object') return;
+      legal = {mn: page.mn || {}, en: page.en || {}, updated: typeof page.updated === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(page.updated) ? page.updated : null};
+      applyLegal();
+    }).catch(() => {});
   }
   if(lang === 'en') loadI18n().then(applyEnglish).catch(() => { lang = 'mn'; });
   if(langBtn) langBtn.addEventListener('click', () => {

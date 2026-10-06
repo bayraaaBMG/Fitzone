@@ -6,6 +6,8 @@
    config/app      {announce:{on, mn, en}, calc:{...}} — the Home banner and
                    the calorie algorithm's numbers (CALC_CFG, ACTIVITY_MULT,
                    CAL_FLOOR).
+   config/pages    {mn:{key:text}, en:{key:text}} — admin wording for any
+                   on-screen text, by its I18N key (js/i18n.js).
    Both are read by every signed-in user and written only by admins
    (firestore.rules). They are still cleaned here before use: they reach
    innerHTML, and a mistake in one admin edit must not break the app.
@@ -32,6 +34,11 @@ const EX_VIDEO_RE = /^([A-Za-z0-9_-]{11}|https:\/\/[A-Za-z0-9./_~%-]{4,300}\.(mp
 
 let EX_DOCS = {};        // id -> cleaned exercises/{id} document, as loaded
 let APP_CONFIG = null;   // cleaned config/app, as loaded
+
+/* the shipped wording, so dropping an override restores it exactly */
+const I18N_DEFAULTS = {mn: {...I18N.mn}, en: {...I18N.en}};
+const PAGE_TEXT_MAX = 2000;
+let PAGE_TEXTS = {mn: {}, en: {}}; // the overrides currently applied
 
 const cleanTxt = (v, max) => typeof v === 'string' ? v.replace(/[<>]/g, '').slice(0, max) : undefined;
 const clampNum = (v, lo, hi, d) => { const n = +v; return isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
@@ -114,6 +121,31 @@ function applyConfig(cfg){
   for(const k of ['deficit', 'surplus', 'proteinPerKg', 'fatShare', 'careFloor']) CALC_CFG[k] = c[k];
 }
 
+/* Page text arrives as plain text and is placed by t() into innerHTML and
+   into double-quoted attributes all over the app, so < > and " are removed
+   here (the rules cannot check map values). Only keys the app actually has
+   are taken. */
+function cleanPageText(v){ return typeof v === 'string' ? v.replace(/[<>"]/g, '').slice(0, PAGE_TEXT_MAX) : ''; }
+function cleanPages(d){
+  const out = {mn: {}, en: {}};
+  for(const lang of ['mn', 'en']){
+    const src = (d && d[lang] && typeof d[lang] === 'object') ? d[lang] : {};
+    for(const [k, v] of Object.entries(src)){
+      if(!Object.prototype.hasOwnProperty.call(I18N_DEFAULTS[lang], k)) continue;
+      const c = cleanPageText(v).trim();
+      if(c) out[lang][k] = c;
+    }
+  }
+  return out;
+}
+function applyPages(p){
+  for(const lang of ['mn', 'en']){
+    for(const k of Object.keys(PAGE_TEXTS[lang])) I18N[lang][k] = I18N_DEFAULTS[lang][k];
+    Object.assign(I18N[lang], p[lang]);
+  }
+  PAGE_TEXTS = p;
+}
+
 function setExerciseDocs(raw){
   EX_DOCS = {};
   for(const [id, d] of Object.entries(raw || {})){ const c = cleanExerciseDoc(d, id); if(c) EX_DOCS[id] = c; }
@@ -124,16 +156,17 @@ function setExerciseDocs(raw){
 async function loadRemoteContent(){
   try{
     const cached = await Store.get('mf_content');
-    if(cached){ setExerciseDocs(cached.exercises); applyConfig(cleanConfig(cached.config)); }
+    if(cached){ setExerciseDocs(cached.exercises); applyConfig(cleanConfig(cached.config)); applyPages(cleanPages(cached.pages)); }
   }catch(e){}
   if(typeof firebase === 'undefined' || !firebase.apps.length) return;
   const db = firebase.firestore();
-  const [exSnap, cfgSnap] = await Promise.all([
+  const [exSnap, cfgSnap, pagesSnap] = await Promise.all([
     db.collection('exercises').get().catch(() => null),
     db.collection('config').doc('app').get().catch(() => null),
+    db.collection('config').doc('pages').get().catch(() => null),
   ]);
   const cached = (await Store.get('mf_content').catch(() => null)) || {};
-  const next = {exercises: cached.exercises || {}, config: cached.config || null};
+  const next = {exercises: cached.exercises || {}, config: cached.config || null, pages: cached.pages || null};
   if(exSnap){
     next.exercises = {};
     exSnap.forEach(doc => { next.exercises[doc.id] = doc.data(); });
@@ -142,6 +175,10 @@ async function loadRemoteContent(){
   if(cfgSnap){
     next.config = cfgSnap.exists ? cfgSnap.data() : null;
     applyConfig(cleanConfig(next.config));
+  }
+  if(pagesSnap){
+    next.pages = pagesSnap.exists ? pagesSnap.data() : null;
+    applyPages(cleanPages(next.pages));
   }
   await Store.set('mf_content', next);
 }

@@ -578,3 +578,14 @@ hr.sep{border:none; border-top:1px solid var(--line); margin:20px 0}
 .adm-table td{padding:9px 6px; border-bottom:1px solid var(--line); vertical-align:top}
 .adm-table td.ok{color:var(--ok); font-weight:700}
 .adm-table td.bad{color:var(--coral); font-weight:700}
+.adm-txt{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:10px}
+.adm-txt.edited{border-color:var(--warn)}
+.adm-txt-head textarea{font-weight:700}
+.adm-txt-h{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px}
+.adm-txt-h code{font-size:11px; color:var(--mut); word-break:break-all}
+.adm-txt-def{margin:0 0 6px}
+.adm-txt textarea{margin:0}
+.adm-link{background:none; border:0; color:var(--acc-ink); font-size:12px; font-weight:600; cursor:pointer; padding:2px 0; white-space:nowrap}
+.adm-savebar{position:sticky; bottom:0; display:flex; align-items:center; justify-content:space-between; gap:10px;
+  margin:8px -4px 0; padding:12px 4px calc(12px + env(safe-area-inset-bottom)); background:var(--bg); border-top:1px solid var(--line)}
+.adm a.chip{text-decoration:none}

@@ -10,7 +10,9 @@
                             challenge (edit/reset/end) and battle results;
                             the owner also grants/revokes roles here
      exercises  admin+      add / edit / hide / delete library exercises
-     config     admin+      Home announcement, calorie algorithm numbers
+     config     admin+      Home announcement, calorie algorithm numbers,
+                            the text of every app screen (config/pages), and
+                            the privacy policy and terms (config/legal)
      staff      admin+      who holds a role (the owner can revoke)
      log        admin+      append-only audit trail
    ============================================================ */
@@ -67,6 +69,15 @@ const ADMIN_I18N = {
     adm_cfg_defaults:'Анхны утгууд', adm_cfg_save:'Тохиргоо хадгалах',
     adm_staff_hint:'Эрх олгохдоо "Хэрэглэгч" хэсгээс хүнээ сонгоно.', adm_granted:'Олгосон',
     adm_log_empty:'Бичлэг алга.',
+    adm_cfg_tab_general:'Ерөнхий', adm_cfg_tab_pages:'Хуудасны текст', adm_cfg_tab_legal:'Нууцлал & Нөхцөл',
+    adm_pg_hint:'Апп доторх аливаа бичвэрийг хуудсаар нь сонгож засна. Хоосон үлдээвэл анхны бичвэр сэргэнэ. {0} гэх мэт орлуулагчийг хадгална уу. Тодруулга (bold, өнгө) энгийн текст болж хадгалагдана.',
+    adm_pg_g_home:'Нүүр', adm_pg_g_nutrition:'Хооллолт', adm_pg_g_library:'Номын сан & Хөтөлбөр', adm_pg_g_workout:'Дасгал хийх',
+    adm_pg_g_onboard:'Асуумж & Нэвтрэх', adm_pg_g_profile:'Ахиц & Профайл', adm_pg_g_other:'Бусад',
+    adm_pg_edited_only:'Зөвхөн засварласан', adm_pg_reset:'Анхныхаар', adm_pg_default:'Анхны бичвэр:',
+    adm_pg_changes:'{0} хадгалаагүй өөрчлөлт', adm_pg_no_changes:'Өөрчлөлт алга', adm_pg_more:'…дахиад {0}. Хайлтаа нарийсгана уу.',
+    adm_pg_err_markup:'{0}: < > " тэмдэгт ашиглах боломжгүй.', adm_pg_err_ph:'{0}: {1} орлуулагч дутуу байна.',
+    adm_lg_privacy:'Нууцлалын бодлого', adm_lg_terms:'Үйлчилгээний нөхцөл', adm_lg_view:'Хуудсыг нээх ↗',
+    adm_lg_hint:'Нийтийн хуудсанд шууд харагдана (нэвтрэх шаардлагагүй). Хадгалахад "Шинэчилсэн" огноо өнөөдрөөр солигдоно.',
   },
   en: {
     adm_title:'Admin panel', adm_back:'Back to app',
@@ -119,6 +130,15 @@ const ADMIN_I18N = {
     adm_cfg_defaults:'Defaults', adm_cfg_save:'Save settings',
     adm_staff_hint:'To grant a role, pick the person in the Users section.', adm_granted:'Granted',
     adm_log_empty:'No entries.',
+    adm_cfg_tab_general:'General', adm_cfg_tab_pages:'Page text', adm_cfg_tab_legal:'Privacy & Terms',
+    adm_pg_hint:'Pick a page and edit any of its text. Leaving a field empty restores the original. Keep placeholders such as {0}. Emphasis (bold, colour) is saved as plain text.',
+    adm_pg_g_home:'Home', adm_pg_g_nutrition:'Nutrition', adm_pg_g_library:'Library & plan', adm_pg_g_workout:'Workout',
+    adm_pg_g_onboard:'Onboarding & sign-in', adm_pg_g_profile:'Progress & profile', adm_pg_g_other:'Other',
+    adm_pg_edited_only:'Edited only', adm_pg_reset:'Restore', adm_pg_default:'Original:',
+    adm_pg_changes:'{0} unsaved changes', adm_pg_no_changes:'No changes', adm_pg_more:'…{0} more. Narrow the search.',
+    adm_pg_err_markup:'{0}: the < > " characters are not allowed.', adm_pg_err_ph:'{0}: missing placeholder {1}.',
+    adm_lg_privacy:'Privacy policy', adm_lg_terms:'Terms of service', adm_lg_view:'Open the page ↗',
+    adm_lg_hint:'Shown on the public page straight away (no sign-in needed). Saving sets its "Updated" date to today.',
   },
 };
 Object.assign(I18N.mn, ADMIN_I18N.mn);
@@ -132,7 +152,9 @@ const ADM_SECTIONS = [
   ['staff', '🛡', 'admin'],
   ['log', '📜', 'admin'],
 ];
-const AD = {sec: 'overview', userQ: '', exQ: '', exF: 'all', dir: null, roles: null, log: null};
+const AD = {sec: 'overview', userQ: '', exQ: '', exF: 'all', dir: null, roles: null, log: null,
+  cfgTab: 'general', pg: {group: 'home', lang: 'mn', q: '', edited: false}, pgDraft: null,
+  lg: {page: 'privacy', lang: 'mn'}, lgDefaults: null, lgSaved: null, lgDraft: null};
 
 const admDb = () => firebase.firestore();
 const admTime = ms => ms ? new Date(ms).toLocaleString(S.lang === 'en' ? 'en-GB' : 'mn-MN', {dateStyle: 'short', timeStyle: 'short'}) : '—';
@@ -536,8 +558,15 @@ async function admPatchExercise(id, doc){
 
 /* ---------- config ---------- */
 function admConfig(body){
-  const cfg = APP_CONFIG || cleanConfig(null);
-  paintConfig(body, JSON.parse(JSON.stringify(cfg)));
+  const tabs = [['general', '⚙️'], ['pages', '📝'], ['legal', '⚖️']];
+  body.innerHTML = `<div class="scrollrow" id="cfgTabs">${tabs.map(([id, ic]) =>
+      `<button class="chip ${AD.cfgTab === id ? 'on' : ''}" data-tab="${id}">${ic} ${t('adm_cfg_tab_' + id)}</button>`).join('')}</div>
+    <div id="cfgBody" style="margin-top:14px"></div>`;
+  body.querySelectorAll('#cfgTabs .chip').forEach(c => c.onclick = () => { AD.cfgTab = c.dataset.tab; admConfig(body); });
+  const el = body.querySelector('#cfgBody');
+  if(AD.cfgTab === 'pages') admPages(el);
+  else if(AD.cfgTab === 'legal') admLegal(el);
+  else paintConfig(el, JSON.parse(JSON.stringify(APP_CONFIG || cleanConfig(null))));
 }
 function paintConfig(body, cfg){
   const c = cfg.calc, D = CALC_DEFAULTS;
@@ -612,6 +641,250 @@ function paintConfig(body, cfg){
       adminLog('config.update', 'config/app', clean.announce.on ? 'announce on' : 'announce off');
       toast(t('adm_saved'));
       paintConfig(body, JSON.parse(JSON.stringify(clean)));
+    }catch(e){ btn.disabled = false; admErr(e); }
+  };
+}
+
+/* ---------- page text (config/pages) ----------
+   Every on-screen string is an I18N key; the editor groups them by the page
+   they belong to (key prefix) and stores only the ones that differ from the
+   shipped wording. */
+const PAGE_GROUPS = [
+  ['home', '🏠', ['home', 'na', 'doctor', 'rec', 'sug', 'todays', 'install', 'ios', 'already', 'other', 'attach', 'q', 'send', 'announce', 'disclaimer']],
+  ['nutrition', '🍳', ['nut', 'recipe', 'recipes', 'photo', 'fadv', 'food', 'pantry', 'macro', 'act', 'abbr', 'ingredients', 'instructions', 'find', 'search', 'added', 'nothing', 'can', 'or', 'day', 'not', 'kcal']],
+  ['library', '🏋️', ['lib', 'plan', 'plantitle', 'wd', 'ex', 'fig', 'demo', 'video', 'clip', 'proper', 'common', 'easier', 'harder', 'alt', 'no', 'equip', 'goal']],
+  ['workout', '⏱', ['ws', 'pose', 'cam', 'rest', 'warmup', 'done', 'finish', 'workout', 'manual', 'target', 'skip']],
+  ['onboard', '📝', ['onb', 'bmi', 'auth', 'autherr']],
+  ['profile', '👤', ['prog', 'meas', 'chart', 'challenge', 'restart', 'congrats', 'summary', 'pf', 'profile', 'your', 'st', 'unit', 'sources', 'ref']],
+  ['other', '🧩', []],
+];
+const PAGE_LIST_MAX = 150;
+function pageGroupOf(k){
+  const p = k.split('_')[0];
+  const g = PAGE_GROUPS.find(([, , ps]) => ps.includes(p));
+  return g ? g[0] : 'other';
+}
+/* the shipped wording as the plain text an override is written in */
+function plainText(s){
+  return String(s == null ? '' : s).replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+}
+const placeholdersOf = s => (String(s).match(/\{\d\}/g) || []).filter((v, i, a) => a.indexOf(v) === i);
+const autoRows = s => Math.min(8, Math.max(1, Math.ceil(String(s || '').length / 42)));
+
+function pagesDirty(){
+  const d = AD.pgDraft;
+  let n = 0;
+  for(const lang of ['mn', 'en']){
+    const keys = new Set([...Object.keys(d[lang]), ...Object.keys(PAGE_TEXTS[lang])]);
+    keys.forEach(k => { if((d[lang][k] || '') !== (PAGE_TEXTS[lang][k] || '')) n++; });
+  }
+  return n;
+}
+function admPages(el){
+  if(!AD.pgDraft) AD.pgDraft = {mn: {...PAGE_TEXTS.mn}, en: {...PAGE_TEXTS.en}};
+  const P = AD.pg, d = AD.pgDraft;
+  const edited = g => Object.keys(I18N_DEFAULTS.mn).filter(k => pageGroupOf(k) === g && (d.mn[k] || d.en[k])).length;
+  el.innerHTML = `
+    <p class="xs mut" style="margin:0 2px 12px">${t('adm_pg_hint')}</p>
+    <div class="scrollrow" id="pgGroups">${PAGE_GROUPS.map(([id, ic]) => {
+      const n = edited(id);
+      return `<button class="chip ${P.group === id ? 'on' : ''}" data-g="${id}">${ic} ${t('adm_pg_g_' + id)}${n ? ` · ${n}` : ''}</button>`;
+    }).join('')}</div>
+    <div class="chiprow" id="pgLang" style="margin-top:10px">
+      <button class="chip ${P.lang === 'mn' ? 'on' : ''}" data-l="mn">MN</button>
+      <button class="chip ${P.lang === 'en' ? 'on' : ''}" data-l="en">EN</button>
+      <button class="chip ${P.edited ? 'on' : ''}" id="pgEdited">✎ ${t('adm_pg_edited_only')}</button>
+    </div>
+    <input class="txin" id="pgQ" type="search" placeholder="${t('adm_search')}" value="${esc(P.q)}" style="margin-top:10px">
+    <div id="pgList" style="margin-top:12px"></div>
+    <p class="xs" id="pgErr" role="alert" style="color:var(--coral);min-height:1em"></p>
+    <div class="adm-savebar"><span class="xs mut" id="pgDirty"></span><button class="btn p sm" id="pgSave">${t('save')}</button></div>`;
+  el.querySelectorAll('#pgGroups .chip').forEach(c => c.onclick = () => { P.group = c.dataset.g; P.q = ''; admPages(el); });
+  el.querySelectorAll('#pgLang [data-l]').forEach(c => c.onclick = () => { P.lang = c.dataset.l; admPages(el); });
+  el.querySelector('#pgEdited').onclick = () => { P.edited = !P.edited; admPages(el); };
+  const q = el.querySelector('#pgQ');
+  q.oninput = () => { P.q = q.value; drawPageList(el); };
+  el.querySelector('#pgSave').onclick = () => savePages(el);
+  drawPageList(el);
+}
+function drawPageList(el){
+  const P = AD.pg, d = AD.pgDraft[P.lang], defs = I18N_DEFAULTS[P.lang];
+  const q = P.q.trim().toLowerCase();
+  const keys = Object.keys(I18N_DEFAULTS.mn).filter(k => {
+    if(!q && pageGroupOf(k) !== P.group) return false;
+    if(P.edited && !d[k]) return false;
+    return !q || [k, plainText(defs[k]), d[k]].some(v => String(v || '').toLowerCase().includes(q));
+  });
+  const list = el.querySelector('#pgList');
+  if(!keys.length){ list.innerHTML = `<div class="empty">${t('adm_none_found')}</div>`; updatePagesDirty(el); return; }
+  list.innerHTML = keys.slice(0, PAGE_LIST_MAX).map(k => {
+    const def = plainText(defs[k]), ov = d[k];
+    return `<div class="adm-txt ${ov ? 'edited' : ''}" data-k="${esc(k)}">
+      <div class="adm-txt-h"><code>${esc(k)}</code><button class="adm-link" data-reset ${ov ? '' : 'hidden'}>↺ ${t('adm_pg_reset')}</button></div>
+      <div class="xs mut adm-txt-def" ${ov ? '' : 'hidden'}>${t('adm_pg_default')} ${esc(def)}</div>
+      <textarea class="txin" rows="${autoRows(ov || def)}" maxlength="${PAGE_TEXT_MAX}" aria-label="${esc(k)}">${esc(ov || def)}</textarea>
+    </div>`;
+  }).join('') + (keys.length > PAGE_LIST_MAX ? `<p class="xs mut">${t('adm_pg_more', keys.length - PAGE_LIST_MAX)}</p>` : '');
+  list.querySelectorAll('.adm-txt').forEach(row => {
+    const k = row.dataset.k, ta = row.querySelector('textarea'), def = plainText(defs[k]);
+    const sync = () => {
+      const v = ta.value.trim();
+      if(v && v !== def) d[k] = v; else delete d[k];
+      const on = !!d[k];
+      row.classList.toggle('edited', on);
+      row.querySelector('[data-reset]').hidden = !on;
+      row.querySelector('.adm-txt-def').hidden = !on;
+      updatePagesDirty(el);
+    };
+    ta.oninput = sync;
+    row.querySelector('[data-reset]').onclick = () => { ta.value = def; sync(); };
+  });
+  updatePagesDirty(el);
+}
+function updatePagesDirty(el){
+  const n = pagesDirty();
+  const s = el.querySelector('#pgDirty');
+  if(s) s.textContent = n ? t('adm_pg_changes', n) : t('adm_pg_no_changes');
+}
+async function savePages(el){
+  const d = AD.pgDraft, err = el.querySelector('#pgErr');
+  err.textContent = '';
+  for(const lang of ['mn', 'en']){
+    for(const [k, v] of Object.entries(d[lang])){
+      if(/[<>"]/.test(v)){ err.textContent = t('adm_pg_err_markup', k); return; }
+      const missing = placeholdersOf(I18N_DEFAULTS[lang][k]).filter(ph => !v.includes(ph));
+      if(missing.length){ err.textContent = t('adm_pg_err_ph', k, missing.join(' ')); return; }
+    }
+  }
+  const doc = {mn: {...d.mn}, en: {...d.en}, updatedAt: Date.now(), updatedBy: authUser.uid};
+  const n = pagesDirty();
+  const btn = el.querySelector('#pgSave'); btn.disabled = true;
+  try{
+    await admDb().collection('config').doc('pages').set(doc);
+    applyPages(cleanPages(doc));
+    const cached = (await Store.get('mf_content')) || {};
+    await Store.set('mf_content', {...cached, pages: doc});
+    adminLog('pages.update', 'config/pages', `${n} changes, ${Object.keys(doc.mn).length + Object.keys(doc.en).length} overrides`);
+    AD.pgDraft = null;
+    toast(t('adm_saved'));
+    renderAdmin();
+  }catch(e){ btn.disabled = false; admErr(e); }
+}
+
+/* ---------- privacy policy & terms (config/legal) ----------
+   The shipped wording is the static HTML (Mongolian) and js/i18n-public.js
+   (English); both are read here so the editor starts from what visitors see
+   today. js/public.js applies the saved overrides on the public pages. */
+const LEGAL_PAGES = {privacy: {file: 'privacy.html', path: '/privacy', prefix: 'pv_'}, terms: {file: 'terms.html', path: '/terms', prefix: 'tm_'}};
+let _pubI18n = null;
+async function loadLegalDefaults(){
+  if(AD.lgDefaults) return AD.lgDefaults;
+  if(!_pubI18n){
+    _pubI18n = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'js/i18n-public.js'; s.onload = res;
+      s.onerror = () => { _pubI18n = null; rej(new Error('i18n-public.js')); };
+      document.head.appendChild(s);
+    });
+  }
+  await _pubI18n;
+  const out = {};
+  for(const [page, meta] of Object.entries(LEGAL_PAGES)){
+    const res = await fetch(meta.file, {cache: 'no-cache'});
+    if(!res.ok) throw new Error(meta.file);
+    const docEl = new DOMParser().parseFromString(await res.text(), 'text/html');
+    out[page] = [...docEl.querySelectorAll('[data-i18n]')]
+      .filter(e => e.dataset.i18n.startsWith(meta.prefix))
+      .map(e => ({key: e.dataset.i18n, tag: e.tagName.toLowerCase(),
+        mn: e.textContent.replace(/\s+/g, ' ').trim(), en: I18N.en[e.dataset.i18n] || ''}));
+  }
+  AD.lgDefaults = out;
+  return out;
+}
+function cleanLegal(d){
+  const out = {};
+  for(const page of Object.keys(LEGAL_PAGES)){
+    const p = (d && d[page] && typeof d[page] === 'object') ? d[page] : {};
+    out[page] = {mn: {}, en: {}};
+    for(const lang of ['mn', 'en']){
+      for(const [k, v] of Object.entries((p[lang] && typeof p[lang] === 'object') ? p[lang] : {})){
+        if(typeof v === 'string' && v.trim()) out[page][lang][k] = v.trim().slice(0, 5000);
+      }
+    }
+    if(typeof p.updated === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p.updated)) out[page].updated = p.updated;
+  }
+  return out;
+}
+async function admLegal(el, force){
+  admLoading(el);
+  try{
+    await loadLegalDefaults();
+    if(!AD.lgSaved || force){
+      const snap = await admDb().collection('config').doc('legal').get();
+      AD.lgSaved = cleanLegal(snap.exists ? snap.data() : null);
+      AD.lgDraft = JSON.parse(JSON.stringify(AD.lgSaved));
+    }
+  }catch(e){ admFailed(el, () => admLegal(el, true)); return; }
+  if(AD.sec !== 'config' || AD.cfgTab !== 'legal') return;
+  paintLegal(el);
+}
+function legalChanged(page){
+  const a = AD.lgDraft[page], b = AD.lgSaved[page];
+  return JSON.stringify([a.mn, a.en]) !== JSON.stringify([b.mn, b.en]);
+}
+function paintLegal(el){
+  const L = AD.lg, meta = LEGAL_PAGES[L.page], draft = AD.lgDraft[L.page][L.lang];
+  const rows = AD.lgDefaults[L.page];
+  const changed = Object.keys(LEGAL_PAGES).filter(legalChanged).length;
+  el.innerHTML = `
+    <p class="xs mut" style="margin:0 2px 12px">${t('adm_lg_hint')}</p>
+    <div class="chiprow" id="lgPage">${Object.keys(LEGAL_PAGES).map(p =>
+      `<button class="chip ${L.page === p ? 'on' : ''}" data-p="${p}">${t('adm_lg_' + p)}${legalChanged(p) ? ' ✎' : ''}</button>`).join('')}</div>
+    <div class="chiprow" id="lgLang" style="margin-top:10px">
+      <button class="chip ${L.lang === 'mn' ? 'on' : ''}" data-l="mn">MN</button>
+      <button class="chip ${L.lang === 'en' ? 'on' : ''}" data-l="en">EN</button>
+      <a class="chip" href="${meta.path}" target="_blank" rel="noopener">${t('adm_lg_view')}</a>
+    </div>
+    <p class="xs mut" style="margin:10px 2px 0">${t('adm_lg_' + L.page)} · ${esc(AD.lgSaved[L.page].updated || '—')}</p>
+    <div id="lgList" style="margin-top:12px">${rows.map(r => {
+      const def = r[L.lang], ov = draft[r.key];
+      return `<div class="adm-txt ${ov ? 'edited' : ''} ${/^h\d$/.test(r.tag) ? 'adm-txt-head' : ''}" data-k="${esc(r.key)}">
+        <div class="adm-txt-h"><code>${esc(r.key)}</code><button class="adm-link" data-reset ${ov ? '' : 'hidden'}>↺ ${t('adm_pg_reset')}</button></div>
+        <textarea class="txin" rows="${autoRows(ov || def)}" maxlength="5000" aria-label="${esc(r.key)}">${esc(ov || def)}</textarea>
+      </div>`;
+    }).join('')}</div>
+    <div class="adm-savebar"><span class="xs mut" id="lgDirty">${changed ? t('adm_pg_changes', changed) : t('adm_pg_no_changes')}</span>
+      <button class="btn p sm" id="lgSave">${t('save')}</button></div>`;
+  el.querySelectorAll('#lgPage [data-p]').forEach(c => c.onclick = () => { L.page = c.dataset.p; paintLegal(el); });
+  el.querySelectorAll('#lgLang [data-l]').forEach(c => c.onclick = () => { L.lang = c.dataset.l; paintLegal(el); });
+  el.querySelectorAll('#lgList .adm-txt').forEach(row => {
+    const k = row.dataset.k, ta = row.querySelector('textarea');
+    const def = (rows.find(r => r.key === k) || {})[L.lang] || '';
+    const sync = () => {
+      const v = ta.value.trim();
+      if(v && v !== def) draft[k] = v; else delete draft[k];
+      row.classList.toggle('edited', !!draft[k]);
+      row.querySelector('[data-reset]').hidden = !draft[k];
+      const n = Object.keys(LEGAL_PAGES).filter(legalChanged).length;
+      el.querySelector('#lgDirty').textContent = n ? t('adm_pg_changes', n) : t('adm_pg_no_changes');
+    };
+    ta.oninput = sync;
+    row.querySelector('[data-reset]').onclick = () => { ta.value = def; sync(); };
+  });
+  el.querySelector('#lgSave').onclick = async () => {
+    const pages = Object.keys(LEGAL_PAGES).filter(legalChanged);
+    if(!pages.length) return;
+    const next = JSON.parse(JSON.stringify(AD.lgDraft));
+    pages.forEach(p => { next[p].updated = today(); });
+    const btn = el.querySelector('#lgSave'); btn.disabled = true;
+    try{
+      await admDb().collection('config').doc('legal').set({...next, updatedAt: Date.now(), updatedBy: authUser.uid});
+      adminLog('legal.update', 'config/legal', pages.join(', '));
+      AD.lgSaved = cleanLegal(next);
+      AD.lgDraft = JSON.parse(JSON.stringify(AD.lgSaved));
+      toast(t('adm_saved'));
+      paintLegal(el);
     }catch(e){ btn.disabled = false; admErr(e); }
   };
 }

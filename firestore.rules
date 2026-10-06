@@ -128,12 +128,39 @@ service cloud.firestore {
         && optTxt(m, 'err', 600) && optTxt(m, 'easy', 200) && optTxt(m, 'hard', 200);
     }
 
-    // config/app: the home-screen announcement and the calorie algorithm's
-    // tunable numbers (js/content.js clamps them again on read).
+    // config/app    the home-screen announcement and the calorie algorithm's
+    //               tunable numbers (js/content.js clamps them again on read)
+    // config/pages  admin overrides of the app's on-screen text, {mn:{key:text}, en:{…}}
+    // config/legal  overrides of the privacy policy and terms, read by the
+    //               public pages without signing in, so readable by anyone
+    // Rules cannot loop over a map, so the text values of pages/legal are
+    // bounded only by count and document size here. They are made safe where
+    // they are used: js/content.js strips < > " before the app renders one,
+    // and js/public.js writes legal text with textContent only.
     match /config/{doc} {
-      allow read: if signedIn();
+      allow read: if signedIn() || doc == 'legal';
       allow delete: if isAdmin();
-      allow create, update: if isAdmin() && doc == 'app' && validConfig(request.resource.data);
+      allow create, update: if isAdmin() && (
+        (doc == 'app' && validConfig(request.resource.data))
+        || (doc == 'pages' && validPages(request.resource.data))
+        || (doc == 'legal' && validLegal(request.resource.data)));
+    }
+    function textMap(m, max) { return m is map && m.size() <= max; }
+    function validPages(d) {
+      return d.keys().hasOnly(['mn', 'en', 'updatedAt', 'updatedBy'])
+        && (!('mn' in d) || textMap(d.mn, 1000)) && (!('en' in d) || textMap(d.en, 1000))
+        && stamped(d);
+    }
+    function validLegalPage(p) {
+      return p is map && p.keys().hasOnly(['mn', 'en', 'updated'])
+        && (!('mn' in p) || textMap(p.mn, 200)) && (!('en' in p) || textMap(p.en, 200))
+        && (!('updated' in p) || (p.updated is string && p.updated.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')));
+    }
+    function validLegal(d) {
+      return d.keys().hasOnly(['privacy', 'terms', 'updatedAt', 'updatedBy'])
+        && (!('privacy' in d) || validLegalPage(d.privacy))
+        && (!('terms' in d) || validLegalPage(d.terms))
+        && stamped(d);
     }
     function validConfig(d) {
       return d.keys().hasOnly(['announce', 'calc', 'updatedAt', 'updatedBy'])
