@@ -56,7 +56,7 @@ function poseErrorCode(err){
 
 /* starts camera + detection loop. onFrame({status, warnKey, event, reps, heldSec, formScore, tracked})
    is called ~12x/sec. Resolves to a controller; rejects with Error{code}. */
-async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded, signal}){
+async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded, onStream, signal}){
   if(!poseCameraSupported()){ const e=new Error('unsupported'); e.code='nocamera'; throw e; }
   let stream;
   try{
@@ -73,6 +73,8 @@ async function startPoseCamera({video, canvas, exId, facing, onFrame, onEnded, s
   video.muted = true; video.setAttribute('playsinline',''); video.setAttribute('muted','');
   video.srcObject = stream;
   try{ await video.play(); }catch(e){}
+  // the picture is live from here; the skeleton follows once the model has loaded
+  if(onStream) try{ onStream(); }catch(e){}
 
   let landmarker;
   try{ landmarker = await loadPoseLandmarker(); }

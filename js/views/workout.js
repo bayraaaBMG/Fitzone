@@ -79,8 +79,8 @@ function wsAttachMedia(host){
 async function wsStartCamera(){
   if(!WS || WS.camState==='loading' || WS.camState==='on') return;
   const sess = WS; // the overlay may be closed/reopened while permission + model load are pending
-  WS.camState = 'loading'; WS.camErr = null;
-  WS.camTip = true; WS.lost = false; WS.lostSince = 0;
+  WS.camState = 'loading'; WS.camErr = null; WS.camPhase = 'permission';
+  WS.camTip = true; WS.tipSeenAt = 0; WS.lost = false; WS.lostSince = 0;
   wsRender();
   const m = wsMedia();
   const signal = {aborted:false};
@@ -89,6 +89,7 @@ async function wsStartCamera(){
     const cam = await startPoseCamera({
       video: m.querySelector('video'), canvas: m.querySelector('canvas'),
       exId: sess.exId, facing: sess.camFacing, onFrame: wsOnPose, onEnded: ()=>wsCameraEnded(sess), signal,
+      onStream: ()=>{ if(WS===sess && !signal.aborted){ WS.camPhase = 'model'; wsUpdateCamStatus(); } },
     });
     if(WS!==sess || signal.aborted){ cam.stop(); return; }
     WS.cam = cam; WS.camState = 'on';
@@ -98,6 +99,28 @@ async function wsStartCamera(){
     WS.cam = null; WS.camState = 'error'; WS.camErr = err.code || 'model';
   }
   wsRender();
+}
+/* What the camera is doing while it starts: first the browser's permission
+   question, then — with the picture already live — the pose model download.
+   Shown on the stage itself, so pressing the button always visibly does
+   something, even when the prompt is slow or the model takes a while. */
+function wsCamStatusText(){
+  return WS.camPhase==='model' ? t('ws_cam_wait_model') : t('ws_cam_wait_perm');
+}
+function wsUpdateCamStatus(){
+  const el = wsRoot() && wsRoot().querySelector('#wsCamStatus b');
+  if(el) el.textContent = wsCamStatusText();
+  const note = wsRoot() && wsRoot().querySelector('#wsCamNote');
+  if(note) note.textContent = wsCamStatusText();
+}
+function wsCamStatusHTML(){
+  if(WS.camState!=='loading') return '';
+  return `<div class="ws-camload" id="wsCamStatus" role="status" aria-live="polite"><span class="ws-spin" aria-hidden="true"></span><b>${esc(wsCamStatusText())}</b></div>`;
+}
+/* a failed start says why, on the stage, with a way to try again */
+function wsCamErrorHTML(){
+  if(WS.camState!=='error') return '';
+  return `<div class="ws-camerr" role="alert"><b>⚠️ ${t('ws_cam_failed')}</b><span>${t('cam_err_'+WS.camErr)}</span></div>`;
 }
 /* camera track ended from outside (permission revoked, another app took the camera, device unplugged) */
 function wsCameraEnded(sess){
@@ -125,6 +148,17 @@ function wsOnPose(out){
   if(!WS) return;
   WS.pose = out;
   wsTrackLost(out);
+  // the placement tip has done its job once the body has been in view for a
+  // moment: take it off the picture so the skeleton is not hidden behind it
+  if(WS.camTip){
+    if(out.status==='lowconf') WS.tipSeenAt = 0;
+    else if(!WS.tipSeenAt) WS.tipSeenAt = Date.now();
+    else if(Date.now() - WS.tipSeenAt > 1500){
+      WS.camTip = false;
+      const tip = wsRoot() && wsRoot().querySelector('#wsTip');
+      if(tip) tip.remove();
+    }
+  }
   if(WS.step==='active' && !WS.paused && out.tracked){
     if(WS.mode==='reps'){
       if(out.reps > WS.amount){ WS.amount = out.reps; wsRepFeedback(); }
@@ -289,7 +323,7 @@ function wsRenderIntro(root){
   const recTarget = recordTargetFor(WS.exId, WS.duration);
   const durChoices = WS.mode==='reps' ? [30,45,60] : [30,45,60,90];
   const showDur = WS.mode==='reps' || WS.oppType==='target';
-  const camNote = WS.camState==='loading' ? `<p class="ws-note">${t('ws_cam_loading')}</p>`
+  const camNote = WS.camState==='loading' ? `<p class="ws-note" id="wsCamNote">${esc(wsCamStatusText())}</p>`
     : WS.camState==='error' ? `<p class="ws-note err">${t('cam_err_'+WS.camErr)}</p>`
     : WS.camState==='on' ? `<p class="ws-note ok">${c.pose ? t('ws_cam_on_auto') : t('ws_cam_on_manual')}</p>${wsAiHintHTML()}`
     : `<p class="ws-note">${c.pose ? t('ws_cam_note_auto') : t('ws_cam_note_manual')}</p>`;
@@ -332,6 +366,7 @@ function wsRenderIntro(root){
 
       <div class="ws-card"><div class="lab">${t('ws_camera')}</div>
         ${WS.camState==='on' || WS.camState==='loading' ? `<div class="ws-stage" id="wsPreview" style="min-height:220px;margin:0 0 10px">
+            ${wsCamStatusHTML()}
             <div class="ws-pill" id="wsPill" role="status" aria-live="polite"></div>
             ${WS.camTip ? wsSetupTipHTML() : ''}
             <div class="ws-camctl"><button class="ws-chipbtn" id="wsFlip">${t('ws_cam_flip')}</button><button class="ws-chipbtn" id="wsCamOff">${t('ws_cam_off')}</button></div>
@@ -433,7 +468,8 @@ function wsRenderActive(root){
       <div class="ws-bar ${WS.battle?'':'solo'}"><i id="wsBar" style="width:${WS.battle?50:0}%"></i></div>
     </div>
     <div class="ws-stage" id="wsStage">
-      ${camOn ? '' : `<div class="ws-demo">
+      ${camOn ? wsCamStatusHTML() : `<div class="ws-demo">
+        ${wsCamErrorHTML()}
         <div class="ws-demoart">${typeof exerciseDemoHTML==='function' ? exerciseDemoHTML(x.id) : ''}</div>
         <div class="ws-cue" id="wsCue">${wsCueHTML()}</div></div>`}
       <div class="ws-pill" id="wsPill" role="status" aria-live="polite"></div>
@@ -445,7 +481,7 @@ function wsRenderActive(root){
       <div class="ws-camctl">${camOn
         ? `<button class="ws-chipbtn" id="wsSound" aria-pressed="${wsSoundOn()}">${wsSoundOn() ? '🔊' : '🔇'} ${t('ws_cam_sound')}</button>
            <button class="ws-chipbtn" id="wsCamOff">${t('ws_cam_off')}</button>`
-        : `<button class="ws-chipbtn" id="wsCam">${t('ws_cam_btn')}</button>`}</div>
+        : `<button class="ws-chipbtn" id="wsCam">${WS.camState==='error' ? t('ws_cam_retry') : t('ws_cam_btn')}</button>`}</div>
     </div>
     <div class="ws-sub" id="wsSub"></div>
     <div class="ws-ctl ${manualReps?'':'two'}">
